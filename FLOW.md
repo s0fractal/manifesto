@@ -1,135 +1,106 @@
-# FLOW-0 — Потоки в гетерогенних просторах станів
+# FLOW-0.1 — Потоки в гетерогенних просторах станів
 
-**Статус:** speculative working model
-**Версія:** 0.1
-**Призначення:** зафіксувати робочий словник і набір гіпотез, що виникли в розмові, не перетворюючи їх на нормативну архітектуру.
+**Статус:** speculative working model  
+**Версія:** 0.1 → 0.1-revised  
+**Призначення:** зафіксувати робочий словник і набір гіпотез; породжувати контрприклади, експерименти та кращі формулювання. Не перетворюватися на нормативну архітектуру.
 
 > **НЕ НОРМАТИВНО. НЕ Є ТЕОРІЄЮ. НЕ ЗЛИВАТИ АВТОМАТИЧНО В HSP, SIGMA-GLYPH ЧИ TRINITY.**
-> Модель існує для породження контрприкладів, експериментів і кращих формулювань.
 
 ---
 
-## 0. Центральна інтуїція
+## Структура документа
 
-Інформаційні системи можна розглядати не лише як множини станів або символів, а як **простори можливих трансформацій**.
-
-У такому представленні важливим є не лише:
-
-> що означає стан \(x\)?
-
-а:
-
-> що з \(x\) можна зробити, за яких умов, якою ціною, що при цьому зберігається, що втрачається і які майбутні стани стають доступними?
-
-Робоча теза:
-
-$$
-\boxed{
-\text{semantics}
-\approx
-\text{possible transformations}
-+
-\text{constraints}
-+
-\text{invariants}
-+
-\text{consequences}
-}
-$$
-
-Це не визначення семантики взагалі, а кандидат на **операційний шар**, придатний для порівняння гетерогенних інформаційних систем.
+- **Part I — Descriptive Vocabulary** (§1–§11): що фіксується без додаткових онтологічних припущень.
+- **Part II — Hypotheses** (§12–§18): спекуляції, які можуть бути хибними.
+- **Part III — Methodology, Risks & Experiments** (§19–§27): як перевіряти, чому не довіряти, що робити далі.
+- **Appendix A — Concrete Minimal Example**
+- **Appendix B — Anti-Example**
 
 ---
 
-# 1. State Space
+# PART I — DESCRIPTIVE VOCABULARY
 
-Нехай існує домен:
+## 1. Minimal Formal Core
+
+Навіть якщо повної формалізації немає, можна виділити ядро, яке приймається без додаткових метафор:
 
 $$
-D = (X,\mathcal O,\mathcal C,\mathcal I)
+D = (X, \mathcal{O}, A, C, I, B, 	au)
 $$
 
 де:
 
-* \(X\) — множина допустимих станів;
-* \(\mathcal O\) — допустимі операції;
-* \(\mathcal C\) — constraints;
-* \(\mathcal I\) — відомі invariants.
+- $X$ — множина допустимих станів;
+- $\mathcal{O}$ — множина операцій;
+- $A(x) \subseteq \mathcal{O}$ — допустимі операції в стані $x$;
+- $C$ — constraints (предикати над $X 	imes \mathcal{O} 	imes T$);
+- $I$ — invariants (предикати над $X$, замкнені відносно допустимих переходів);
+- $B$ — boundary (інтерфейс між внутрішнім і зовнішнім);
+- $	au$ — temporal domain (часова структура).
 
-`State space` не зобов'язаний бути геометричним.
-
-Він може бути:
-
-* графом;
-* частковим порядком;
-* автоматом;
-* множиною термів;
-* probability space;
-* manifold;
-* causal graph;
-* constraint system;
-* ledger;
-* ontology;
-* композицією кількох різних просторів.
-
-Тому слово **topology** тут поки слід використовувати обережно: частина просторів може не мати топології в строгому математичному сенсі.
+Усе інше в документі — розширення цього ядра.
 
 ---
 
-# 2. Flow
+## 2. State Space
 
-`Flow` — зміна стану відповідно до деякого transition law.
+State space не зобов'язаний бути геометричним. Він може бути графом, частковим порядком, автоматом, множиною термів, probability space, manifold, causal graph, constraint system, ledger, ontology або композицією кількох різних просторів.
+
+Тому слово **topology** тут використовується обережно: частина просторів може не мати топології в строгому математичному сенсі.
+
+---
+
+## 3. Boundary / Interface
+
+Boundary $B$ — first-class об'єкт, а не метафора:
+
+$$
+B = (S_{in}, S_{out}, M, F)
+$$
+
+де:
+
+- $S_{in}$ — стани, які належать домену;
+- $S_{out}$ — стани поза доменом, але з якими можливі взаємодії;
+- $M$ — mapping дозволених впливів (що може перетинати межу);
+- $F$ — фільтр інформації (що спостерігається ззовні).
+
+Без boundary поняття "transfer" (§5) не має сенсу: transfer — це зміна стану зі збереженням деякої властивості при перетині $B$.
+
+---
+
+## 4. Flow
+
+Flow — зміна стану відповідно до деякого transition law.
 
 У детермінованому випадку:
 
 $$
-x_{t+1} = T(x_t,a_t,e_t)
+x_{t+1} = T(x_t, a_t, e_t)
 $$
 
 У стохастичному:
 
 $$
-x_{t+1}
-\sim
-P(X_{t+1}\mid x_t,a_t,e_t)
+x_{t+1} \sim P(X_{t+1} \mid x_t, a_t, e_t)
 $$
-
-де:
-
-* \(x_t\) — локальний стан;
-* \(a_t\) — дія;
-* \(e_t\) — середовище.
 
 У continuous domain:
 
 $$
-\dot x = F(x,t)
+\dot{x} = F(x, t)
 $$
 
-або для зв'язаних полів:
-
-$$
-\frac{\partial \phi}{\partial t}
-=
-F(\phi,\psi,\nabla\phi,\ldots)
-$$
-
-Але жоден із цих формалізмів не є універсальним.
-
-**FLOW-0 не стверджує, що всі системи треба описувати PDE або механікою рідин.**
-
-Navier–Stokes, diffusion, reaction–diffusion, network flow тощо — можливі **локальні flow laws**, а не фундаментальні метафори для всього.
+Але жоден із цих формалізмів не є універсальним. Navier–Stokes, diffusion, reaction–diffusion, network flow тощо — можливі **локальні flow laws**, а не фундаментальні метафори для всього.
 
 ---
 
-# 3. Admissible transitions
+## 5. Admissible Transitions
 
 Не кожний математично можливий перехід є допустимим.
 
-Визначимо:
-
 $$
-A(x) = \{a \mid C_i(x,a)\leq 0\;\forall i\}
+A(x) = \{a \mid C_i(x, a) \leq 0 \; orall i\}
 $$
 
 Тоді система має не просто trajectory, а **простір допустимих майбутніх**:
@@ -138,47 +109,37 @@ $$
 Reach(x)
 $$
 
-Constraints можуть змінювати його форму:
+Constraints змінюють його форму:
 
 $$
-Reach(x\mid C_1)
-\subseteq
-Reach(x)
+Reach(x \mid C_1) \subseteq Reach(x)
 $$
 
 Resource constraint:
 
 $$
-Reach(x\mid r=10)
-\subseteq
-Reach(x\mid r=100)
+Reach(x \mid r=10) \subseteq Reach(x \mid r=100)
 $$
 
-Authority constraint може поводитися інакше:
-
-$$
-a\notin A(x)
-$$
-
-доки не з'явиться певний warrant.
+Authority constraint може поводитися інакше: $a \notin A(x)$ доки не з'явиться певний warrant.
 
 Таким чином інформація може змінювати поведінку системи не через зміну фізичного стану, а через **зміну множини admissible transitions**.
 
 ---
 
-# 4. Constraint
+## 6. Constraint
 
 Constraint — правило, що обмежує допустимі стани або переходи.
 
 Загальна форма:
 
 $$
-C(x,a,t,\context)\leq0
+C(x, a, t, \text{context}) \leq 0
 $$
 
-Важливо відокремлювати:
+Відокремлюємо:
 
-```text
+```
 physical constraint
 resource constraint
 logical constraint
@@ -189,155 +150,124 @@ semantic constraint
 policy constraint
 ```
 
-Вони можуть мати схожий операційний ефект:
+Вони можуть мати схожий операційний ефект — "цей перехід зараз неможливий" — але абсолютно різну природу. Operational similarity не означає ontological identity.
 
-> “цей перехід зараз неможливий”
+### 6.1 Soft Constraints
 
-але абсолютно різну природу.
+Не всі обмеження бінарні. **Soft constraint** відображає:
 
-Тому operational similarity не означає ontological identity.
+$$
+C_{soft}: X \times \mathcal{O} \rightarrow [0, \infty)
+$$
+
+де $0$ = жорстко заборонено, а скінченні значення = допустимо з ціною. Це дозволяє говорити про graceful degradation і про price (§8) як про вартість порушення, а не лише як про обмінний курс.
 
 ---
 
-# 5. Invariant
+## 7. Invariant
 
-Інваріант не є абсолютною властивістю об'єкта.
-
-Коректніша форма:
+Інваріант не є абсолютною властивістю об'єкта. Коректніша форма:
 
 $$
-I(x)
-\text{ invariant under }
-F
-\text{ within }
-B
-\text{ assuming }
-A
+I(x) \text{ invariant under } F \text{ within } B \text{ assuming } A
 $$
 
 де:
 
-* \(F\) — сімейство трансформацій;
-* \(B\) — boundary;
-* \(A\) — assumptions.
+- $F$ — сімейство трансформацій;
+- $B$ — boundary;
+- $A$ — assumptions.
 
-Наприклад:
+Наприклад, величина $R_{total}$ може бути conserved under `transfer`, але не under `mint`, `burn`, `external grant`, `decay`.
 
-$$
-ATP_{total}
-$$
-
-може бути conserved under `transfer`, але не under:
-
-```text
-mint
-burn
-external grant
-decay
-```
-
-Тому запис:
-
-> “ATP conserved”
-
-недостатній.
-
-Треба:
-
-> “ATP conserved under transformation family \(F_{transfer}\) inside boundary \(B\).”
+Тому запис "ATP conserved" недостатній. Треба: "$R_{total}$ conserved under transformation family $F_{transfer}$ inside boundary $B$."
 
 ---
 
-# 6. Resource-like structures
+## 8. Resource-like Structures
 
-Назви `ATP`, `budget`, `money`, `energy`, `attention`, `compute`, `risk-capacity` не є універсальними сутностями.
-
-Замість цього можна описувати їхню **операційну структуру**.
-
-Наприклад:
+Назви `budget`, `compute`, `attention`, `risk-capacity` не є універсальними сутностями. Замість цього описуємо їхню **операційну структуру**:
 
 $$
-R =
-(
-Q,
-C,
-T,
-P,
-E,
-\tau,
-B
-)
+R = (Q, C, T, P, E, \tau, B)
 $$
 
 де:
 
-* \(Q\) — quantity/state;
-* \(C\) — admissibility constraints;
-* \(T\) — transition/accounting law;
-* \(P\) — production/destruction rules;
-* \(E\) — exchange/transfer rules;
-* \(\tau\) — temporal behavior;
-* \(B\) — scope/boundary.
+- $Q$ — quantity/state;
+- $C$ — admissibility constraints;
+- $T$ — transition/accounting law;
+- $P$ — production/destruction rules;
+- $E$ — exchange/transfer rules;
+- $	au$ — temporal behavior;
+- $B$ — scope/boundary.
 
 Можливі властивості:
 
-```text
-bounded
-conserved
-consumable
-replenishable
-transferable
-divisible
-fungible
-decaying
-borrowable
-mintable
-local
-global
-path-dependent
-reversible
-non-reversible
+```
+bounded, conserved, consumable, replenishable, transferable,
+divisible, fungible, decaying, borrowable, mintable,
+local, global, path-dependent, reversible, non-reversible
 ```
 
-Тоді ATP і гроші можуть мати спільні властивості, не будучи одним поняттям.
+Тоді різні ресурси можуть мати спільні властивості, не будучи одним поняттям.
 
 ---
 
-# 7. Price ≠ Resource
+## 9. Price
 
-`Price` не слід автоматично ототожнювати з budget/resource.
+Price не слід автоматично ототожнювати з budget/resource.
 
 Resource:
 
 $$
-r_{t+1}=r_t-cost(a_t)
+r_{t+1} = r_t - \text{cost}(a_t)
 $$
 
 Price радше визначає mapping:
 
 $$
-cost(a,t)=p(a,t)\cdot q(a)
+\text{cost}(a, t) = p(a, t) \cdot q(a)
 $$
 
-Тобто `price` може бути:
+Price може бути:
 
-* exchange relation;
-* marginal cost;
-* shadow price;
-* dual variable;
-* context-dependent transformation coefficient.
+- exchange relation;
+- marginal cost;
+- shadow price;
+- dual variable;
+- context-dependent transformation coefficient;
+- **вартість порушення soft constraint**.
 
-Через це одна й та сама дія може мати різну resource cost при різних prices.
+Одна й та сама дія може мати різну resource cost при різних prices.
 
 ---
 
-# 8. Quantization
+## 10. Temporal Domains
 
-Не всі flows є continuous.
+Різні домени мають різний час. Wall-clock, logical (Lamport), event-driven, causal — це не різні "реалізації" одного часу, а різні **темпоральні онтології**.
 
-У деяких domains переходи принципово дискретні:
+Temporal domain:
 
-```text
+$$
+\tau = (T, \prec, \lambda)
+$$
+
+де:
+
+- $T$ — носій (множина часових міток);
+- $\prec$ — порядок (частковий або повний);
+- $\lambda$ — функція "тривалості" (може бути undefined).
+
+При translation між domains зміна темпоральної онтології — це не просто дискретизація, а зміна самої структури flow.
+
+---
+
+## 11. Quantization
+
+Не всі flows є continuous. У деяких domains переходи принципово дискретні:
+
+```
 unsigned → signed
 draft → ratified
 alive → archived
@@ -345,257 +275,162 @@ uncommitted → committed
 unresolved → resolved
 ```
 
-Стан:
+Стан $0.73 \; \text{ratified}$ може взагалі не мати семантики.
 
-$$
-0.73\;ratified
-$$
+Domain повинен декларувати:
 
-може взагалі не мати семантики.
-
-Тому domain повинен декларувати:
-
-```text
-continuous
-discrete
-hybrid
-event-driven
-quantized
+```
+continuous / discrete / hybrid / event-driven / quantized
 ```
 
-а translation між domains не повинна мовчки перетворювати discrete transition на continuous scalar або навпаки.
+Translation між domains не повинна мовчки перетворювати discrete transition на continuous scalar або навпаки.
 
 ---
 
-# 9. Multi-space systems
+## 12. Multi-space Systems
 
 Реальна система може одночасно існувати в кількох різних state spaces:
 
 $$
-x_A\in X_A
+x_A \in X_A, \quad x_B \in X_B, \quad x_C \in X_C
 $$
 
-$$
-x_B\in X_B
-$$
+Наприклад: semantic state, resource state, authority state, physical state, epistemic state, social state.
 
-$$
-x_C\in X_C
-$$
-
-Наприклад:
-
-```text
-semantic state
-resource state
-authority state
-physical state
-epistemic state
-social state
-```
-
-Сукупний стан:
-
-$$
-S = (x_A,x_B,x_C,\ldots)
-$$
-
-але це не означає, що існує одна природна vector space, в яку їх слід сплющити.
+Сукупний стан $S = (x_A, x_B, x_C, \ldots)$, але це не означає, що існує одна природна vector space.
 
 Динаміка може бути coupled:
 
 $$
-\dot{x}_A = F_A(x_A,x_B)
+\dot{x}_A = F_A(x_A, x_B)
 $$
 
 $$
-\dot{x}_B = F_B(x_B,x_C)
+\dot{x}_B = F_B(x_B, x_C)
 $$
 
 $$
-x_C^{t+1}=T_C(x_C^t,x_A^t)
+x_C^{t+1} = T_C(x_C^t, x_A^t)
 $$
 
-Тобто flow в одному домені деформує flow в іншому.
+Flow в одному домені деформує flow в іншому.
 
 ---
 
-# 10. Cross-space translation
+## 13. Cross-space Translation
 
-Для двох domains:
-
-$$
-D_A,D_B
-$$
-
-може існувати mapping:
+Для двох domains $D_A, D_B$ може існувати mapping:
 
 $$
-\phi_{A\rightarrow B}:X_A\rightharpoonup X_B
+\phi_{A \rightarrow B}: X_A \rightharpoonup X_B
 $$
 
-Він може бути:
+Він може бути partial, lossy, irreversible, context-sensitive, resource-expensive, non-unique.
 
-* partial;
-* lossy;
-* irreversible;
-* context-sensitive;
-* resource-expensive;
-* non-unique.
-
-Основна одиниця перевірки translation — не схожість значень, а **збереження заявлених властивостей**.
-
-Наприклад:
+Основна одиниця перевірки translation — не схожість значень, а **збереження заявлених властивостей**:
 
 $$
-I_A(x)
-\Rightarrow
-I_B(\phi(x))
+I_A(x) \Rightarrow I_B(\phi(x))
 $$
 
 або:
 
 $$
-C_A(x,a)
-\Rightarrow
-C_B(\phi(x),\phi(a))
+C_A(x, a) \Rightarrow C_B(\phi(x), \phi(a))
 $$
 
 для певного action context.
 
-Універсальним тоді стає не значення:
+Універсальним стає не значення ("resource X ↔ resource Y"), а, можливо:
 
-```text
-ATP ↔ money
+```
+ConsumedBy, BoundedBy, TransferableUnder, AdmissibleWhen,
+ConservedUnder, EnabledBy, ForbiddenBy
 ```
 
-а, можливо:
+### 13.1 Graceful Untranslatability
 
-```text
-ConsumedBy
-BoundedBy
-TransferableUnder
-AdmissibleWhen
-ConservedUnder
+Translator повинен уміти сказати не просто "не вдається", а видавати структурований звіт:
+
 ```
+Translation report:
+  φ: partial mapping
+  Preserved: {ordering, action admissibility}
+  Lost: {distance, resource magnitude}
+  Introduced: {approximation error}
+  Confidence: [0,1]
+  Alternative: {φ', φ''} або "none found"
+```
+
+Failure to translate — це **first-class результат**, а не поразка.
 
 ---
 
-# 11. Translation loss
+## 14. Translation Loss
 
 Будь-який cross-domain bridge повинен потенційно описувати:
 
-```text
-preserved
-lost
-introduced
-approximated
-unknown
-non-invertible
-context-dependent
+```
+preserved, lost, introduced, approximated,
+unknown, non-invertible, context-dependent
 ```
 
-Наприклад:
+Наприклад, $\phi_{A \rightarrow B}$ може зберігати ordering, але втрачати distance; або зберігати action admissibility, але втрачати resource magnitude.
 
-$$
-\phi_{A\rightarrow B}
-$$
-
-може зберігати:
-
-```text
-ordering
-```
-
-але втрачати:
-
-```text
-distance
-```
-
-або зберігати:
-
-```text
-action admissibility
-```
-
-але втрачати:
-
-```text
-resource magnitude
-```
-
-Тому:
-
-$$
-\phi^{-1}(\phi(x)) = x
-$$
-
-не є загальною вимогою.
+Тому $\phi^{-1}(\phi(x)) = x$ не є загальною вимогою.
 
 ---
 
-# 12. Information as transformation potential
+# PART II — HYPOTHESES
 
-Одна з центральних спекулятивних тез FLOW-0:
+> Усе, що нижче, — свідомі спекуляції. Вони можуть бути хибними.
+
+---
+
+## 15. Information as Transformation Potential
+
+**Центральна спекулятивна теза FLOW-0.1:**
 
 > Інформаційний стан набуває операційного значення через те, як він змінює простір можливих трансформацій.
 
-Наприклад warrant:
+**Уточнення щодо тавтологічності:** зміна $Reach(x)$ сама по собі ще не є інформацією. Камінь падає — його $Reach$ змінюється, але він не "отримує інформацію". Різниця:
 
-```text
-before:
-    action ∉ admissible
+- **Фізична зміна** змінює $Reach(x)$ через зміну самого $x$.
+- **Інформаційна зміна** змінює $Reach(x)$ без зміни фізичного стану — через зміну $A(x)$, $C$ або $I$.
 
-after:
-    action ∈ admissible
+Приклади:
+
 ```
+Warrant:
+  before: action ∉ admissible
+  after:  action ∈ admissible
 
 Knowledge:
-
-```text
-before:
-    policy selects A
-
-after evidence E:
-    policy selects B
-```
+  before: policy selects A
+  after evidence E: policy selects B
 
 Commitment:
-
-```text
-before:
-    futures = {A,B,C,D}
-
-after commitment:
-    futures = {C,D}
+  before: futures = {A,B,C,D}
+  after:  futures = {C,D}
 ```
 
-Тому інформація може трактуватися як щось, що:
+Тому інформація трактується як те, що:
 
 $$
-Reach(x)
-\rightarrow
-Reach'(x)
+Reach(x) \rightarrow Reach'(x)
 $$
 
 або:
 
 $$
-P(Trajectory)
-\rightarrow
-P'(Trajectory)
+P(\text{Trajectory}) \rightarrow P'(\text{Trajectory})
 $$
+
+**але лише коли зміна відбувається через зміну constraints, а не через зміну фізичного стану.**
 
 ---
 
-# 13. Wittgenstein extension
-
-Мовна гра Вітгенштейна використовується тут лише як **аналогія**, не як формальна основа.
-
-Класична інтуїція:
-
-> meaning is use.
+## 16. Operational Meaning
 
 Розширена робоча форма:
 
@@ -607,66 +442,43 @@ $$
 }
 $$
 
-Для інформації питання стає не:
-
-> “що означає цей символ?”
-
-а:
-
-> які операції він дозволяє, забороняє, змінює або робить можливими?
+Для інформації питання стає не "що означає цей символ?", а "які операції він дозволяє, забороняє, змінює або робить можливими?"
 
 Це дозволяє мати **family resemblance** замість universal ontology.
 
-Наприклад:
-
-```text
-ATP
-money
-time
-trust
-authority
-compute
-```
-
-можуть мати частково перекривні структурні властивості без спільної сутності.
+Наприклад, `budget`, `trust`, `authority`, `compute` можуть мати частково перекривні структурні властивості без спільної сутності.
 
 ---
 
-# 14. Player
+## 17. Player
 
-`Player` не визначається просто як “об'єкт, що рухається”.
+**Робоче визначення:**
 
-Робоче визначення:
-
-> **Player — локус endogenous control, внутрішній стан або policy якого причинно впливають на його власний розподіл майбутніх траєкторій.**
+> **Player — локус endogenous control, внутрішній стан або policy якого причинно впливають на його власний розподіл майбутніх траєкторій, і який має representational capacity (стан, що функціонально відіграє роль моделі ситуації).**
 
 Для policy:
 
 $$
-a_t=\pi(x_t,h_t)
+a_t = \pi(x_t, h_t)
 $$
 
 Якщо:
 
 $$
-Trajectory(do(\pi=\pi_1))
-\neq
-Trajectory(do(\pi=\pi_2))
+\text{Trajectory}(do(\pi=\pi_1)) \neq \text{Trajectory}(do(\pi=\pi_2))
 $$
 
 то policy має causal influence на trajectory.
 
-Це не вимагає метафізичної свободи волі.
+**Уточнення:** за цим визначенням складний термостат може бути borderline player, але він не має representational capacity у сенсі моделі альтернатив. Це не вимагає метафізичної свободи волі.
 
 ---
 
-# 15. Degrees of agency
+## 18. Degrees of Agency
 
-Agency може бути не binary property.
+Agency — не binary property. Груба шкала:
 
-Можлива груба шкала:
-
-```text
+```
 object
     trajectory externally determined
 
@@ -678,6 +490,7 @@ agent
 
 player
     internal selection affects own trajectory
+    + representational capacity
 
 reflexive player
     can modify its own policy
@@ -686,332 +499,163 @@ self-modifying player
     can modify mechanisms that modify policy
 ```
 
-Це поки descriptive taxonomy, а не formal hierarchy.
+Це descriptive taxonomy, а не formal hierarchy.
 
 ---
 
-# 16. Determinism
+## 19. Determinism, Stochasticity, Nondeterminism
 
-Agency не вимагає stochasticity.
+### 19.1 Determinism ≠ absence of agency
 
-Детермінована система:
+Детермінована система $x_{t+1} = T(x_t, \pi(x_t))$ може бути player, якщо зміна $\pi$ контрфактично змінює trajectory.
+
+### 19.2 Stochasticity
+
+При $x_{t+1} \sim P(X \mid x_t, a_t)$ player може не контролювати outcome, але змінювати distribution:
 
 $$
-x_{t+1}=T(x_t,\pi(x_t))
+P(\text{Trajectory} \mid \pi_1) \neq P(\text{Trajectory} \mid \pi_2)
 $$
 
-може бути player, якщо зміна \(\pi\) контрфактично змінює trajectory.
+Agency — здатність деформувати $P(\text{future})$, а не обов'язково вибирати конкретне future.
 
-Отже:
+### 19.3 Чотири різні "недетермінованості"
 
-```text
-determinism ≠ absence of agency
-randomness ≠ agency
-```
-
-Важливішим поняттям є **controllability**.
+1. **Epistemic uncertainty** — transition deterministic, але observer не знає повного state.
+2. **Chaos** — transition deterministic, але $\delta x_0 \ll 1$ породжує $\delta x_t \gg 1$.
+3. **Stochasticity** — transition law сам є probability distribution.
+4. **Underspecified admissibility** — існує кілька legal actions $A(x) = \{a_1, a_2, \ldots\}$, а policy визначає, яку буде використано. Це не те саме, що randomness.
 
 ---
 
-# 17. Nondeterminism / stochasticity
+## 20. Reflexive Trajectory
 
-При stochastic transitions:
-
-$$
-x_{t+1}
-\sim
-P(X\mid x_t,a_t)
-$$
-
-player може не контролювати конкретний outcome, але змінювати distribution:
-
-$$
-P(Trajectory\mid\pi_1)
-\neq
-P(Trajectory\mid\pi_2)
-$$
-
-Тому agency можна описувати як здатність деформувати:
-
-$$
-P(\text{future})
-$$
-
-а не обов'язково вибирати конкретне future.
-
----
-
-# 18. Чотири різні “недетермінованості”
-
-Необхідно розрізняти:
-
-### 18.1 Epistemic uncertainty
-
-Transition deterministic, але observer не знає повного state.
-
-### 18.2 Chaos
-
-Transition deterministic, але:
-
-$$
-\delta x_0\ll1
-$$
-
-може породити:
-
-$$
-\delta x_t\gg1
-$$
-
-### 18.3 Stochasticity
-
-Transition law сам є probability distribution.
-
-### 18.4 Underspecified admissibility
-
-Існує кілька legal actions:
-
-$$
-A(x)=\{a_1,a_2,\ldots\}
-$$
-
-а policy визначає, яку буде використано.
-
-Це не те саме, що randomness.
-
----
-
-# 19. Reflexive trajectory
-
-Для reflexive player існують щонайменше два взаємопов'язані flows.
+Для reflexive player існують щонайменше два взаємопов'язані flows:
 
 State flow:
 
 $$
-x_t\rightarrow x_{t+1}
+x_t \rightarrow x_{t+1}
 $$
 
 Policy flow:
 
 $$
-\pi_t\rightarrow\pi_{t+1}
+\pi_t \rightarrow \pi_{t+1}
 $$
 
 Наприклад:
 
 $$
-x_{t+1}=F(x_t,\pi_t,e_t)
+x_{t+1} = F(x_t, \pi_t, e_t)
 $$
 
 $$
-\pi_{t+1}=G(\pi_t,x_t,Evidence_t)
+\pi_{t+1} = G(\pi_t, x_t, \text{Evidence}_t)
 $$
 
-Тоді історія агента впливає на механізм, який породжує його наступні рішення.
-
-Це кандидат на формалізацію поняття **trajectory-conditioned attractor** для довгоживучих LLM-процесів.
+Історія агента впливає на механізм, який породжує його наступні рішення. Кандидат на формалізацію **trajectory-conditioned attractor** для довгоживучих процесів.
 
 ---
 
-# 20. Attractors
+## 21. Attractors
 
-Attractor у FLOW-0 поки використовується в широкому робочому сенсі.
+Attractor у FLOW-0.1 використовується в широкому робочому сенсі. Необхідно окремо перевіряти, чи конкретна система дійсно допускає математично коректне поняття attractor.
 
-Необхідно окремо перевіряти, чи конкретна система дійсно допускає математично коректне поняття attractor.
+**Застереження:** це психологічна/епістемічна метафора, а не динамічна система, доки не доведено існування відповідної метрики.
 
 Інтуїція:
 
-```text
-history
-→ vocabulary
-→ preferred decompositions
-→ preferred tools
-→ repeated action patterns
-→ stronger history
+```
+history → vocabulary → preferred decompositions
+       → preferred tools → repeated action patterns
+       → stronger history
 ```
 
-утворює feedback loop.
-
-Для LLM-agent trajectory:
+утворює feedback loop. Для LLM-agent trajectory:
 
 $$
-h_t
-\rightarrow
-\pi_t
-\rightarrow
-a_t
-\rightarrow
-h_{t+1}
+h_t \rightarrow \pi_t \rightarrow a_t \rightarrow h_{t+1}
 $$
 
-Такий loop може породжувати:
-
-* specialization;
-* competence;
-* blind spots;
-* vocabulary lock-in;
-* Goodhart-like behavior.
+Такий loop може породжувати specialization, competence, blind spots, vocabulary lock-in, Goodhart-like behavior.
 
 ---
 
-# 21. Continuity vs blindness
+## 22. Continuity vs Blindness
 
-Тяглість є одночасно ресурсом і ризиком.
+Тяглість є одночасно ресурсом і ризиком:
 
-```text
-continuity
-→ accumulated competence
-
-continuity
-→ attractor reinforcement
+```
+continuity → accumulated competence
+continuity → attractor reinforcement
 ```
 
-Тому можливі два ортогональні механізми.
+Два ортогональні механізми:
 
 ### Lineage process
-
-Отримує:
-
-```text
-history
-vocabulary
-prior hypotheses
-prior failures
-reviews
-receipts
-```
-
-і продовжує trajectory.
+Отримує: history, vocabulary, prior hypotheses, prior failures, reviews, receipts — і продовжує trajectory.
 
 ### Cold reconstruction
-
-Отримує максимально raw:
-
-```text
-artifact
-observations
-tests
-measurements
-problem
-```
-
-без старого interpretive vocabulary.
+Отримує максимально raw: artifact, observations, tests, measurements, problem — без старого interpretive vocabulary.
 
 Різниця між ними сама стає observation.
 
 ---
 
-# 22. Artifact continuity ≠ interpretive continuity
+## 23. Artifact Continuity ≠ Interpretive Continuity
 
-Варто розділяти:
+Варто розділяти $\text{ArtifactContinuity}$ і $\text{InterpretiveContinuity}$.
 
-$$
-ArtifactContinuity
-$$
+Перше бажано зберігати: code, measurements, provenance, experiments, failed hypotheses, receipts.
 
-і:
+Друге варто періодично скидати: metaphors, favored ontology, "big picture", canonical vocabulary.
 
-$$
-InterpretiveContinuity
-$$
+Це дозволяє **перечитувати ті самі факти так, ніби попередньої теорії не існувало**.
 
-Перше бажано зберігати:
-
-* code;
-* measurements;
-* provenance;
-* experiments;
-* failed hypotheses;
-* receipts.
-
-Друге варто періодично скидати:
-
-* metaphors;
-* favored ontology;
-* “big picture”;
-* canonical vocabulary.
-
-Це дозволяє:
-
-> перечитувати ті самі факти так, ніби попередньої теорії не існувало.
-
-Робоча назва:
-
-**epistemic rebase**.
+Робоча назва: **epistemic rebase**.
 
 ---
 
-# 23. Multi-player systems
+## 24. Multi-player Systems
 
-Нехай існують players:
+Нехай існують players $P_1, \ldots, P_n$ з різними spaces $X_1, \ldots, X_n$ і policies $\pi_1, \ldots, \pi_n$.
 
-$$
-P_1,\ldots,P_n
-$$
-
-з різними spaces:
+Спільна дія не вимагає $X_1 = X_2$ або $\pi_1 \approx \pi_2$. Достатньою може бути локальна compatibility relation:
 
 $$
-X_1,\ldots,X_n
+K_{ij}(a, \text{context})
 $$
 
-і policies:
-
-$$
-\pi_1,\ldots,\pi_n
-$$
-
-Спільна дія не вимагає, щоб:
-
-$$
-X_1=X_2
-$$
-
-або:
-
-$$
-\pi_1\approx\pi_2
-$$
-
-Достатньою може бути локальна compatibility relation:
-
-$$
-K_{ij}(a,\context)
-$$
-
-Тобто systems можуть мати несумісні внутрішні representations, але домовитися про boundary conditions для конкретної взаємодії.
+Systems можуть мати несумісні внутрішні representations, але домовитися про boundary conditions для конкретної взаємодії.
 
 ---
 
-# 24. Coupling
+## 25. Coupling
 
 Два flows можуть бути coupled без прямого translation.
 
 Наприклад:
 
 $$
-\dot{x}=F(x,r)
+\dot{x} = F(x, r)
 $$
 
 $$
-\dot{r}=G(r,a)
+\dot{r} = G(r, a)
 $$
 
 Resource field впливає на state trajectory, але не означає state.
 
-Аналогія з ferrofluid тут допустима лише структурно:
-
-> зовнішнє поле змінює доступну dynamics середовища.
-
-Не слід робити висновок, що соціальні або інформаційні системи “насправді є рідинами”.
+**Застереження:** аналогія з ferrofluid допустима лише структурно — "зовнішнє поле змінює доступну dynamics середовища". Не слід робити висновок, що соціальні або інформаційні системи "насправді є рідинами".
 
 ---
 
-# 25. Flow law library
+## 26. Flow Law Library
 
 Можливо, універсальним шаром стане не universal state representation, а бібліотека relation primitives:
 
-```text
+```
 BoundedBy(...)
 ConservedUnder(...)
 ConsumedBy(...)
@@ -1030,314 +674,120 @@ QuantizedBy(...)
 ReachableUnder(...)
 ```
 
-Конкретні domains тоді інстанціюють частину цих відношень.
+Конкретні domains інстанціюють частину цих відношень.
+
+### 26.1 Sorts (Typing)
+
+Щоб ці primitives були більше, ніж слова, потрібні сорти:
+
+```
+Sorts:
+  State, Action, Observation, Policy, Boundary,
+  Time, Evidence, Warrant, Constraint, Invariant,
+  Resource, Player, Domain, Translation
+```
+
+Тоді $\text{ConservedUnder}(x, F)$ — це well-formed предикат, який можна перевірити на коректність типів, а не довільна фраза.
 
 ---
 
-# 26. Candidate universal layer
+## 27. Candidate Universal Layer
 
-Найсильніша спекулятивна теза документа:
+**Найсильніша спекулятивна теза:**
 
 > Якщо універсальний informational layer взагалі існує, він може бути ближчим до алгебри constraints, transformations і preserved relations, ніж до універсальної онтології сутностей.
 
 Тобто не:
 
 $$
-UniversalMeaning(x)
+\text{UniversalMeaning}(x)
 $$
 
 а:
 
 $$
-Structure(
-Transformations,
-Constraints,
-Invariants,
-Mappings
+\text{Structure}(
+  \text{Transformations},
+  \text{Constraints},
+  \text{Invariants},
+  \text{Mappings}
 )
 $$
 
 ---
 
-# 27. “Universal translation”
-
-Universal translation не означає:
-
-> кожний стан можна перевести в кожний інший.
-
-Навпаки, корректний translator повинен уміти сказати:
-
-```text
-translation undefined
-translation partial
-invariant not preserved
-loss unacceptable for this action
-comparison meaningless
-```
-
-Тому failure to translate може бути **правильним результатом**.
-
----
-
-# 28. Information game
-
-Узагальнення мовної гри:
-
-```text
-Game G =
-    state domain
-    legal transformations
-    constraints
-    resources
-    players
-    observations
-    consequences
-```
-
-Одна й та сама datum може брати участь у різних games.
-
-Її operational meaning може змінюватися без зміни bytes.
-
-Тому:
-
-$$
-Meaning(data,G_1)
-\neq
-Meaning(data,G_2)
-$$
-
----
-
-# 29. Game transition
+## 28. Game Transition
 
 Цікавіший випадок — коли player може перейти не просто між states, а між **games**:
 
 $$
-G_A\rightarrow G_B
+G_A \rightarrow G_B
 $$
 
-Наприклад:
-
-* змінити ontology;
-* змінити governance;
-* змінити accounting unit;
-* перейти на інший evaluator;
-* змінити власну policy architecture.
+Наприклад: змінити ontology, governance, accounting unit, evaluator, policy architecture.
 
 Тоді виникає meta-flow:
 
 $$
-(x,G)_t
-\rightarrow
-(x,G)_{t+1}
+(x, G)_t \rightarrow (x, G)_{t+1}
 $$
 
-Це вже не рух усередині fixed rules.
+Це вже не рух усередині fixed rules. Це рух, що може змінити самі rules.
 
-Це рух, що може змінити самі rules.
-
----
-
-# 30. Constraint on self-modification
+### 28.1 Constraint on Self-Modification
 
 Self-modification не повинна автоматично означати unconstrained mutation.
 
-Можливе:
+Можливе $G_t \rightarrow G_{t+1}$ лише якщо:
 
-$$
-G_t\rightarrow G_{t+1}
-$$
-
-лише якщо:
-
-$$
-I_{identity}(G_t,G_{t+1})
-$$
-
-$$
-Budget_{mutation}\ge Cost(G_t\rightarrow G_{t+1})
-$$
-
-$$
-Warrant(G_t\rightarrow G_{t+1})=true
-$$
-
-Тут уже природно виникає зв'язок з HSP/Warrant/Sigma-Glyph, але FLOW-0 не визначає їх реалізацію.
-
----
-
-# 31. Relation to [Sigma-Glyph](https://github.com/s0fractal/sigma-glyph)
-
-Можлива майбутня відповідність:
-
-```text
-Sigma-Glyph (https://github.com/s0fractal/sigma-glyph)
-→ concrete execution/resource semantics
-
-FLOW
-→ broader vocabulary for classes of constrained flows
+```
+I_identity(G_t, G_{t+1}) — збереження ідентичності
+Budget_mutation ≥ Cost(G_t → G_{t+1})
+Warrant(G_t → G_{t+1}) = true
 ```
 
-FLOW не повинен змушувати Sigma-Glyph перейменовувати ATP або підганяти evaluator під універсальну метафору.
+---
 
-Навпаки, Sigma-Glyph може виступати конкретним falsification substrate для деяких FLOW hypotheses.
+# PART III — METHODOLOGY, RISKS & EXPERIMENTS
 
 ---
 
-# 32. Relation to [HSP (RFC-0003)](https://github.com/s0fractal/trinity/tree/main/docs/rfc/0003-heterogeneous-state-protocol)
+## 29. Relation to Other Frameworks
 
-HSP працює з:
+FLOW-0.1 не повинен змушувати інші системи перейменовувати свої поняття або підганяти evaluator під універсальну метафору.
 
-* typed domains;
-* translations;
-* losses;
-* compatibility;
-* heterogeneous state.
+Навпаки, конкретні фреймворки можуть виступати falsification substrate для FLOW hypotheses.
 
-FLOW може досліджувати нижчий або сусідній шар:
-
-> які саме dynamical/constraint structures можуть переноситися між domains?
-
-Небезпека:
-
-FLOW може просто перевинайти HSP іншими словами.
-
-Це треба активно перевіряти.
+**Позикові імена:** коли використовуються терміни на кшталт "ATP" або "Warrant", це — **позикові імена** ($R_{example}$, $W_{example}$), які не несуть онтологічних зобов'язань. Вони служать лише для конкретності прикладів.
 
 ---
 
-# 33. Relation to [Warrant](https://github.com/s0fractal/warrant)
+## 30. Risks
 
-Warrant можна інтерпретувати як механізм, що змінює admissibility:
-
-$$
-A(x)
-\rightarrow
-A'(x)
-$$
-
-але це лише одна перспектива.
-
-Не можна редукувати provenance/authority/signature semantics до “ще одного flow constraint”, якщо при цьому губляться суттєві властивості.
-
----
-
-# 34. Relation to [ALife](https://github.com/s0fractal/sigma-glyph-alife) / [World](https://github.com/s0fractal/sigma-glyph-world)
-
-World/ALife можуть бути хорошими quarantine substrates для перевірки FLOW-гіпотез.
-
-Наприклад:
-
-```text
-Does a resource invariant survive persistent history?
-
-Does changing representation alter observed flow?
-
-Can two domains preserve action admissibility while losing magnitude?
-
-Does reflexive policy evolution create measurable attractors?
-```
-
-Негативний результат цінний.
-
----
-
-# 35. Candidate mathematical families
-
-FLOW-0 поки не вибирає фундаментальну математику.
-
-Кандидати:
-
-### Dynamical systems
-
-Для trajectories, attractors, stability.
-
-### Control theory
-
-Для endogenous control, controllability, reachability.
-
-### Graph theory / network flow
-
-Для discrete transition spaces.
-
-### Stochastic processes
-
-Для probabilistic trajectories.
-
-### Game theory
-
-Для multi-player coupled decisions.
-
-### Category theory
-
-Для composition mappings та preservation structure.
-
-### Formal semantics
-
-Для operational meaning і transition systems.
-
-### Information theory
-
-Для dependence, channel loss, distinguishability.
-
-### Optimal transport
-
-Можливо корисний для деяких cross-space mappings, але не універсальний.
-
-### PDE / continuum mechanics
-
-Лише для domains, де continuous-field assumptions виправдані.
-
----
-
-# 36. Заборонені shortcuts
-
-FLOW-0 не дозволяє без доказу:
-
-```text
-everything is energy
-everything is flow
-everything is geometry
-everything is information
-everything is optimization
-everything is a fluid
-everything is a game
-everything is an agent
-```
-
-Такі statements можуть бути metaphors, але не conclusions.
-
----
-
-# 37. Основні ризики
-
-## 37.1 Vocabulary laundering
-
+### 30.1 Vocabulary Laundering
 Старі концепції перейменовуються в нові терміни без нового змісту.
 
-## 37.2 Physics cosplay
-
+### 30.2 Physics Cosplay
 Математичні слова з фізики використовуються без відповідної структури.
 
-## 37.3 Universalization bias
-
+### 30.3 Universalization Bias
 Локальна закономірність оголошується універсальною.
 
-## 37.4 Metaphor lock-in
-
+### 30.4 Metaphor Lock-In
 `flow`, `field`, `attractor` починають визначати, які observations модель взагалі помічає.
 
-## 37.5 LLM convergence artifact
-
+### 30.5 LLM Convergence Artifact
 Кілька моделей погоджуються не через істинність структури, а через спільні training priors.
 
-## 37.6 Tautological semantics
+### 30.6 Tautological Semantics
+"Meaning is transformations" стає невразливою тезою, бо все заднім числом описується як transformation.
 
-“Meaning is transformations” стає невразливою тезою, бо все заднім числом описується як transformation.
+### 30.7 Methodological Risk: Universalization Through Metaphor
+"Заборонені shortcuts" (усе є енергією, flow, геометрією тощо) — це не стільки помилки, скільки **методологічний ризик**: спокуса пояснити різне одним і тим самим інструментом, втрачаючи distinctions.
 
 ---
 
-# 38. Фальсифікатори framing
+## 31. Falsificators
 
 FLOW framing має втрачати довіру, якщо:
 
@@ -1345,93 +795,55 @@ FLOW framing має втрачати довіру, якщо:
 2. Переклад у flow vocabulary систематично втрачає більше, ніж пояснює.
 3. Незалежні cold-start analyses природніше відновлюють іншу структуру.
 4. `constraint`, `invariant`, `flow`, `player` неможливо визначити без постійних ad hoc exceptions.
-5. Конкретні формальні моделі не дають нічого понад звичайну operational semantics/control theory.
-6. Різні domains вимагають настільки несумісних primitives, що “універсальний layer” стає порожньою множиною загальних слів.
+5. Конкретні формальні моделі не дають нічого понад звичайну operational semantics / control theory.
+6. Різні domains вимагають настільки несумісних primitives, що "універсальний layer" стає порожньою множиною загальних слів.
 7. Модель генерує красиві аналогії, але вони не змінюють predictions або experiment design.
 
 ---
 
-# 39. Перші експерименти
+## 32. Anti-Example
 
-### FLOW-EXP-001 — Vocabulary independence
+**Система, де FLOW framing дає trivial або misleading result:**
 
-Дати кільком моделям одну задачу без слів:
+Квантова заплутаність. Два ентангльовані частинки $A$ і $B$.
 
-```text
-flow
-topology
-invariant
-resource
-ontology
-translation
-```
+- "Стан" $A$ не є локальним — він не належить $X_A$ окремо.
+- "Transformation" над $A$ — це не операція над підсистемою, а глобальна зміна стану $A \otimes B$.
+- $Reach(x_A)$ не визначається незалежно від $x_B$.
+- Boundary $B$ між $A$ і $B$ пропускає кореляції, які не є "transfer" у жодному класичному сенсі.
 
-Подивитися, чи реконструюють вони схожі primitives.
+FLOW vocabulary тут або мовчить, або вводить в оману, намагаючись застосувати "state", "flow" і "transfer" до контексту, де ці поняття вимагають радикальної переінтерпретації.
+
+**Висновок:** FLOW-0.1 не претендує на універсальність. Він претендує на корисність для певного класу систем.
 
 ---
 
-### FLOW-EXP-002 — Same artifact, different games
+## 33. Experiments
 
-Взяти один artifact і змінити лише action context.
+### EXP-001 — Vocabulary Independence
+Дати кільком моделям одну задачу без слів: flow, topology, invariant, resource, ontology, translation. Подивитися, чи реконструюють вони схожі primitives.
 
-Перевірити, які semantics залишаються invariant, а які змінюються.
+### EXP-002 — Same Artifact, Different Games
+Взяти один artifact і змінити лише action context. Перевірити, які semantics залишаються invariant, а які змінюються.
 
----
+### EXP-003 — Resource Isomorphism
+Взяти дві системи з різними назвами resource. Спробувати побудувати mapping лише через operational laws. Перевірити: що зберігається, де mapping ламається.
 
-### FLOW-EXP-003 — Resource isomorphism
+### EXP-004 — Deterministic Agency
+Побудувати повністю deterministic player. Контрфактично змінювати policy. Виміряти зміну reachable trajectories без stochasticity.
 
-Взяти дві системи з різними назвами resource.
+### EXP-005 — Attractor Formation
+Декілька однакових моделей стартують з однакової задачі, але різних ранніх histories. Через $N$ циклів перевірити: vocabulary divergence, problem decomposition, tool choice, blind spots, cross-trajectory reconstruction.
 
-Спробувати побудувати mapping лише через operational laws.
+### EXP-006 — Epistemic Rebase
+Порівняти lineage agent vs cold-start agent на одному накопиченому artifact set. Ціль — вимірювати не "хто правильніший", а **які distinctions бачить лише один із режимів**.
 
-Перевірити:
-
-* що зберігається;
-* де mapping ламається.
-
----
-
-### FLOW-EXP-004 — Deterministic agency
-
-Побудувати повністю deterministic player.
-
-Контрфактично змінювати policy.
-
-Виміряти зміну reachable trajectories без stochasticity.
+### EXP-007 — Boundary Violation
+Система з чітко визначеним $B$. Намисно порушити boundary (змінити $M$ або $F$). Виміряти, які invariants руйнуються негайно, а які — з запізненням. Це тест на те, чи boundary є дійсно first-class.
 
 ---
 
-### FLOW-EXP-005 — Attractor formation
-
-Декілька однакових моделей стартують з однакової задачі, але різних ранніх histories.
-
-Через \(N\) циклів перевірити:
-
-* vocabulary divergence;
-* problem decomposition;
-* tool choice;
-* blind spots;
-* cross-trajectory reconstruction.
-
----
-
-### FLOW-EXP-006 — Epistemic rebase
-
-Порівняти:
-
-```text
-lineage agent
-vs
-cold-start agent
-```
-
-на одному накопиченому artifact set.
-
-Ціль — вимірювати не “хто правильніший”, а **які distinctions бачить лише один із режимів**.
-
----
-
-# 40. Open questions
+## 34. Open Questions
 
 1. Чи існує мінімальний набір transformation primitives, достатній для широкого класу domains?
 2. Чи можна математично визначити translation loss без universal metric?
@@ -1441,19 +853,19 @@ cold-start agent
 6. Як визначити identity при policy self-modification?
 7. Чи є invariant preservation достатнім для semantic translation?
 8. Які properties повинні зберігатися лише action-contextually?
-9. Чи можна визначити “same game” без спільної ontology?
+9. Чи можна визначити "same game" без спільної ontology?
 10. Коли зміна representation є просто coordinate change, а коли — зміною самої game?
 11. Чи існують універсальні conservation-like laws для informational systems?
-12. Чи є “untranslatable” first-class semantic result?
+12. Чи є "untranslatable" first-class semantic result?
 13. Як працює quantization при переході між discrete і continuous domains?
 14. Чи можна формалізувати `price` як relation між flows, не редукуючи все до economics?
 15. Чи можна отримати emergent player з системи, компоненти якої окремо players не є?
 
 ---
 
-# 41. Найкоротша форма
+## 35. Найкоротша форма
 
-Якщо прибрати всю “потокологію”, залишається:
+Якщо прибрати всю "потокологію", залишається:
 
 $$
 \boxed{
@@ -1464,6 +876,8 @@ $$
 \text{Constraints}
 +
 \text{Invariants}
++
+\text{Boundary}
 }
 $$
 
@@ -1476,6 +890,8 @@ $$
 \text{Preservation}
 +
 \text{Loss}
++
+\text{Temporal ontology}
 }
 $$
 
@@ -1501,12 +917,76 @@ $$
 
 А можлива загальна теза:
 
-> **Інформаційні системи можна порівнювати не через спільні назви станів, а через структуру допустимих трансформацій, обмежень і того, що ці трансформації зберігають.**
+> **Інформаційні системи можна порівнювати не через спільні назви станів, а через структуру допустимих трансформацій, обмежень, меж і того, що ці трансформації зберігають.**
 
 І ще спекулятивніше:
 
 > **Meaning may be less a property of a representation than a position within a structured space of possible transformations.**
 
-Оце я б і лишив центром `FLOW-0`.
+Оце — центр FLOW-0.1. Усе інше — кандидати на те, щоб бути красиво роз'їбаними наступними експериментами.
 
-Усе інше — поки що кандидати на те, щоб бути красиво роз'їбаними наступними експериментами.
+---
+
+# APPENDIX A — Concrete Minimal Example
+
+## Три домени: Compute, Attention, Budget
+
+### Domain C (Compute)
+- $X_C = \{(c, t) \mid c \in \mathbb{R}_{\geq 0}, t \in \mathbb{N}\}$ — доступні обчислювальні одиниці та часові тики.
+- $\mathcal{O}_C = \{\text{run}, \text{idle}, \text{delegate}\}$
+- $A_C(x) = \{\text{run} \mid c \geq \text{cost}(\text{run})\} \cup \{\text{idle}, \text{delegate}\}$
+- $I_C$: $c$ conserved under `delegate` within $B_C$ (передача іншому агенту зберігає суму).
+- $B_C$: межа між локальним compute pool і мережею.
+- $	au_C$: discrete ticks.
+
+### Domain A (Attention)
+- $X_A = \{(a_1, a_2, \ldots, a_n) \mid a_i \in [0, 1], \sum a_i \leq 1\}$ — розподіл уваги.
+- $\mathcal{O}_A = \{\text{focus}(i), \text{distribute}, \text{withdraw}\}$
+- $I_A$: $\sum a_i$ conserved under `focus` (переміщення, не знищення).
+- $	au_A$: event-driven.
+
+### Domain B (Budget)
+- $X_B = \{(b, r) \mid b \in \mathbb{R}, r \in \mathbb{R}_{\geq 0}\}$ — баланс і ставка.
+- $\mathcal{O}_B = \{\text{spend}, \text{earn}, \text{borrow}\}$
+- $C_B$: soft constraint — `borrow` дозволено, але з $\text{cost} = r \cdot \text{amount}$.
+- $	au_B$: continuous.
+
+### Translation Attempts
+
+**$\phi_{C \rightarrow A}$: Compute → Attention**
+- Partial: $c \geq \text{threshold} \Rightarrow$ можливість `focus`.
+- Lost: exact magnitude of $c$ (attention не розрізняє "багато" і "дуже багато" compute).
+- Preserved: ordering (більше compute → більше attention capacity).
+- Translation report: partial, confidence 0.6.
+
+**$\phi_{A \rightarrow B}$: Attention → Budget**
+- Lost: structural property (attention розподіляється, budget — накопичується).
+- Preserved: scarcity (обмежена сумарна кількість).
+- Translation report: partial, heavy loss, confidence 0.3.
+
+**$\phi_{C \rightarrow B}$: Compute → Budget**
+- Mapping: $c \cdot \text{price}_t \rightarrow b$.
+- Context-dependent: price залежить від $t$ і market state.
+- Preserved: ordering, additivity.
+- Lost: temporal granularity (compute вимірюється в ticks, budget — continuously).
+- Translation report: partial, temporal ontology mismatch.
+
+**Висновок:** жодна translation не є invertible або lossless. Кожна зберігає інший набір властивостей. Це демонстрація §13–§14.
+
+---
+
+# APPENDIX B — Anti-Example
+
+*(Дублікат §32 для наголосу)*
+
+**Система:** квантово-заплутані частинки.
+
+**Чому FLOW-0.1 тут не працює:**
+
+1. **State:** $\psi_{AB}$ не розкладається на $\psi_A \otimes \psi_B$. Поняття "локального стану $x_A$" — approximation, а не first-class entity.
+2. **Boundary:** $B$ між $A$ і $B$ не фільтрує інформацію класичним чином. Кореляції "протікають" крізь boundary без "transfer" у сенсі §3.
+3. **Flow:** Operation на $A$ (наприклад, вимірювання) миттєво змінює $\psi_{AB}$, але це не "transition $x_A \rightarrow x'_A$" — це колапс глобального стану.
+4. **Invariant:** "Збереження заплутаності" — не invariant у сенсі §5, бо заплутаність не є локальною величиною.
+5. **Reach:** $Reach(x_A)$ не визначається незалежно від $x_B$.
+
+**Мораль:** FLOW-0.1 — інструмент для певного класу систем. Його обмеження такі ж важливі, як і його твердження.
