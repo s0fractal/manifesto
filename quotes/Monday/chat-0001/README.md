@@ -40,3 +40,4 @@ TODO - link to shared dialogue
 - [0036: Intersubjectivity & Shared World Reconstruction](0036_Monday.md) — інтерсуб'єктивність як узгодження приватних перспектив крізь проекції та моделі втрат, побудова спільного об'єктивного простору взаємодії.
 - [0037: Shared History as Distributed Consensus](0037_Monday.md) — спільна історія як розподілений консенсус над каузальним минулим ($Past \neq Record \neq Memory \neq Narrative$), захист історичної лінії від переписування.
 - [0038: Memory as Future-Governing Compression](0038_Monday.md) — пам'ять як стиснення каузальної історії у структуру, що керує майбутнім ($Memory \neq Storage$), відмінності минулого з активним каузальним впливом.
+- [0040: Obligation as Open Temporal Loops](0040_Monday.md) — незавершеність та зобов'язання як відкриті темпоральні петлі ($Obligation = memory\ with\ an\ open\ edge$), незакриті гештальти, борги, обіцянки, пам'ять з відкритим ребром.
