@@ -31,6 +31,13 @@ WARRANT = Path("/Users/s0fractal/Projects/warrant")
 sys.path.insert(0, str(WARRANT / "impl"))
 import policy_lang as pl  # noqa: E402
 import warrant as w       # noqa: E402
+import sigma_glyph as wsg  # noqa: E402  (warrant's bundled Book I oracle)
+
+# glyphlib is used ONLY for its pure lambda layer (compile_l, church, PLUS, A);
+# its own `import sigma_glyph` resolves to warrant's bundle already in
+# sys.modules, which is exactly what we want for byte-identical terms.
+sys.path.insert(0, str(MANIFESTO / "tools"))
+import glyphlib as gl  # noqa: E402
 
 PACK = MANIFESTO / "drafts" / "ssd-pack"
 STORE = PACK / ".warrants"
@@ -56,6 +63,54 @@ fact unsettled: int = 0
 
 check refuted == 0 && unsettled == 0 && claims >= 1
 """
+
+
+def build_aie_check(store):
+    """AIE-0.1 as a raw ski@v1 check: term = (PLUS 74 1) F X, expect = the
+    NodeHash of its normal form F^75(X) — a NON-boolean expect, legal per
+    validate_ski_blob and per run_ski_check's plain hash comparison. This is
+    the 'addressing is equality' idiom carried verbatim into a warrant record:
+    re-execution reproduces the canonical 75-mark or the check fails.
+    Returns (check_hex, term_hex, expect_hex, atp)."""
+    tree = gl.compile_l(gl.A(gl.PLUS, gl.church(74), gl.church(1),
+                             ("lit", b"F"), ("lit", b"X")))
+
+    def to_w(t):
+        if t[0] == "a":
+            return ("app", to_w(t[1]), to_w(t[2]))
+        if t[0] in ("S", "K", "I"):
+            return ("lit", wsg.sha(t[0].encode()))
+        if t[0] == "lit":
+            return ("lit", wsg.sha(t[1]))
+        raise ValueError(t)
+
+    term = to_w(tree)
+
+    def materialize(t, put):
+        if t[0] == "app":
+            materialize(t[1], put)
+            materialize(t[2], put)
+        return put(wsg.term_bytes(t))
+
+    term_hex = materialize(term, store.put_blob)
+
+    priv = wsg.Store()
+    for b in (wsg.I_BYTES, wsg.K_BYTES, wsg.S_BYTES):
+        priv.put(b)
+
+    def load(t):
+        if t[0] == "app":
+            load(t[1]); load(t[2])
+        priv.put(wsg.term_bytes(t))
+    load(term)
+    result, atp = wsg.eval_hash(bytes.fromhex(term_hex), 100_000, priv)
+    expect_hex = wsg.term_hash(result).hex()
+    doc = {"ski": 1, "term": term_hex, "atp": atp, "expect": expect_hex}
+    raw = json.dumps(doc, sort_keys=True, separators=(",", ":"),
+                     ensure_ascii=False).encode("utf-8")
+    assert w.validate_ski_blob(json.loads(raw)) is None
+    check_hex = store.put_blob(raw)
+    return check_hex, term_hex, expect_hex, atp
 
 
 class Args:
@@ -96,6 +151,7 @@ def main():
     assert check.result is True, "acceptance predicate must hold for DEMO-0.2"
     source_hex = store.put_blob(WPL_TEXT.encode())
     d = check.doc
+    aie_check, aie_term, aie_expect, aie_atp = build_aie_check(store)
 
     w1 = w.file_warrant(store, "propose", subject1, Args(
         under=[policy_hex],
@@ -151,7 +207,13 @@ def main():
         "ski_checks": [{"check": check.blob, "term": d["term"],
                         "expect": d["expect"], "atp": d["atp"],
                         "means": "refuted==0 && unsettled==0 && claims>=1 over "
-                                 "the SSD-DEMO-0.2 receipt tally -> Church TRUE"}],
+                                 "the SSD-DEMO-0.2 receipt tally -> Church TRUE"},
+                       {"check": aie_check, "term": aie_term,
+                        "expect": aie_expect, "atp": aie_atp,
+                        "means": "AIE-0.1 raw NF check (non-boolean expect): "
+                                 "(PLUS 74 1) F X normalizes to the 75-mark "
+                                 "F^75(X) — the demo claim 74+1=75, settled by "
+                                 "addressing"}],
         "expected_verification": {"errors": 0},
         "how_to_verify": "cd drafts/ssd-pack && warrant --store .warrants verify "
                          "&& warrant --store .warrants check <ski_checks[0].check>; "
@@ -159,7 +221,9 @@ def main():
     }
     (PACK / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"records": [w1, w2, w3, w4], "ski_check": check.blob,
-                      "atp": d["atp"], "expect": d["expect"][:12]}, indent=2))
+                      "atp": d["atp"], "expect": d["expect"][:12],
+                      "aie_check": aie_check, "aie_atp": aie_atp,
+                      "aie_expect": aie_expect[:12]}, indent=2))
 
 
 if __name__ == "__main__":

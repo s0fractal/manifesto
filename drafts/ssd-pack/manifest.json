@@ -19,6 +19,13 @@
       "expect": "bc0c2fe26e44e2aed8ce500a74963bc270fd4a49ec0c2e4837ce7a64bb0a486c",
       "means": "refuted==0 && unsettled==0 && claims>=1 over the SSD-DEMO-0.2 receipt tally -> Church TRUE",
       "term": "117646a4f30c55e8a1fef34d93dc58cd24b800108cc3ac176c8f74050573fe7e"
+    },
+    {
+      "atp": 2108,
+      "check": "0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87",
+      "expect": "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00",
+      "means": "AIE-0.1 raw NF check (non-boolean expect): (PLUS 74 1) F X normalizes to the 75-mark F^75(X) \u2014 the demo claim 74+1=75, settled by addressing",
+      "term": "a6a2df31593f250b21250dd89000134b070f9ab4ea2c00225f71343df8d4910e"
     }
   ],
   "story": "propose (4 hallucinations) -> reject with receipt -> corrected propose -> accept proven by a re-executable acceptance predicate",
