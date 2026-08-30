@@ -1,5 +1,5 @@
 ---
-title: "Every Check Spawns More: A Reflexive Verification Bound, Its Measured Coefficient, and a Gate That Crosses the Gap"
+title: "Every Check Spawns More: A Reflexive Verification Model (Conjectural), Its Measured Coefficient, and a Gate That Crosses the Gap"
 author: "Serhii Glova (independent) — sergey.glova@gmail.com"
 date: 2026-08-30
 keywords:
@@ -125,6 +125,26 @@ $\mu$. Write $g = \lambda_G / \lambda_V$ and let $\gamma$ be the asymptotic
 fraction of generated claims never closed.
 
 ## 2.2 Statement
+
+> **Status (revised after external review, Codex 2026-08).** What follows is a
+> **conjectural model, not a theorem.** An external reviewer produced explicit
+> counterexamples to (C) and (D) as originally stated: both depend on an
+> unstated *scheduler and abandonment policy*. A scheduler that preferentially
+> completes short (small-$N$) closures beats the mean-size accounting the
+> renewal–reward argument assumes. Concretely (reviewer's example): with
+> $P(N{=}0)=\tfrac34,\,P(N{=}2)=\tfrac14$ ($\mu=0.5$), $g=0.8$, checking each
+> root once immediately closes 75% while (C)'s bound $\gamma\ge 1-(1-\mu)/g =
+> 0.375$ demands ≥37.5% unclosed — violated. And with
+> $P(N{=}0)=0.4,\,P(N{=}2)=0.6$ ($\mu=1.2\ge 1$), 40% of roots close on the
+> first act, so (D)'s "throughput → 0" fails. The anchor leg (A) also needs
+> **well-foundedness**, not mere acyclicity (an acyclic chain
+> $c_0\leftarrow c_1\leftarrow\cdots$ can descend forever without reaching
+> $\mathcal{A}$). The statements below are kept as written, with the repair
+> conditions named inline, because the *measurement* (§3) is what this paper
+> actually establishes; the closed forms are the conjecture the measurement
+> motivates, not a proven bound. A dedicated probability reviewer is the
+> registered next step.
+
 
 **(A) Anchor.** If acceptance requires a warrant (a verification act or
 membership in an axiom set $\mathcal{A}$), and the warrant relation is
@@ -370,10 +390,22 @@ retrofitting.)
 
 The compiled claim was then measured under the §3.1 protocol: the verifier
 re-ran the script, compared receipt bytes, and stopped with zero offspring.
-The same semantic content thus carries $\mu \approx 3$ in prose and
-$\mu = 0$ compiled — the informal/formal gap of §3.3, crossed by hand for
-one claim in one working session, with the price of crossing itemized
-(definitional stipulations; a quantization loss report).
+
+**What this does and does not show (corrected after review, Codex F6).** The
+prose claim measured $\mu \approx 3$; the compiled artifact measures
+$\mu = 0$. It is **not** "the same semantic content" — an earlier draft said
+so, and that was wrong. The compiled version is a *weaker, stipulated
+specification* (the prose asserted a universal law, later refuted in §3.2;
+the compiled invariant holds because its scope was narrowed until it did).
+And $\mu = 0$ proves only that *this particular checker terminates*: a
+trivial `return true` also has $\mu = 0$. Termination is not adequacy.
+**Semantic binding** — that the checker's computation actually captures the
+prose claim's content, that its facts derive from cited evidence, that its
+result entails what the document asserts — is the real open bridge, and this
+compilation does not close it; it relocates the claim to a form where the
+*termination* half is free. That is genuinely useful (a settleable artifact
+where there was none) and genuinely partial. §5's gate inherits exactly this
+limit, which §5.2's own failures then make measurable.
 
 # 5. The settlement gate
 
@@ -388,6 +420,25 @@ on the real Σ-GLYPH machine, the rest on integer/repo layers — and rewrites
 the text with badges: settled-true (with layer and ATP), REFUTED (with the
 measured actual value), or unsettled (the claim stays typed as
 speculation). A canonical receipt accompanies the output.
+
+**The gate's honest boundary, made concrete by review (Codex F3).** A
+document can carry a fully-settled receipt and still assert falsehoods,
+because the gate settles only *marked* claims and binds only what the markup
+names. The `SSD-DEMO-0.2` fixture of §5.2 shows `11/11 ⚓` yet its prose
+claims "3 root files and 6 directories" via `⟦arith: 3 + 6 = 9⟧` — the
+arithmetic is true and the operands are never bound to the sets they
+purportedly count (actual: 8 and 8); its unmarked claims about directory
+sizes are simply wrong. So the falsifiers this paper filed as *future*
+(F2 Goodhart, F2c selective markup) have in fact *already fired* in our own
+canonical success case. Two consequences we now hold as load-bearing: a
+receipt binds to *marked, supported* claims only (never to a document's full
+truth), and a receipt is only as current as the world it was computed
+against — the `SSD-DEMO-0.2` receipt froze a `count(/FLOW/)` value the
+repository has since drifted past, so a live re-run of that same fixture now
+reports `10 settled / 1 refuted`. Both facts argue for **dependency-bound
+receipts** (committing to the digest of every file read, the repo SHA, the
+checker version and oracle fingerprint), not merely to source text — a
+change registered in the closure-season plan, not yet built.
 
 ## 5.2 Live episode
 

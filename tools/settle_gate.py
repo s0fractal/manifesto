@@ -33,6 +33,46 @@ import glyphlib as gl  # noqa: E402
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLAIM = re.compile(r"⟦([a-z0-9_]+):\s*([^⟧]+)⟧")
 
+# --- P0 fixes (Codex review 2026-08, findings F2) -------------------------
+MAX_READ_BYTES = 8 * 1024 * 1024   # bound file work (ReDoS / exhaustion surface)
+REGEX_TIMEOUT_S = 2                # bound regex work
+
+def resolve_in_repo(path):
+    """Resolve `path` under REPO and REFUSE escapes and out-of-tree symlinks.
+    Returns an absolute path or raises ValueError. Closes the sandbox escape
+    Codex reproduced (sha256 reading ../../../../etc/hosts)."""
+    repo_real = os.path.realpath(REPO)
+    target = os.path.realpath(os.path.join(REPO, path))
+    if target != repo_real and not target.startswith(repo_real + os.sep):
+        raise ValueError(f"path escapes repository: {path}")
+    return target
+
+def read_bounded(fp):
+    """Read at most MAX_READ_BYTES; raise if the file is larger."""
+    size = os.path.getsize(fp)
+    if size > MAX_READ_BYTES:
+        raise ValueError(f"file too large ({size} > {MAX_READ_BYTES} bytes)")
+    with open(fp, encoding="utf-8", errors="replace") as f:
+        return f.read()
+
+def findall_bounded(pattern, text, flags=0):
+    """re.findall with a wall-clock bound, via a worker thread (no signal
+    dependence, works off the main thread too). Raises TimeoutError."""
+    import threading
+    result, error = [], []
+    def run():
+        try:
+            result.append(re.findall(pattern, text, flags))
+        except Exception as e:  # invalid pattern etc. surface as settle errors
+            error.append(e)
+    t = threading.Thread(target=run, daemon=True)
+    t.start(); t.join(REGEX_TIMEOUT_S)
+    if t.is_alive():
+        raise TimeoutError(f"regex exceeded {REGEX_TIMEOUT_S}s (possible ReDoS)")
+    if error:
+        raise error[0]
+    return result[0]
+
 ARITH = re.compile(r"^(-?\d+)\s*([+*-])\s*(-?\d+)\s*=\s*(-?\d+)$")
 CMP = re.compile(r"^(-?\d+)\s*(<=|>=|<|>|=)\s*(-?\d+)$")
 COUNT = re.compile(r"^/(.+)/\s+in\s+(\S+)\s*=\s*(\d+)$")
@@ -113,11 +153,16 @@ def settle(cls, payload):
         if not m:
             return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed count"}
         pat, path, n = m[1], m[2], int(m[3])
-        fp = os.path.join(REPO, path)
+        try:
+            fp = resolve_in_repo(path)
+        except ValueError as e:
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
-        with open(fp, encoding="utf-8", errors="replace") as f:
-            actual = len(re.findall(pat, f.read(), re.MULTILINE))
+        try:
+            actual = len(findall_bounded(pat, read_bounded(fp), re.MULTILINE))
+        except (ValueError, TimeoutError) as e:
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         return {"verdict": "PASS" if actual == n else "REFUTED", "layer": "repo",
                 "detail": f"actual count = {actual}"}
     if cls == "sha256":
@@ -125,11 +170,16 @@ def settle(cls, payload):
         if not m:
             return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed sha256"}
         path, prefix = m[1], m[2]
-        fp = os.path.join(REPO, path)
+        try:
+            fp = resolve_in_repo(path)
+        except ValueError as e:
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
-        with open(fp, "rb") as f:
-            actual = hashlib.sha256(f.read()).hexdigest()
+        try:
+            actual = hashlib.sha256(read_bounded(fp).encode("utf-8", "replace")).hexdigest()
+        except ValueError as e:
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         return {"verdict": "PASS" if actual.startswith(prefix) else "REFUTED",
                 "layer": "repo", "detail": f"actual {actual[:16]}..."}
     if cls in ("cite", "citei"):
@@ -137,11 +187,16 @@ def settle(cls, payload):
         if not m:
             return {"verdict": "UNSETTLED", "layer": None, "detail": f"malformed {cls}"}
         quote, path = m[1], m[2]
-        fp = os.path.join(REPO, path)
+        try:
+            fp = resolve_in_repo(path)
+        except ValueError as e:
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
-        with open(fp, encoding="utf-8", errors="replace") as f:
-            content = f.read()
+        try:
+            content = read_bounded(fp)
+        except ValueError as e:
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         if cls == "citei":
             found = quote.lower() in content.lower()
             kind = "case-insensitive"
@@ -197,10 +252,12 @@ def gate(text):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("usage: settle_gate.py <file.md>", file=sys.stderr)
+    args = [a for a in sys.argv[1:] if a != "--strict"]
+    strict = "--strict" in sys.argv   # P1 fix (Codex): fail-closed on ANY non-PASS
+    if len(args) != 1:
+        print("usage: settle_gate.py [--strict] <file.md>", file=sys.stderr)
         return 2
-    src = sys.argv[1]
+    src = args[0]
     with open(src, encoding="utf-8") as f:
         text = f.read()
     settled_text, results = gate(text)
@@ -222,6 +279,10 @@ def main():
     print(json.dumps(tally, sort_keys=True))
     print("settled ->", out_md)
     print("receipt ->", out_js)
+    if strict:
+        # a publication/CI gate must fail on refuted OR unsettled (unsupported,
+        # malformed, budget-exhausted, path-refused): only all-PASS exits 0.
+        return 0 if tally["refuted"] == 0 and tally["unsettled"] == 0 else 1
     return 1 if tally["refuted"] else 0
 
 

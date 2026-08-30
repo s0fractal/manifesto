@@ -94,15 +94,38 @@ def tool_settle_text(args):
     return {"settled_text": settled, "receipt": build_receipt(text, results)}
 
 
+def _split_receipt(s):
+    """Return (body, trailer_hash) for a receipt string, or (None, None) if it
+    is not in the exact `<body>\\nRECEIPT_SHA256: <hex>\\n` canonical shape."""
+    m = re.search(r"\nRECEIPT_SHA256: ([0-9a-f]{64})\n?\Z", s)
+    if not m:
+        return None, None
+    return s[:m.start()], m.group(1)
+
+
 def tool_verify_receipt(args):
-    fresh = tool_settle_text({"markdown": args["markdown"]})["receipt"]
+    """Verification is replay AND self-consistency (P0 fix, Codex F1).
+    A forged body carrying a copied trailer must NOT verify: we recompute the
+    digest of the SUPPLIED body and reject any trailer/body mismatch BEFORE
+    comparing against a fresh replay."""
     given = args["receipt"]
-    h = lambda s: (re.search(r"RECEIPT_SHA256:\s*([0-9a-f]{64})", s) or [None, None])[1]
-    fresh_h, given_h = h(fresh), h(given)
-    return {"match": fresh == given or (fresh_h is not None and fresh_h == given_h),
-            "fresh_receipt_sha256": fresh_h, "given_receipt_sha256": given_h,
-            "note": "verification is replay: the fresh settlement was recomputed "
-                    "from the markdown bytes just now"}
+    given_body, given_trailer = _split_receipt(given)
+    if given_body is None:
+        return {"match": False, "reason": "supplied receipt is not in canonical "
+                "`<body>\\nRECEIPT_SHA256: <hex>` form"}
+    recomputed = hashlib.sha256(given_body.encode()).hexdigest()
+    if recomputed != given_trailer:
+        return {"match": False, "reason": "supplied body does not hash to its own "
+                "trailer (forged or corrupted receipt)",
+                "supplied_trailer": given_trailer, "recomputed": recomputed}
+    fresh = tool_settle_text({"markdown": args["markdown"]})["receipt"]
+    _, fresh_trailer = _split_receipt(fresh)
+    return {"match": fresh == given,
+            "fresh_receipt_sha256": fresh_trailer,
+            "given_receipt_sha256": given_trailer,
+            "note": "verification = self-consistency (body hashes to trailer) "
+                    "AND replay (fresh settlement recomputed from the markdown "
+                    "reproduces the receipt byte-for-byte)"}
 
 
 def tool_check_taint(args):

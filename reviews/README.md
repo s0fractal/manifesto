@@ -4,10 +4,20 @@ Adversarial review is this repository's intended next phase: the owner plans
 to attack the RVB/SSD/AIE line of work with models from other vendors. This
 directory is where those reviews land, in the discipline of
 `warrant/reviews/`: one file per review, named
-`YYYY-MM-<vendor-or-model>-<slug>.md`, filed verbatim (including the parts
-that are wrong), with responses in separate files, never edits to the
-original. A review that kills a claim is a *contribution*; the falsifier
-registers below say exactly what each kill would demote.
+`YYYY-MM-<vendor-or-model>-<slug>.md`, filed **as received**, with responses
+in separate files, never edits to the original. A review that kills a claim
+is a *contribution*; the falsifier registers below say exactly what each kill
+would demote.
+
+**Fidelity note (Codex 2026-08 caught this):** "verbatim" was too strong a
+promise — the Qwen review file abridges the original with a `[...]` marker
+(the source was long and partly redundant), so it is filed *faithfully but
+not byte-complete*. Standard corrected: reviews are filed **as received,
+with any abridgement marked in place**; only reviews delivered as a single
+self-contained text are byte-verbatim. Where the full original exists it
+should be linkable. (Also: review files carry the date the review was
+authored; the git commit that files them may be a day off — check `git log`,
+not the filename, for filing time.)
 
 ## Attack surface (ranked by expected yield)
 
