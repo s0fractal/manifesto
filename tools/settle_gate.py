@@ -110,7 +110,7 @@ def settle(cls, payload):
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
         with open(fp, encoding="utf-8", errors="replace") as f:
-            actual = len(re.findall(pat, f.read()))
+            actual = len(re.findall(pat, f.read(), re.MULTILINE))
         return {"verdict": "PASS" if actual == n else "REFUTED", "layer": "repo",
                 "detail": f"actual count = {actual}"}
     if cls == "sha256":
@@ -125,18 +125,24 @@ def settle(cls, payload):
             actual = hashlib.sha256(f.read()).hexdigest()
         return {"verdict": "PASS" if actual.startswith(prefix) else "REFUTED",
                 "layer": "repo", "detail": f"actual {actual[:16]}..."}
-    if cls == "cite":
+    if cls in ("cite", "citei"):
         m = CITE.match(payload)
         if not m:
-            return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed cite"}
+            return {"verdict": "UNSETTLED", "layer": None, "detail": f"malformed {cls}"}
         quote, path = m[1], m[2]
         fp = os.path.join(REPO, path)
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
         with open(fp, encoding="utf-8", errors="replace") as f:
-            found = quote in f.read()
+            content = f.read()
+        if cls == "citei":
+            found = quote.lower() in content.lower()
+            kind = "case-insensitive"
+        else:
+            found = quote in content
+            kind = "verbatim"
         return {"verdict": "PASS" if found else "REFUTED", "layer": "repo",
-                "detail": "verbatim quote found" if found else "quote NOT in file"}
+                "detail": f"{kind} quote found" if found else f"{kind} quote NOT in file"}
     if cls == "mono":
         # ⟦mono: c1,c2,c3 ev i,j⟧ — confidence chain in ppm (0..1000000);
         # invariant 0030: conf[k+1] <= conf[k] unless entry k+1 carries evidence.

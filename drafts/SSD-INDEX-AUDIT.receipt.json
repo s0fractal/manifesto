@@ -1,0 +1,255 @@
+{
+  "claims": [
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"Invariant Recipe Method\" in quotes/Monday/chat-0001/0001_Moday.md",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Epistemic Rebase\" in quotes/Monday/chat-0001/0002_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Reasoning Fabric\" in quotes/Monday/chat-0001/0003_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Imagination & Dreaming\" in quotes/Monday/chat-0001/0004_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Self-Rewrite\" in quotes/Monday/chat-0001/0005_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"AGI Reactor\" in quotes/Monday/chat-0001/0005_a_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Dynamics Attractors\" in quotes/Monday/chat-0001/0006_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Attention, Perspective & Meaning\" in quotes/Monday/chat-0001/0009_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Geometry of the Irreversible\" in quotes/Monday/chat-0001/0010_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Self-Integration\" in quotes/Monday/chat-0001/0012_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Geometry of Future Cones\" in quotes/Monday/chat-0001/0014_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Epistemic Typing\" in quotes/Monday/chat-0001/0016_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Generative Efficiency\" in quotes/Monday/chat-0001/0018_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Epistemic Eutrophication\" in quotes/Monday/chat-0001/0020_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Thought Evolution Engine\" in quotes/Monday/chat-0001/0022_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Bidirectional Compiler\" in quotes/Monday/chat-0001/0024_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"Flourishing\" in quotes/Monday/chat-0001/0026_Monday.md",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Proof-Carrying Authority\" in quotes/Monday/chat-0001/0028_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Geometry of Uncertainty\" in quotes/Monday/chat-0001/0030_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Steerability Without Capture\" in quotes/Monday/chat-0001/0032_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Privileged Causal Access\" in quotes/Monday/chat-0001/0035_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Future-Governing Compression\" in quotes/Monday/chat-0001/0038_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Open Temporal Loops\" in quotes/Monday/chat-0001/0040_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Viability Theory\" in quotes/Monday/chat-0001/0044_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Obligation Semantics of Economic Exchange\" in quotes/Monday/chat-0001/0048_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Genesis of Agency\" in quotes/Monday/chat-0001/0052_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Disagreement, Conflict, Dispute & War\" in quotes/Monday/chat-0001/0056_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Design, Engineering, Optimization & Goodhart\" in quotes/Monday/chat-0001/0060_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Norms, Blame, Shame, Punishment & Forgiveness\" in quotes/Monday/chat-0001/0065_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "cite",
+      "detail": "quote NOT in file",
+      "layer": "repo",
+      "payload": "\"Commons, Public Goods & Collective Action\" in quotes/Monday/chat-0001/0070_Monday.md",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 67",
+      "layer": "repo",
+      "payload": "/^- \\[/ in quotes/Monday/chat-0001/README.md = 67",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 3373,
+      "class": "arith",
+      "detail": "70-4=66",
+      "evidence": "bfc57c3bdaec vs bfc57c3bdaec",
+      "layer": "sigma-glyph",
+      "payload": "70 - 4 = 66",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 3477,
+      "class": "arith",
+      "detail": "66+1=67",
+      "evidence": "b8f64b5aead0 vs b8f64b5aead0",
+      "layer": "sigma-glyph",
+      "payload": "66 + 1 = 67",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "30 <= 67",
+      "layer": "integer",
+      "payload": "30 <= 67",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "dad53fcec7ad89d805f921a29e1a178d148e77dd5988f5bec92387c075b459c9",
+  "tally": {
+    "atp_total": 6850,
+    "claims": 34,
+    "refuted": 28,
+    "settled_true": 6,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: b330aa7cf52171fc61467d811b97c3348b216e942a4ab68e7c3cc715fae314af
