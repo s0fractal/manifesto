@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "class": "count",
+      "detail": "actual count = 7",
+      "layer": "repo",
+      "payload": "/Теза/ in README.md = 7",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 4",
+      "layer": "repo",
+      "payload": "/boxed/ in drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md = 14",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 9",
+      "layer": "repo",
+      "payload": "/ATP/ in drafts/SSD-PLAN.md = 9",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 15",
+      "layer": "repo",
+      "payload": "/Reach/ in FLOW.md = 5",
+      "verdict": "REFUTED"
+    }
+  ],
+  "source_sha256": "feb134c5a4dfaa63248bb6eef7864e3795f7c0458db414eb35b337c59b5aaf1d",
+  "tally": {
+    "atp_total": 0,
+    "claims": 4,
+    "refuted": 2,
+    "settled_true": 2,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: 6637637a86ce63bfdca74f95a0aec931996e208fdb505e32cc9f7cfb9da513d6

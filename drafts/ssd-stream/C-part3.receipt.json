@@ -1,0 +1,49 @@
+{
+  "claims": [
+    {
+      "atp": 1733,
+      "class": "arith",
+      "detail": "35-14=21",
+      "layer": "sigma-glyph",
+      "payload": "35 - 14 = 21",
+      "ski_checks": [
+        {
+          "atp": 908,
+          "expect": "6bd22e06a29e7219dad49de670dfd9cf87f8f137565db10be9dc1ae98dbe6943",
+          "means": "NF of 35-14 at a generic point",
+          "term": "b6793013d3a20eb903d06c3807e944c5c5e04ca0d118e1ebf6699a0909c4246a"
+        },
+        {
+          "atp": 825,
+          "expect": "6bd22e06a29e7219dad49de670dfd9cf87f8f137565db10be9dc1ae98dbe6943",
+          "means": "NF of 21 at a generic point",
+          "term": "72609f374722192912304a5bb4acc983849de4ef51836fe9dca9b6adaedec2fa"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "14 <= 21",
+      "layer": "integer",
+      "payload": "14 <= 21",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"Теза 1\" in README.md",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "1856b4d6820e7f5f654e8358cbdd615d0113eecefe3a23440fc2eb4954e39b6e",
+  "tally": {
+    "atp_total": 1733,
+    "claims": 3,
+    "refuted": 0,
+    "settled_true": 3,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: 6114a15dec60749da9c117645b47a9780d03dc96b89e381c3aac534b358eaee2

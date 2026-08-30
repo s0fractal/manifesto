@@ -1,0 +1,129 @@
+{
+  "claims": [
+    {
+      "atp": 553,
+      "class": "arith",
+      "detail": "7+4=11",
+      "layer": "sigma-glyph",
+      "payload": "7 + 4 = 11",
+      "ski_checks": [
+        {
+          "atp": 304,
+          "expect": "6669b3fa6beb05746814b113bdb6a5e3fc66d670a85668cf1ecb1ad06c9dede5",
+          "means": "NF of 7+4 at a generic point",
+          "term": "98827b74f1272785df6a42bb28430388308f37496443a2607fcbc765a628d90f"
+        },
+        {
+          "atp": 249,
+          "expect": "6669b3fa6beb05746814b113bdb6a5e3fc66d670a85668cf1ecb1ad06c9dede5",
+          "means": "NF of 11 at a generic point",
+          "term": "e20c401d46487fc43fcf5ec9de6c7d59d0529266acc08993c27f9eab771f0306"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "atp": 1185,
+      "class": "arith",
+      "detail": "9+15=24",
+      "layer": "sigma-glyph",
+      "payload": "9 + 15 = 24",
+      "ski_checks": [
+        {
+          "atp": 624,
+          "expect": "9eeef7aa63f39f77989f2fcf837cf23635090290f9a013b18ea022dd21eafa2d",
+          "means": "NF of 9+15 at a generic point",
+          "term": "9fd56027e881c643f2f66d971778cf0803b192f7ab6ad81de0538f1960fc4c4c"
+        },
+        {
+          "atp": 561,
+          "expect": "9eeef7aa63f39f77989f2fcf837cf23635090290f9a013b18ea022dd21eafa2d",
+          "means": "NF of 24 at a generic point",
+          "term": "52afe9701aa9b6b24d6ec83d5c54fa7d9d62599f7749fe27a848166a334808f6"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "atp": 1721,
+      "class": "arith",
+      "detail": "11+24=35",
+      "layer": "sigma-glyph",
+      "payload": "11 + 24 = 35",
+      "ski_checks": [
+        {
+          "atp": 896,
+          "expect": "6bd22e06a29e7219dad49de670dfd9cf87f8f137565db10be9dc1ae98dbe6943",
+          "means": "NF of 11+24 at a generic point",
+          "term": "6bd212d6c809946949ca32be0ab1d2d4dcb6c63da0eea6b0d6062dc9b1431356"
+        },
+        {
+          "atp": 825,
+          "expect": "6bd22e06a29e7219dad49de670dfd9cf87f8f137565db10be9dc1ae98dbe6943",
+          "means": "NF of 35 at a generic point",
+          "term": "72609f374722192912304a5bb4acc983849de4ef51836fe9dca9b6adaedec2fa"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "15 >= 4",
+      "layer": "integer",
+      "payload": "15 >= 4",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "15 > 9",
+      "layer": "integer",
+      "payload": "15 > 9",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 1737,
+      "class": "arith",
+      "detail": "35-15=20",
+      "layer": "sigma-glyph",
+      "payload": "35 - 15 = 20",
+      "ski_checks": [
+        {
+          "atp": 912,
+          "expect": "6bd22e06a29e7219dad49de670dfd9cf87f8f137565db10be9dc1ae98dbe6943",
+          "means": "NF of 35-15 at a generic point",
+          "term": "556de0b3940d8f1d8227f41dd07290b43605cded0ad64aa34d4c8623aa9d1bf2"
+        },
+        {
+          "atp": 825,
+          "expect": "6bd22e06a29e7219dad49de670dfd9cf87f8f137565db10be9dc1ae98dbe6943",
+          "means": "NF of 20 at a generic point",
+          "term": "72609f374722192912304a5bb4acc983849de4ef51836fe9dca9b6adaedec2fa"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "20 > 15",
+      "layer": "integer",
+      "payload": "20 > 15",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"Теза 1\" in README.md",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "3b314fd0487f366c050c58288b8bf2ee556c77b1f7f23d4c3ea728188a4964d4",
+  "tally": {
+    "atp_total": 5196,
+    "claims": 8,
+    "refuted": 0,
+    "settled_true": 8,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: b686790a3bc64508149732919b040f1c9fded45a5d9df96942b2c911de41466c
