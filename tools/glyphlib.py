@@ -118,10 +118,10 @@ def eval_nf(lambda_expr, atp=50_000_000):
     except sg.ResourceFault:
         return None, 0, "RESOURCE_FAULT"
     if result[0] != "app" and result[1] == sg.sha(b"ATP Exhausted"):
-        return None, spent, "ATP_EXHAUSTED"
+        return None, spent, "ATP_EXHAUSTED", th.hex()
     if result[0] != "app" and result[1] == sg.sha(b"Unresolved Reference"):
-        return None, spent, "UNRESOLVED"
-    return sg.term_hash(result).hex(), spent, "NF"
+        return None, spent, "UNRESOLVED", th.hex()
+    return sg.term_hash(result).hex(), spent, "NF", th.hex()
 
 
 def settle_nat_eq(m_expr, n_expr, atp=50_000_000):
@@ -129,15 +129,20 @@ def settle_nat_eq(m_expr, n_expr, atp=50_000_000):
     canonical normal forms of (expr F X) with inert literals F, X — the
     content-addressed equality idiom: equal numbers reduce to the same
     F^k(X), hence the same hash. Linear cost, no SUB blowup.
-    Returns (verdict, atp_spent, detail)."""
+    Returns (verdict, atp_spent, meta) where meta carries, for each side,
+    the evaluated term hash, its normal-form hash and its ATP spend — the
+    exact shape of a Warrant evidence-pack `ski_checks` entry
+    ({check, term, expect, atp})."""
     F, X = ("lit", b"F"), ("lit", b"X")
-    hm, sm, em = eval_nf(A(m_expr, F, X), atp)
+    hm, sm, em, tm = eval_nf(A(m_expr, F, X), atp)
     if em != "NF":
-        return em, sm, "lhs"
-    hn, sn, en = eval_nf(A(n_expr, F, X), atp)
+        return em, sm, {"failed": "lhs"}
+    hn, sn, en, tn = eval_nf(A(n_expr, F, X), atp)
     if en != "NF":
-        return en, sm + sn, "rhs"
-    return ("PASS" if hm == hn else "VIOLATION"), sm + sn, f"{hm[:12]} vs {hn[:12]}"
+        return en, sm + sn, {"failed": "rhs"}
+    meta = {"lhs": {"term": tm, "expect": hm, "atp": sm},
+            "rhs": {"term": tn, "expect": hn, "atp": sn}}
+    return ("PASS" if hm == hn else "VIOLATION"), sm + sn, meta
 
 
 # Our verifier policy: admit more in-flight growth than DEFAULT_LIMITS, but

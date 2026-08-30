@@ -80,9 +80,11 @@ def settle(cls, payload):
         a, op, b, c = int(m[1]), m[2], int(m[3]), int(m[4])
         mach = _machine_arith(a, op, b, c)
         if mach and mach[0] in ("PASS", "VIOLATION"):
-            v, spent, ev = mach
+            v, spent, meta = mach
             return {"verdict": "PASS" if v == "PASS" else "REFUTED",
-                    "layer": "sigma-glyph", "atp": spent, "evidence": ev,
+                    "layer": "sigma-glyph", "atp": spent,
+                    "ski_checks": [dict(meta["lhs"], means=f"NF of {a}{op}{b} at a generic point"),
+                                   dict(meta["rhs"], means=f"NF of {c} at a generic point")],
                     "detail": f"{a}{op}{b}={c}"}
         actual = {"+": a + b, "*": a * b, "-": a - b}[op]
         return {"verdict": "PASS" if actual == c else "REFUTED",
@@ -95,9 +97,14 @@ def settle(cls, payload):
         mach = _machine_cmp(a, rel, b)
         if mach and mach[0] in ("PASS", "VIOLATION"):
             v, spent, ev = mach
-            return {"verdict": "PASS" if v == "PASS" else "REFUTED",
-                    "layer": "sigma-glyph", "atp": spent, "evidence": ev[:16],
-                    "detail": payload}
+            entry = {"verdict": "PASS" if v == "PASS" else "REFUTED",
+                     "layer": "sigma-glyph", "atp": spent, "detail": payload}
+            if isinstance(ev, dict) and "lhs" in ev:  # settle_nat_eq meta
+                entry["ski_checks"] = [dict(ev["lhs"], means=f"NF of {a}"),
+                                       dict(ev["rhs"], means=f"NF of {b}")]
+            else:  # settle_bool term hash
+                entry["evidence"] = str(ev)[:16]
+            return entry
         ok = {"<=": a <= b, ">=": a >= b, "=": a == b, "<": a < b, ">": a > b}[rel]
         return {"verdict": "PASS" if ok else "REFUTED", "layer": "integer",
                 "detail": payload}
