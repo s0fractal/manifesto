@@ -37,6 +37,8 @@ ARITH = re.compile(r"^(-?\d+)\s*([+*-])\s*(-?\d+)\s*=\s*(-?\d+)$")
 CMP = re.compile(r"^(-?\d+)\s*(<=|>=|<|>|=)\s*(-?\d+)$")
 COUNT = re.compile(r"^/(.+)/\s+in\s+(\S+)\s*=\s*(\d+)$")
 SHA = re.compile(r"^(\S+)\s*=\s*([0-9a-f]{12,64})$")
+CITE = re.compile(r"^\"(.+)\"\s+in\s+(\S+)$", re.S)
+MONO = re.compile(r"^([\d,\s]+?)(?:\s+ev\s+([\d,\s]+))?$")
 
 MACHINE_MAX = 400   # arith via hash-equality of normal forms: linear cost
 CMP_MAX = 12        # cmp needs Church SUB/LEQ: expensive, small values only
@@ -123,6 +125,39 @@ def settle(cls, payload):
             actual = hashlib.sha256(f.read()).hexdigest()
         return {"verdict": "PASS" if actual.startswith(prefix) else "REFUTED",
                 "layer": "repo", "detail": f"actual {actual[:16]}..."}
+    if cls == "cite":
+        m = CITE.match(payload)
+        if not m:
+            return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed cite"}
+        quote, path = m[1], m[2]
+        fp = os.path.join(REPO, path)
+        if not os.path.isfile(fp):
+            return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
+        with open(fp, encoding="utf-8", errors="replace") as f:
+            found = quote in f.read()
+        return {"verdict": "PASS" if found else "REFUTED", "layer": "repo",
+                "detail": "verbatim quote found" if found else "quote NOT in file"}
+    if cls == "mono":
+        # ⟦mono: c1,c2,c3 ev i,j⟧ — confidence chain in ppm (0..1000000);
+        # invariant 0030: conf[k+1] <= conf[k] unless entry k+1 carries evidence.
+        m = MONO.match(payload)
+        if not m:
+            return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed mono"}
+        try:
+            confs = [int(x) for x in m[1].replace(" ", "").split(",") if x]
+            evs = {int(x) for x in (m[2] or "").replace(" ", "").split(",") if x}
+        except ValueError:
+            return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed mono"}
+        if len(confs) < 2 or any(not 0 <= c <= 1_000_000 for c in confs):
+            return {"verdict": "UNSETTLED", "layer": None,
+                    "detail": "need >=2 confidences in 0..1000000 ppm"}
+        for i in range(len(confs) - 1):
+            if confs[i + 1] > confs[i] and (i + 1) not in evs:
+                return {"verdict": "REFUTED", "layer": "integer",
+                        "detail": f"confidence laundering at step {i + 1} "
+                                  f"({confs[i]} -> {confs[i + 1]}, no evidence)"}
+        return {"verdict": "PASS", "layer": "integer",
+                "detail": f"monotone ({len(confs)} entries, evidence at {sorted(evs) or '—'})"}
     return {"verdict": "UNSETTLED", "layer": None, "detail": f"unknown class {cls}"}
 
 
