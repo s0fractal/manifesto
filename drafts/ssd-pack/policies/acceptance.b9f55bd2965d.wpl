@@ -1,0 +1,8 @@
+# SSD acceptance predicate over the settle_gate receipt tally
+# (SSD-DEMO-0.2.receipt.json, pinned as evidence in the accept warrant).
+
+fact claims:    int = 11
+fact refuted:   int = 0
+fact unsettled: int = 0
+
+check refuted == 0 && unsettled == 0 && claims >= 1

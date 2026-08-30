@@ -1,0 +1,16 @@
+{
+  "actors": {
+    "corrector@ssd-demo": [
+      "ed3234b276d4ceda57d59bad14fbaf5a773c0f318c999de3a60d53c5a5b34c05"
+    ],
+    "gate@manifesto": [
+      "4e6008b01b74e49e38d8b11392bfaccc7b5bff86ca2048cbb0f783633a61e2dd"
+    ],
+    "generator@ssd-demo": [
+      "d404bc44565aedbb899150e5b0b3b32b9441bf0cb7884c33130da8dbc27dd2cf"
+    ]
+  },
+  "genesis_roots": [
+    "66cb1f95b5fc1d5e1a7587bbe3757b83c03dc597160feb8f8398397e7e1e8f0b"
+  ]
+}

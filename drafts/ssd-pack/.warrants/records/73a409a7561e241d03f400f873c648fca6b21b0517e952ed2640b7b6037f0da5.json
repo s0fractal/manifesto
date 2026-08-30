@@ -1,0 +1,34 @@
+{
+  "body": {
+    "actor": {
+      "id": "corrector@ssd-demo"
+    },
+    "because": [
+      {
+        "kind": "prose",
+        "text": "corrected draft; the only truth source used was the actual values inside the gate's refutation badges"
+      }
+    ],
+    "decision": "propose",
+    "evidence": [],
+    "prior": [
+      "fea71058664508b2f12b1780f4c1589f682bc7177a05300d3a24d6161ba6b87c"
+    ],
+    "subject": {
+      "hash": "86b785ae4638b587f00471a23434389abcfb5267a6a063d7eb49fe7dfc0a241c",
+      "note": "SSD-DEMO-0.2 publication"
+    },
+    "ts": 1756500120,
+    "under": [
+      "9df989f5715f89c22c65f146efcd6ceee648abcdb1cd698b86166fee715651be"
+    ],
+    "warrant": "0.2"
+  },
+  "sigs": [
+    {
+      "actor": "corrector@ssd-demo",
+      "key": "ed3234b276d4ceda57d59bad14fbaf5a773c0f318c999de3a60d53c5a5b34c05",
+      "sig": "fbec5036a36ca9d309b31ddd34a47f0cd8bd58e8c07b1f27fd7092c165feba07dc2ed6c7a37a62807f6ea9b958b04376ed6e94e48b549a10eed3e9e1cb8ca40c"
+    }
+  ]
+}

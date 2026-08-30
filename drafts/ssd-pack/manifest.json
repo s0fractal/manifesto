@@ -1,0 +1,26 @@
+{
+  "decision": "5c68be7a7c3356ced26566773924d8aa1bd59e53b3420e1e9e2183b01516c1c0",
+  "evidence_pack": "0",
+  "expected_verification": {
+    "errors": 0
+  },
+  "how_to_verify": "cd drafts/ssd-pack && warrant --store .warrants verify && warrant --store .warrants check <ski_checks[0].check>; stronger: verify --settlement --trust-config trust.json",
+  "produced_by": "manifesto/tools/build_ssd_pack.py",
+  "records": [
+    "66cb1f95b5fc1d5e1a7587bbe3757b83c03dc597160feb8f8398397e7e1e8f0b",
+    "fea71058664508b2f12b1780f4c1589f682bc7177a05300d3a24d6161ba6b87c",
+    "73a409a7561e241d03f400f873c648fca6b21b0517e952ed2640b7b6037f0da5",
+    "5c68be7a7c3356ced26566773924d8aa1bd59e53b3420e1e9e2183b01516c1c0"
+  ],
+  "ski_checks": [
+    {
+      "atp": 501,
+      "check": "41083847b0560275744d0ada6f7fac010b4f78b9b1c72eb364c4a40dc0c9188d",
+      "expect": "bc0c2fe26e44e2aed8ce500a74963bc270fd4a49ec0c2e4837ce7a64bb0a486c",
+      "means": "refuted==0 && unsettled==0 && claims>=1 over the SSD-DEMO-0.2 receipt tally -> Church TRUE",
+      "term": "117646a4f30c55e8a1fef34d93dc58cd24b800108cc3ac176c8f74050573fe7e"
+    }
+  ],
+  "story": "propose (4 hallucinations) -> reject with receipt -> corrected propose -> accept proven by a re-executable acceptance predicate",
+  "title": "SSD correction loop \u2014 draft rejected, repaired from badges, accepted"
+}

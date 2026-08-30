@@ -1,0 +1,7 @@
+SSD publication policy v0.1 (manifesto, 2026-08-30)
+
+A document may be published iff tools/settle_gate.py, run on its exact bytes,
+reports refuted == 0 and unsettled == 0 among its embedded claims. A refuted
+claim is repaired only from the actual values in the gate's refutation badges;
+unsettled claims must be retyped as speculation or removed. The gate script is
+pinned by hash as evidence; the receipt is the transcript.

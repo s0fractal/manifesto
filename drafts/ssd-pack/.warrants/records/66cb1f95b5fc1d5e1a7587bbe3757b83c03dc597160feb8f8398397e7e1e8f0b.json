@@ -1,0 +1,32 @@
+{
+  "body": {
+    "actor": {
+      "id": "generator@ssd-demo"
+    },
+    "because": [
+      {
+        "kind": "prose",
+        "text": "draft technical summary with 11 embedded checkable claims; generator was forbidden to verify (white cone)"
+      }
+    ],
+    "decision": "propose",
+    "evidence": [],
+    "prior": [],
+    "subject": {
+      "hash": "39e609254556d398e3f0581cc95c033321cfdda9c246dcdba2e58cd953135bc4",
+      "note": "SSD-DEMO-0.1 publication"
+    },
+    "ts": 1756500000,
+    "under": [
+      "9df989f5715f89c22c65f146efcd6ceee648abcdb1cd698b86166fee715651be"
+    ],
+    "warrant": "0.2"
+  },
+  "sigs": [
+    {
+      "actor": "generator@ssd-demo",
+      "key": "d404bc44565aedbb899150e5b0b3b32b9441bf0cb7884c33130da8dbc27dd2cf",
+      "sig": "bee3212cae8e600395f8268c489e12ebfa2915d040509d98427379a43873e9ca486c13c5a9109ce822fa2c8613d3fe2f31d197aae8ed98097404557b4b92ad07"
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "claims": [
+    {
+      "atp": 441,
+      "class": "arith",
+      "detail": "3+6=9",
+      "layer": "sigma-glyph",
+      "payload": "3 + 6 = 9",
+      "ski_checks": [
+        {
+          "atp": 240,
+          "expect": "d2003231700f29d4582574f9a06ec97254a1edbe81d29ceee3df9fa4e7f6feb4",
+          "means": "NF of 3+6 at a generic point",
+          "term": "18f7bcb2eb2acab6caf270ddee94518c73ccaab46bb35bd51a71a7a308f2a541"
+        },
+        {
+          "atp": 201,
+          "expect": "d2003231700f29d4582574f9a06ec97254a1edbe81d29ceee3df9fa4e7f6feb4",
+          "means": "NF of 9 at a generic point",
+          "term": "94fa3d56dc8d4d446b50d4f6f9705e4f82ac54091e9b218c3f778484d4219ff0"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "atp": 441,
+      "class": "arith",
+      "detail": "3+6=9",
+      "layer": "sigma-glyph",
+      "payload": "3 + 6 = 9",
+      "ski_checks": [
+        {
+          "atp": 240,
+          "expect": "d2003231700f29d4582574f9a06ec97254a1edbe81d29ceee3df9fa4e7f6feb4",
+          "means": "NF of 3+6 at a generic point",
+          "term": "18f7bcb2eb2acab6caf270ddee94518c73ccaab46bb35bd51a71a7a308f2a541"
+        },
+        {
+          "atp": 201,
+          "expect": "d2003231700f29d4582574f9a06ec97254a1edbe81d29ceee3df9fa4e7f6feb4",
+          "means": "NF of 9 at a generic point",
+          "term": "94fa3d56dc8d4d446b50d4f6f9705e4f82ac54091e9b218c3f778484d4219ff0"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 12",
+      "layer": "repo",
+      "payload": "/FLOW/ in FLOW.md = 12",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 12",
+      "layer": "repo",
+      "payload": "/RVB/ in drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md = 12",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 210,
+      "class": "cmp",
+      "detail": "5 = 5",
+      "layer": "sigma-glyph",
+      "payload": "5 = 5",
+      "ski_checks": [
+        {
+          "atp": 105,
+          "expect": "29bcccfd45bafee451c0119fc36c3f532e5810773e6cab8ce1244ea376b0d1f4",
+          "means": "NF of 5",
+          "term": "ca6b15b2db826288c92c9ebedfb87245e7d7cca3ff93a33f178fd911124b0bff"
+        },
+        {
+          "atp": 105,
+          "expect": "29bcccfd45bafee451c0119fc36c3f532e5810773e6cab8ce1244ea376b0d1f4",
+          "means": "NF of 5",
+          "term": "ca6b15b2db826288c92c9ebedfb87245e7d7cca3ff93a33f178fd911124b0bff"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "atp": 3893,
+      "class": "arith",
+      "detail": "74+1=75",
+      "layer": "sigma-glyph",
+      "payload": "74 + 1 = 75",
+      "ski_checks": [
+        {
+          "atp": 2108,
+          "expect": "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00",
+          "means": "NF of 74+1 at a generic point",
+          "term": "a6a2df31593f250b21250dd89000134b070f9ab4ea2c00225f71343df8d4910e"
+        },
+        {
+          "atp": 1785,
+          "expect": "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00",
+          "means": "NF of 75 at a generic point",
+          "term": "57764dd425000a8da03f2600800a02b85490192116153e84845e45f1142e82d2"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "75 > 8",
+      "layer": "integer",
+      "payload": "75 > 8",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 653,
+      "class": "arith",
+      "detail": "8+5=13",
+      "layer": "sigma-glyph",
+      "payload": "8 + 5 = 13",
+      "ski_checks": [
+        {
+          "atp": 356,
+          "expect": "787e4c63e83b40e583934ef2b7eb3bc43cecf8155d2dab675f2021a3b10ae695",
+          "means": "NF of 8+5 at a generic point",
+          "term": "6cc8a10e8a7d95c9c033b2cf430e48d9675ceda2961601282a193bb29f7a6a5a"
+        },
+        {
+          "atp": 297,
+          "expect": "787e4c63e83b40e583934ef2b7eb3bc43cecf8155d2dab675f2021a3b10ae695",
+          "means": "NF of 13 at a generic point",
+          "term": "90949cef313790423af007dca1dd4fff27680f12c9e64feba1ebe70b1c7e3a39"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "75 >= 13",
+      "layer": "integer",
+      "payload": "75 >= 13",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 67",
+      "layer": "repo",
+      "payload": "/Monday/ in quotes/Monday/chat-0001/README.md = 67",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 7",
+      "layer": "repo",
+      "payload": "/Теза/ in README.md = 7",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "86b785ae4638b587f00471a23434389abcfb5267a6a063d7eb49fe7dfc0a241c",
+  "tally": {
+    "atp_total": 5638,
+    "claims": 11,
+    "refuted": 0,
+    "settled_true": 11,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: 43d77498191acda4df903d069feed7e3d87cccab94a711ab8a26fddf76b60557

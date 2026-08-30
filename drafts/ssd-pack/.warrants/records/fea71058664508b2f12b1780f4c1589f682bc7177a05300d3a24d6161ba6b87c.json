@@ -1,0 +1,43 @@
+{
+  "body": {
+    "actor": {
+      "id": "gate@manifesto"
+    },
+    "because": [
+      {
+        "kind": "prose",
+        "text": "settle_gate: 4 of 11 claims refuted (count guesses 42/37/8/12 vs actual 12/12/67/7); policy requires refuted == 0"
+      },
+      {
+        "check": "bad00bcfd372aa6b0dca703610ed35f3c58daa755b941b98ffa5c4c253eb965f",
+        "kind": "check",
+        "runtime": "cmd@v1",
+        "transcript": "379d8d93e01f66012a1574c16f589b50bdd99a3e17e50106f61dcfa9265e6b2c",
+        "verdict": "fail"
+      }
+    ],
+    "decision": "reject",
+    "evidence": [
+      "379d8d93e01f66012a1574c16f589b50bdd99a3e17e50106f61dcfa9265e6b2c"
+    ],
+    "prior": [
+      "66cb1f95b5fc1d5e1a7587bbe3757b83c03dc597160feb8f8398397e7e1e8f0b"
+    ],
+    "subject": {
+      "hash": "39e609254556d398e3f0581cc95c033321cfdda9c246dcdba2e58cd953135bc4",
+      "note": "SSD-DEMO-0.1 publication"
+    },
+    "ts": 1756500060,
+    "under": [
+      "9df989f5715f89c22c65f146efcd6ceee648abcdb1cd698b86166fee715651be"
+    ],
+    "warrant": "0.2"
+  },
+  "sigs": [
+    {
+      "actor": "gate@manifesto",
+      "key": "4e6008b01b74e49e38d8b11392bfaccc7b5bff86ca2048cbb0f783633a61e2dd",
+      "sig": "b7d8f79b27a90ab480655d2f7eb7a77dd36ac0eb4ae57a887b7df2f6cc32e12d04ecc9b8eabe43eefcf0b34423b25ccbc059889757df82a951338e669cdfac06"
+    }
+  ]
+}

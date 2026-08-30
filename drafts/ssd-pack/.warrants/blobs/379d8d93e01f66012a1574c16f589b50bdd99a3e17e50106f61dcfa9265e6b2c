@@ -1,0 +1,100 @@
+{
+  "claims": [
+    {
+      "atp": 441,
+      "class": "arith",
+      "detail": "3+6=9",
+      "evidence": "d2003231700f vs d2003231700f",
+      "layer": "sigma-glyph",
+      "payload": "3 + 6 = 9",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 441,
+      "class": "arith",
+      "detail": "3+6=9",
+      "evidence": "d2003231700f vs d2003231700f",
+      "layer": "sigma-glyph",
+      "payload": "3 + 6 = 9",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 12",
+      "layer": "repo",
+      "payload": "/FLOW/ in FLOW.md = 42",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 12",
+      "layer": "repo",
+      "payload": "/RVB/ in drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md = 37",
+      "verdict": "REFUTED"
+    },
+    {
+      "atp": 210,
+      "class": "cmp",
+      "detail": "5 = 5",
+      "evidence": "29bcccfd45ba vs ",
+      "layer": "sigma-glyph",
+      "payload": "5 = 5",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 3893,
+      "class": "arith",
+      "detail": "74+1=75",
+      "evidence": "e0419cc5112a vs e0419cc5112a",
+      "layer": "sigma-glyph",
+      "payload": "74 + 1 = 75",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "75 > 8",
+      "layer": "integer",
+      "payload": "75 > 8",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 653,
+      "class": "arith",
+      "detail": "8+5=13",
+      "evidence": "787e4c63e83b vs 787e4c63e83b",
+      "layer": "sigma-glyph",
+      "payload": "8 + 5 = 13",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cmp",
+      "detail": "75 >= 13",
+      "layer": "integer",
+      "payload": "75 >= 13",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 67",
+      "layer": "repo",
+      "payload": "/Monday/ in quotes/Monday/chat-0001/README.md = 8",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 7",
+      "layer": "repo",
+      "payload": "/Теза/ in README.md = 12",
+      "verdict": "REFUTED"
+    }
+  ],
+  "source_sha256": "39e609254556d398e3f0581cc95c033321cfdda9c246dcdba2e58cd953135bc4",
+  "tally": {
+    "atp_total": 5638,
+    "claims": 11,
+    "refuted": 4,
+    "settled_true": 7,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: e40b11b3584e92534412bf28020a9e2a6f6c33d81476150ae9b72bb7b35342d8

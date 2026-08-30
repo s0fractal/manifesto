@@ -1,0 +1,45 @@
+{
+  "body": {
+    "actor": {
+      "id": "gate@manifesto"
+    },
+    "because": [
+      {
+        "kind": "prose",
+        "text": "settle_gate: 11/11 settled, 0 refuted, 0 unsettled (5638 ATP across both layers)"
+      },
+      {
+        "check": "41083847b0560275744d0ada6f7fac010b4f78b9b1c72eb364c4a40dc0c9188d",
+        "kind": "check",
+        "runtime": "ski@v1",
+        "transcript": "bc73421c20869f9c212f9a5ab15711068fd43bab2bac9c5f5502b1023bf0ded0",
+        "verdict": "pass"
+      }
+    ],
+    "decision": "accept",
+    "evidence": [
+      "bc73421c20869f9c212f9a5ab15711068fd43bab2bac9c5f5502b1023bf0ded0",
+      "bad00bcfd372aa6b0dca703610ed35f3c58daa755b941b98ffa5c4c253eb965f",
+      "b9f55bd2965da4c8f049b00a18dec5e1224f36f9661c6db3a078bb40c1f828e6"
+    ],
+    "prior": [
+      "73a409a7561e241d03f400f873c648fca6b21b0517e952ed2640b7b6037f0da5"
+    ],
+    "subject": {
+      "hash": "86b785ae4638b587f00471a23434389abcfb5267a6a063d7eb49fe7dfc0a241c",
+      "note": "SSD-DEMO-0.2 publication"
+    },
+    "ts": 1756500180,
+    "under": [
+      "9df989f5715f89c22c65f146efcd6ceee648abcdb1cd698b86166fee715651be"
+    ],
+    "warrant": "0.2"
+  },
+  "sigs": [
+    {
+      "actor": "gate@manifesto",
+      "key": "4e6008b01b74e49e38d8b11392bfaccc7b5bff86ca2048cbb0f783633a61e2dd",
+      "sig": "93ee211a5f2488c81330beceafd00351d36428f7603df66c3974e1757d29c5a7943745ce8c48563bb4bc0ddcc43ccecd331f5435b4b60b35acaede99a7edfb01"
+    }
+  ]
+}
