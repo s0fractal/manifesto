@@ -312,7 +312,12 @@ its own converging chain (5, 2, 1), catching, among other things, a symbol
 carrying three roles inside the amortizing document. Across three
 repair–audit iterations the debt count went 6 → 3 → 3 strictly smaller
 items: the recursion the theorem says cannot end can, with amortization, be
-made to **contract**.
+made to **contract**. A fourth iteration then measured the honest caveat: a
+hasty repair (a definition added without amending the norms it contradicted,
+grounded in a downstream schema quoted from memory rather than re-read)
+drove the count back to 7 before a careful fifth pass — contraction is a
+property of diligent iterations, not of the loop itself, and the loop
+punishes haste measurably.
 
 ## 3.5 Threats to validity
 
