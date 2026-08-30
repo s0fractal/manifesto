@@ -233,9 +233,22 @@ Sonnet $2.10$ (the coefficient is verifier-relative); counting instruction
 verbatim roots lowered Fable's depth-0 mean from 5.42 to 4.25 (extraction
 bias is real and worth ~20%). Two roots — confidence monotonicity and a
 modal reachability core — were the only VALID verdicts among 20 informal
-roots tested across both rounds; both were verified by Sonnet, so "the
-strongest claims survive" is confounded with verifier leniency and remains
-an open crossed-design question.
+roots tested across both rounds; both were verified by Sonnet.
+
+**Crossed design.** We resolved the confound by crossing: the two
+Sonnet-VALID roots re-verified by Fable, the two Fable-UNVERIFIABLE roots
+re-verified by Sonnet. Negative verdicts replicated (2/2); positive
+verdicts did not (0/2) — after crossing, **no informal corpus claim is
+VALID under both verifiers**. The flips are not taste: Fable produced
+concrete counterexamples (a valid evidence-free inference can raise
+certainty, $P(A \lor B) > \max(P(A),P(B))$, refuting the monotonicity
+claim as a general law; budget-bounded reachability is non-transitive by
+a three-node construction, so the modal core's implicit S4 fails). The
+verifier-μ profiles, meanwhile, replicated on the crossed roots (the
+stricter verifier ≈ 3.2, the other ≈ 2.1, per root family as before):
+$\mu$ is verifier-stable per model, verdicts are not — and within a
+single vendor lineage, which sharpens rather than softens the
+multi-verifier caution of §3.5.
 
 **Across all 100 acts of both rounds, no act returned zero offspring.**
 
@@ -320,9 +333,15 @@ drifted off its assigned root — recorded, not silently dropped.
 
 # 4. Crossing the gap: compilation to μ = 0
 
-The claim that survived verification best — *confidence must be monotone
-across translation and summarization layers unless evidence is added* — was
-carried end-to-end from prose to settlement:
+The claim that fared best in early verification — *confidence must be
+monotone across translation and summarization layers unless evidence is
+added* — was carried end-to-end from prose to settlement. (The crossed
+design of §3.2 later refuted this claim *as a universal law*; the compiled
+version below is untouched by that counterexample, because compilation
+scopes the disjunct: "evidence" becomes an explicit record on a declared
+trace. Compilation did not merely make the claim checkable — it made it
+true, by paying for scope. We keep the chronology honest rather than
+retrofitting.)
 
 1. **Stipulation.** The audit's open questions (whose confidence? what
    counts as evidence? what is a layer?) were paid down by definition:

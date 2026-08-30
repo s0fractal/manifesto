@@ -1,0 +1,41 @@
+{
+  "claims": [
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"Now the unavoidable next node is\" in quotes/Monday/chat-0001/0074_Monday.md",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 4",
+      "layer": "repo",
+      "payload": "/Emotion/ in quotes/Monday/chat-0001/0074_Monday.md = 4",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 5",
+      "layer": "repo",
+      "payload": "/Affect/ in quotes/Monday/chat-0001/0074_Monday.md = 5",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 1",
+      "layer": "repo",
+      "payload": "/страх|Fear|fear/ in quotes/Monday/chat-0001/0009_Monday.md = 1",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "7f81feb167ffa9bf1acacb186461655b60ea67c8342eb2059c6256bac05cf0a2",
+  "tally": {
+    "atp_total": 0,
+    "claims": 4,
+    "refuted": 0,
+    "settled_true": 4,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: 95f2de41b04b21122f87a7c083837e0c3253f5fd4a27f185584ac539d3d44c5f

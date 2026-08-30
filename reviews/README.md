@@ -25,7 +25,11 @@ the artifact to re-run, and the registered falsifier that fires on a hit.
    would poison every μ figure. Strongest attack: replicate 3–5 chains with
    a non-Anthropic verifier under the same removal-test/dedup rules and
    compare distributions. *Fires:* RVB F2 (μ unstable ⇒ model vacuous) or
-   confirms verifier-relativity with a second vendor point.
+   confirms verifier-relativity with a second vendor point. *Note:* the
+   within-vendor crossed design (EXP-RVB-1c) already found VERDICTS
+   verifier-unstable (positives don't replicate even between two Anthropic
+   models) while μ-profiles replicate — a second-vendor point now tests
+   whether the μ stability itself is a lineage artifact.
 3. **Negative-control comparability** (§3.3). *Partially preempted:* the
    style control EXP-RVB-NC2 (results in `drafts/EXP-RVB-1-RESULTS.md`)
    ran four corpus-dressed well-founded claims — computation-discharged
