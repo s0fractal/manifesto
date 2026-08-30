@@ -254,6 +254,27 @@ operator — is the paper's central empirical fact. $\mu$ measures a claim's
 **distance from a form in which checking terminates**, not the verbosity of
 the model doing the checking.
 
+**Style control.** Because the control claims differ from the corpus in
+style as well as in groundedness, we ran a second control: four genuinely
+well-founded claims dressed in the corpus's own register (mixed-language
+conceptual prose, boxed formulas, rhetorical framing), with the prediction
+registered before the results. Two claims dischargeable by an exhibited
+finite computation ($\pi(100)=25$; a pattern count in a repository file)
+stayed at $n=0$ even in costume — the verifiers *twice, in writing,
+classified the rhetorical framing as non-load-bearing and refused it
+offspring*. The other two rose (chains 2,2,2,1,0 and 3,3,3,2,2; overall
+$\mu_0 = 1.25$), and the offspring show why, and it is not verbosity: the
+costume itself smuggled checkable content (an "addresses in
+content-addressed systems" gloss that overgeneralizes — real CAS addresses
+are not bare digests; a "recoverable by any agent from the axioms"
+quantifier), and the Pythagorean theorem's closure genuinely contains its
+axiomatics (the parallel postulate behind similarity, SAS as an axiom,
+line-unboundedness with a spherical countermodel). The refined statement:
+style adds $\mu$ only by adding content, and well-founded claims differ in
+their distance-to-discharge — a finite computation is self-discharging, a
+theorem "from the axioms" is not. No plateau of contentless paraphrase was
+observed on any well-founded claim.
+
 ## 3.4 Amortization, measured
 
 The theorem's escape hatch predicts that one act closing a defect *family*
@@ -288,9 +309,12 @@ from other lineages, is unmeasured. Sample sizes are small (12 + 8 + 6 + 3
 roots). Offspring counts cluster in 2–7 and, although the anti-quantization
 instruction moved them only 0.35, a subtler list-length prior cannot be
 excluded. Depth stops at 4; $\mu_\infty$ is extrapolated, not observed. The
-negative control shares the measurement operator but not the claim
-*distribution* of the corpus. The corpus is a single, stylistically uniform
-document set. Finally, the protocol's own extraction step measurably
+negative control's distribution mismatch with the corpus is partly
+addressed by the style control above (which we ran against our own
+threat model, prediction pre-registered); what remains unaddressed is a
+control matched on *both* style and topical domain simultaneously, and
+replication with non-Anthropic verifiers. The corpus is a single,
+stylistically uniform document set. Finally, the protocol's own extraction step measurably
 inflates $\mu$ (§3.2), and one control chain (V7 in the repository data)
 drifted off its assigned root — recorded, not silently dropped.
 

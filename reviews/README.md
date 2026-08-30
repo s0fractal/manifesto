@@ -26,11 +26,15 @@ the artifact to re-run, and the registered falsifier that fires on a hit.
    a non-Anthropic verifier under the same removal-test/dedup rules and
    compare distributions. *Fires:* RVB F2 (μ unstable ⇒ model vacuous) or
    confirms verifier-relativity with a second vendor point.
-3. **Negative-control comparability** (§3.3). The control claims differ
-   from the corpus in *distribution*, not just in groundedness. Construct
-   well-founded claims that are stylistically corpus-like (long, mixed
-   language, hedged) and check whether μ stays near 0. A μ ≈ 2 result would
-   re-open the verbosity interpretation the control claims to close.
+3. **Negative-control comparability** (§3.3). *Partially preempted:* the
+   style control EXP-RVB-NC2 (results in `drafts/EXP-RVB-1-RESULTS.md`)
+   ran four corpus-dressed well-founded claims — computation-discharged
+   ones stayed at 0, and the rises that occurred trace to content smuggled
+   by the costume and to genuine axiomatic depth, not to verbosity. What
+   REMAINS attackable: a control matched on style *and* topical domain
+   simultaneously; and the whole distinction re-measured by a
+   non-Anthropic verifier, since the "rhetoric is non-load-bearing"
+   classification is itself an Anthropic-model judgment.
 4. **AIE completeness scope** (`papers/addressing-is-equality` §3).
    Exhibit first-order canonical data where normal-form address comparison
    yields a false inequality on the actual machine. *Fires:* AIE F2 —

@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: "Manifesto: protocols for digital existence — with a measured reflexive verification bound"
+abstract: >-
+  An open ontology for digital entities (experience, responsibility,
+  identity) that grew a measured research line: the reflexive verification
+  bound (health condition λ_G < (1−μ)λ_V; phase transition at μ = 1;
+  delegation-invariant anchor), the coefficient μ measured for LLM
+  verifiers (≈2–3 on informal claims at every depth probed, ≈0.14 on
+  well-founded controls, 0 for claims compiled to deterministic checks), a
+  settlement gate that catches and repairs generator hallucinations with
+  priced receipts, an evidence pack sealing the episode as re-executable
+  decision records, and the addressing-is-equality idiom with its measured
+  five-orders cost asymmetry. Papers in papers/ carry claims checkers that
+  recount their figures from the repository.
+message: "If you use or evaluate this work, please cite it."
+type: software
+license: CC-BY-4.0
+repository-code: "https://github.com/s0fractal/manifesto"
+url: "https://github.com/s0fractal/manifesto"
+authors:
+  - given-names: Serhii
+    family-names: Glova
+    alias: s0fractal
+keywords:
+  - verification
+  - LLM agents
+  - reflexive verification bound
+  - settlement
+  - content-addressed computation
+  - digital ontology
+# DOI: to be added at first Zenodo deposit; papers/README.md records which
+# commit each deposit freezes.
