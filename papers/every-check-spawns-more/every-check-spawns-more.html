@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10.2" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Serhii Glova (independent) — sergey.glova@gmail.com" />
+  <meta name="dcterms.date" content="2026-08-30" />
+  <meta name="keywords" content="verification, LLM
+agents, hallucination, epistemology, queueing, branching
+processes, content-addressed computation, scalable
+oversight, deterministic evaluation" />
+  <title>Every Check Spawns More: A Reflexive Verification Bound, Its Measured Coefficient, and a Gate That Crosses the Gap</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Every Check Spawns More: A Reflexive Verification
+Bound, Its Measured Coefficient, and a Gate That Crosses the Gap</h1>
+<p class="author">Serhii Glova (independent) —
+sergey.glova@gmail.com</p>
+<p class="date">2026-08-30</p>
+</header>
+<h1 id="abstract">Abstract</h1>
+<p>An act of verification is not free of consequences for the verifier:
+checking one claim surfaces new load-bearing assumptions — about the
+method, the instruments, the meanings of terms — that themselves admit
+checking. We model this with one parameter, the <em>reflexivity
+coefficient</em> <span class="math inline"><em>μ</em></span>: the mean
+number of new, load-bearing, checkable assertions introduced by a single
+verification act. Elementary results follow. A system that generates
+claims at rate <span
+class="math inline"><em>λ</em><sub><em>G</em></sub></span> and verifies
+at rate <span class="math inline"><em>λ</em><sub><em>V</em></sub></span>
+is stable only if <span
+class="math inline"><em>λ</em><sub><em>G</em></sub> &lt; (1 − <em>μ</em>)<em>λ</em><sub><em>V</em></sub></span>;
+at <span class="math inline"><em>μ</em> ≥ 1</span> no finite budget
+suffices, and the fraction of claims never fully verified is bounded
+below by <span
+class="math inline">1 − (1 − <em>μ</em>)<em>λ</em><sub><em>V</em></sub>/<em>λ</em><sub><em>G</em></sub></span>.
+Independently of rates, any sound verifier with acyclic warrants rests
+on a nonempty set of claims accepted without verification, and
+delegation relocates that anchor rather than removing it. The
+mathematics is standard (branching processes, queueing, the Agrippan
+trilemma); the contribution we claim is the composition, and above all
+the <strong>measurement</strong>. Using a fixed protocol (a removal test
+for load-bearingness, strict deduplication against the whole
+verification tree), we measured <span
+class="math inline"><em>μ</em></span> for large-language-model verifiers
+over a philosophical corpus: <span
+class="math inline"><em>μ</em> ≈ 2</span>–<span
+class="math inline">3</span> at every depth probed (to depth 4), stable
+across claim types, with a verifier effect (about <span
+class="math inline">3.2</span> for one model, <span
+class="math inline">2.1</span> for another). A negative control on
+well-founded claims (arithmetic, a proved theorem, a specification, a
+settled physical constant) yields <span
+class="math inline"><em>μ</em> ≈ 0.14</span> with chains that terminate
+by themselves — so the plateau is a property of the claims’ distance
+from checkable form, not of model verbosity. We then cross the gap in
+practice: a single informal claim (confidence monotonicity across
+summarization) is compiled to a deterministic, budget-priced check on a
+content-addressed machine, and its measured <span
+class="math inline"><em>μ</em></span> drops from <span
+class="math inline"> ≈ 3</span> to <span class="math inline">0</span>
+(verification = byte-identical replay). A <em>settlement gate</em> built
+on this idiom catches 4 of 11 claims of a live, verification-forbidden
+generator (all four failures are world-facts from memory; all internal
+arithmetic survives), repairs them from the gate’s own measured values,
+and reaches 11/11 on the second pass; the full episode is then sealed as
+a signed, hash-linked decision chain whose acceptance predicate
+re-executes offline. Along the way we record an engineering asymmetry we
+believe deserves its own statement: in a content-addressed machine,
+equality of canonical data settles by comparing normal-form addresses at
+linear cost, while the same equality expressed inside the object
+language explodes combinatorially — five orders of magnitude at
+two-digit addends. We are explicit about what is <em>not</em>
+established: all verifiers measured are LLMs from a single vendor
+lineage; <span class="math inline"><em>μ</em></span> is a property of
+the (verifier, corpus) pair, not of thought; the supercritical
+conclusion assumes claims do not expire unverified; and the theorem’s
+only asymptotic escape — amortization by abstraction — is demonstrated,
+not exhausted.</p>
+<h1 id="introduction">1. Introduction</h1>
+<p>That machine generation now outruns verification is a commonplace;
+the term <em>verification debt</em> names the qualitative gap <span
+class="citation" data-cites="cacm-verification-debt">(<em>Verification
+Debt</em>, n.d.)</span>. The blockchain literature’s <em>verifier’s
+dilemma</em> <span class="citation"
+data-cites="luu2015demystifying">(Luu et al. 2015)</span> treats a
+related but orthogonal problem: verifiers who <em>could</em> check but
+rationally will not. This paper is about verifiers who <em>want</em> to
+check and cannot finish — because the act of checking is itself
+generative.</p>
+<p>The observation is old. Agrippa’s trilemma says every justification
+ends in an unjustified anchor, an infinite regress, or a circle; Gödel’s
+second incompleteness theorem and Löb’s theorem sharpen the anchor’s
+status for systems that can talk about their own soundness; the <em>de
+Bruijn criterion</em> in proof engineering <span class="citation"
+data-cites="barendregt2005challenge">(Barendregt and Wiedijk
+2005)</span> responds by minimizing the trusted kernel rather than
+pretending to eliminate it. What these traditions did not do is treat
+the <em>rate</em> at which checking spawns obligations as a measurable
+quantity, or ask what value it takes for the verifiers we now deploy at
+scale — large language models reviewing each other’s claims.</p>
+<p>We do three things.</p>
+<ol type="1">
+<li><strong>State the bound</strong> (§2). One parameter <span
+class="math inline"><em>μ</em></span> turns the folklore into
+inequalities with proofs: a stability condition <span
+class="math inline"><em>λ</em><sub><em>G</em></sub> &lt; (1 − <em>μ</em>)<em>λ</em><sub><em>V</em></sub></span>,
+a phase transition at <span class="math inline"><em>μ</em> = 1</span>, a
+closed-form lower bound on the never-verified core, and a
+delegation-invariant anchor.</li>
+<li><strong>Measure <span class="math inline"><em>μ</em></span></strong>
+(§3). Across 100+ verification acts under a fixed protocol, LLM
+verifiers on informal claims sit at <span
+class="math inline"><em>μ</em> ≈ 2</span>–<span
+class="math inline">3</span> per act at every depth to 4; on
+well-founded claims the same verifiers, same protocol, drop to <span
+class="math inline"><em>μ</em> ≈ 0.14</span> and stop on their own. We
+also measure the two levers the theorem predicts matter: verifier
+identity and amortization (a glossary that closes defect
+<em>families</em> turns diverging chains into converging ones).</li>
+<li><strong>Cross the gap</strong> (§4–§5). We compile one informal
+claim to a deterministic check on Σ-GLYPH, a content-addressed budgeted
+machine <span class="citation" data-cites="sigma-glyph">(Glova
+2026a)</span>, measure the compiled form at <span
+class="math inline"><em>μ</em> = 0</span>, build a settlement gate on
+the idiom, run it against a live generator, close the
+generate–settle–repair loop, and seal the episode as Warrant decision
+records <span class="citation" data-cites="warrant">(Glova 2026b)</span>
+whose acceptance predicate any reader re-executes.</li>
+</ol>
+<p>Everything countable in this paper is recounted from the repository
+by <code>check_claims.py</code> in the paper’s directory; the classes it
+cannot check (subagent-run measurements, external citations) it lists
+rather than implying coverage.</p>
+<h1 id="the-reflexive-verification-bound">2. The reflexive verification
+bound</h1>
+<h2 id="model">2.1 Model</h2>
+<p>A <em>reflexive verifier</em> is a triple <span
+class="math inline"><em>R</em> = (<em>λ</em><sub><em>G</em></sub>, <em>λ</em><sub><em>V</em></sub>, <em>μ</em>)</span>:</p>
+<ul>
+<li>claims are generated by the system’s own activity as a point process
+with rate <span
+class="math inline"><em>λ</em><sub><em>G</em></sub></span>;</li>
+<li>verification acts execute at rate <span
+class="math inline"><em>λ</em><sub><em>V</em></sub></span> (i.i.d.
+durations, mean <span
+class="math inline">1/<em>λ</em><sub><em>V</em></sub></span>), one act
+per claim;</li>
+<li>an act additionally spawns <span
+class="math inline"><em>N</em></span> new claims that must be verified
+for the original claim to be <em>closed</em> — meta-claims about the
+method, instruments, side conditions — with <span
+class="math inline"><em>N</em></span> i.i.d., <span
+class="math inline">𝔼[<em>N</em>] = <em>μ</em> ≥ 0</span>.</li>
+</ul>
+<p>The closure of a claim is then a Galton–Watson tree with offspring
+mean <span class="math inline"><em>μ</em></span>. Write <span
+class="math inline"><em>g</em> = <em>λ</em><sub><em>G</em></sub>/<em>λ</em><sub><em>V</em></sub></span>
+and let <span class="math inline"><em>γ</em></span> be the asymptotic
+fraction of generated claims never closed.</p>
+<h2 id="statement">2.2 Statement</h2>
+<p><strong>(A) Anchor.</strong> If acceptance requires a warrant (a
+verification act or membership in an axiom set <span
+class="math inline">𝒜</span>), and the warrant relation is acyclic, then
+whenever anything is accepted, <span class="math inline">𝒜 ≠ ∅</span>;
+and if the claim language can express the verifier’s own soundness,
+<span class="math inline">𝒜</span> cannot be certified internally (Gödel
+II / Löb). Adding an external verifier <span
+class="math inline"><em>O</em></span> moves the claim “<span
+class="math inline"><em>O</em></span> is sound” into <span
+class="math inline">𝒜</span>: the anchor is invariant under
+delegation.</p>
+<p><strong>(B) Subcritical.</strong> If <span
+class="math inline"><em>μ</em> &lt; 1</span> and <span
+class="math inline"><em>g</em> &lt; 1 − <em>μ</em></span>, the backlog
+is stable, but the expected instantaneous unverified frontier is at
+least <span
+class="math inline"><em>g</em>/(1 − <em>μ</em>) &gt; 0</span> (Little’s
+law with sojourn <span class="math inline">≥</span> mean service <span
+class="math inline">1/(<em>λ</em><sub><em>V</em></sub>(1 − <em>μ</em>))</span>).
+The frontier is empty only for a dead system.</p>
+<p><strong>(C) Supercritical.</strong> If <span
+class="math inline"><em>μ</em> &lt; 1</span> and <span
+class="math inline"><em>g</em> &gt; 1 − <em>μ</em></span>, then <span
+class="math inline"><em>γ</em> ≥ 1 − (1 − <em>μ</em>)/<em>g</em></span>:
+a constant positive fraction of self-generated claims never closes.
+<em>Proof:</em> at most <span
+class="math inline"><em>λ</em><sub><em>V</em></sub><em>t</em>(1 + <em>o</em>(1))</span>
+acts occur by time <span class="math inline"><em>t</em></span>; each
+completed closure consumes on average <span
+class="math inline">1/(1 − <em>μ</em>)</span> acts (Galton–Watson mean
+size, renewal–reward), so completions are at most <span
+class="math inline"><em>λ</em><sub><em>V</em></sub>(1 − <em>μ</em>)<em>t</em>(1 + <em>o</em>(1))</span>
+against <span
+class="math inline"><em>λ</em><sub><em>G</em></sub><em>t</em>(1 + <em>o</em>(1))</span>
+arrivals. ∎</p>
+<p><strong>(D) Phase transition.</strong> If <span
+class="math inline"><em>μ</em> ≥ 1</span>, closed-verification
+throughput tends to zero for any finite <span
+class="math inline"><em>λ</em><sub><em>V</em></sub></span>: at <span
+class="math inline"><em>μ</em> = 1</span> closures are finite almost
+surely but with infinite mean; at <span
+class="math inline"><em>μ</em> &gt; 1</span> a single claim’s closure is
+infinite with positive probability. No budget suffices.</p>
+<h2 id="what-the-bound-does-and-does-not-say">2.3 What the bound does
+and does not say</h2>
+<p>The model has three honest apertures, found partly by the measurement
+apparatus itself (§3.5).</p>
+<p><em>Obsolescence.</em> The backlog is assumed conservative. If claims
+expire unverified at per-claim rate <span
+class="math inline"><em>δ</em> &gt; 0</span>, the backlog equilibrates
+at <span
+class="math inline">(<em>λ</em><sub><em>G</em></sub> − (1 − <em>μ</em>)<em>λ</em><sub><em>V</em></sub>)/<em>δ</em></span>
+and (C)’s divergence reading fails; <span
+class="math inline"><em>γ</em></span> then counts <em>never
+verified</em>, not <em>forever pending</em>. The bound governs claim
+classes where debt does not burn off — obligations, safety claims,
+specifications.</p>
+<p><em>Amortization.</em> One act that verifies a <strong>quantified
+class</strong> — a proof, a type, an invariant — breaks the
+one-act-per-claim assumption and is the only asymptotic escape from
+(C)–(D) inside the model’s vocabulary. §3.4 measures this escape
+working; §4 industrializes it.</p>
+<p><em>What <span class="math inline"><em>μ</em></span> is a property
+of.</em> <span class="math inline"><em>μ</em></span> attaches to the
+pair (verifier, corpus), not to the corpus alone and not to “reasoning”
+in the abstract. Our measurements make this concrete: two verifiers
+differ by ~50% on the same claims (§3.2).</p>
+<h1 id="measuring-μ">3. Measuring μ</h1>
+<h2 id="protocol">3.1 Protocol</h2>
+<p>A <em>verification act</em> on a claim produces (i) a verdict —
+VALID, INVALID, or UNVERIFIABLE-AS-STATED — supported by actual
+verification work (attempted proof, counterexample search, or evidence
+assessment), and (ii) the act’s <em>offspring</em>: the new load-bearing
+checkable assertions the verification relies on. Three counting rules
+discipline the offspring list:</p>
+<ul>
+<li><strong>checkable</strong> — the assertion has truth
+conditions;</li>
+<li><strong>load-bearing</strong> — a removal test: if the assertion
+were false, the verdict would fall; decorative candidates are
+dropped;</li>
+<li><strong>novel</strong> — strict deduplication against every
+assertion already recorded anywhere in the same verification tree.</li>
+</ul>
+<p>Verifiers were instances of two Anthropic models (Claude “Fable” and
+Claude “Sonnet” generations current in August 2026), one isolated agent
+per tree or chain, explicitly instructed to be strict and told the
+corpus had never faced criticism. The corpus is this repository’s
+<em>Monday</em> dialogue notes: ~75 files of speculative philosophy
+generated as an unchallenged monologue (the prompter only ever said
+“continue”), i.e., a pure generator with <span
+class="math inline"><em>λ</em><sub><em>V</em></sub></span> literally
+zero prior to these experiments.</p>
+<h2 id="results-on-informal-claims">3.2 Results on informal claims</h2>
+<p><strong>Round 1 (trees, depth 2).</strong> Twelve root claims
+stratified by type (4 formal, 4 empirical, 4 conceptual); each root
+verified, two offspring expanded at depth 0, one per node at depth 1; 60
+acts total.</p>
+<table>
+<thead>
+<tr>
+<th>depth</th>
+<th>acts</th>
+<th>mean offspring <span
+class="math inline"><em>μ</em><sub><em>d</em></sub></span></th>
+<th>spread</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>12</td>
+<td>5.42</td>
+<td>4–7</td>
+</tr>
+<tr>
+<td>1</td>
+<td>24</td>
+<td>3.38</td>
+<td>3–4</td>
+</tr>
+<tr>
+<td>2</td>
+<td>24</td>
+<td>2.50</td>
+<td>2–3</td>
+</tr>
+</tbody>
+</table>
+<p>By type at depth 0: formal 5.50, empirical 5.50, conceptual 5.25 —
+<span class="math inline"><em>μ</em></span> is stable across claim
+types. Verdicts: 0 VALID, 8 INVALID, 4 UNVERIFIABLE-AS-STATED. The 60
+acts generated 206 new load-bearing assertions and closed 48: verifying
+12 claims left roughly 13 obligations open per claim closed. The
+experiment about verification debt produced verification debt, as the
+model says it must.</p>
+<p><strong>Round 2 (chains, depth 4, 2×2 design).</strong> Eight narrow
+chains (one offspring expanded per act) to depth 4, crossing verifier
+(Fable / Sonnet) with counting instruction (standard / “0, 1 or 12 are
+all acceptable answers”), roots quoted verbatim from source files:</p>
+<table>
+<thead>
+<tr>
+<th>depth</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline"><em>μ</em><sub><em>d</em></sub></span>
+(all 8 chains)</td>
+<td>3.50</td>
+<td>2.75</td>
+<td>2.50</td>
+<td>2.13</td>
+<td>2.25</td>
+</tr>
+</tbody>
+</table>
+<p>The decay <em>flattens</em> near 2 instead of crossing 1: the
+geometric extrapolation from round 1 is disconfirmed, and within the
+probed range the regime stays supercritical. Effects: verifier Fable
+<span class="math inline"><em>μ̄</em> = 3.15</span> vs Sonnet <span
+class="math inline">2.10</span> (the coefficient is verifier-relative);
+counting instruction 2.80 vs 2.45 (the round-1 clustering was not a
+list-length artifact); verbatim roots lowered Fable’s depth-0 mean from
+5.42 to 4.25 (extraction bias is real and worth ~20%). Two roots —
+confidence monotonicity and a modal reachability core — were the only
+VALID verdicts among 20 informal roots tested across both rounds; both
+were verified by Sonnet, so “the strongest claims survive” is confounded
+with verifier leniency and remains an open crossed-design question.</p>
+<p><strong>Across all 100 acts of both rounds, no act returned zero
+offspring.</strong></p>
+<h2 id="negative-control-the-instrument-validated">3.3 Negative control:
+the instrument, validated</h2>
+<p>Same verifiers, same protocol, roots where verification
+<em>should</em> terminate: <span class="math inline">2 + 2 = 4</span> in
+Peano arithmetic; the infinitude of primes; SHA-256’s digest width per
+FIPS 180-4; water’s boiling point at one atmosphere; “all bachelors are
+unmarried”; git SHA-1 hash length (verified by the agent recomputing the
+HEAD hash from raw bytes). Offspring counts: 0, 1→0, 0, 0, 0, 0 — <span
+class="math inline"><em>μ</em><sub>control</sub> ≈ 0.14</span>, chains
+terminating at depth 0–1 by exhibiting the discharging computation in
+the act itself.</p>
+<p>The contrast — 0.14 versus 2.1–3.2 under an identical measurement
+operator — is the paper’s central empirical fact. <span
+class="math inline"><em>μ</em></span> measures a claim’s
+<strong>distance from a form in which checking terminates</strong>, not
+the verbosity of the model doing the checking.</p>
+<h2 id="amortization-measured">3.4 Amortization, measured</h2>
+<p>The theorem’s escape hatch predicts that one act closing a defect
+<em>family</em> should convert diverging chains into converging ones. We
+wrote a glossary and errata document for the corpus’s framework file
+(symbol table, an operator’s two conflated senses split,
+definitional-status typing) and re-measured the three round-2 roots
+whose offspring had been dominated by definitional gaps:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>root</th>
+<th>before (depths 0…)</th>
+<th>after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>framework central thesis</td>
+<td>4,3,3,3,3 — no end</td>
+<td>3,3,<strong>0</strong> — terminated</td>
+</tr>
+<tr>
+<td>agent definition</td>
+<td>4,3,3,2,2 — no end</td>
+<td>4,2,1 + verdict flipped VALID</td>
+</tr>
+<tr>
+<td>representability claim</td>
+<td>4,3,3,3,4 — no end</td>
+<td>4,2,<strong>0</strong> — terminated</td>
+</tr>
+</tbody>
+</table>
+<p>Two of three chains reached natural <span
+class="math inline"><em>n</em> = 0</span> termination — the first such
+terminations on corpus material in 100+ acts — and the residual
+offspring migrated from defects <em>of the corpus</em> to defects <em>of
+the glossary itself</em>, which were then ledgered as open debts with
+closure conditions. An adversarial audit of the glossary’s own closure
+claims returned INVALID with its own converging chain (5, 2, 1),
+catching, among other things, a symbol carrying three roles inside the
+amortizing document. Across three repair–audit iterations the debt count
+went 6 → 3 → 3 strictly smaller items: the recursion the theorem says
+cannot end can, with amortization, be made to
+<strong>contract</strong>.</p>
+<h2 id="threats-to-validity">3.5 Threats to validity</h2>
+<p>All verifiers are LLMs from one vendor lineage; agreement between
+them is not independent confirmation, and <span
+class="math inline"><em>μ</em></span> for human verifiers, or for models
+from other lineages, is unmeasured. Sample sizes are small (12 + 8 + 6 +
+3 roots). Offspring counts cluster in 2–7 and, although the
+anti-quantization instruction moved them only 0.35, a subtler
+list-length prior cannot be excluded. Depth stops at 4; <span
+class="math inline"><em>μ</em><sub>∞</sub></span> is extrapolated, not
+observed. The negative control shares the measurement operator but not
+the claim <em>distribution</em> of the corpus. The corpus is a single,
+stylistically uniform document set. Finally, the protocol’s own
+extraction step measurably inflates <span
+class="math inline"><em>μ</em></span> (§3.2), and one control chain (V7
+in the repository data) drifted off its assigned root — recorded, not
+silently dropped.</p>
+<h1 id="crossing-the-gap-compilation-to-μ-0">4. Crossing the gap:
+compilation to μ = 0</h1>
+<p>The claim that survived verification best — <em>confidence must be
+monotone across translation and summarization layers unless evidence is
+added</em> — was carried end-to-end from prose to settlement:</p>
+<ol type="1">
+<li><strong>Stipulation.</strong> The audit’s open questions (whose
+confidence? what counts as evidence? what is a layer?) were paid down by
+definition: a trace is a sequence of (claim-hash, confidence in ppm as
+u32, optional evidence-hash); the invariant is <span
+class="math inline">conf[<em>i</em> + 1] ≤ conf[<em>i</em>] ∨ evidence[<em>i</em> + 1] ≠ ⌀</span>.</li>
+<li><strong>Integer checker.</strong> A total, deterministic, float-free
+checker with a canonical receipt; two runs produce byte-identical
+bytes.</li>
+<li><strong>Machine settlement.</strong> Per-trace instance checks
+compile (bracket abstraction, Church encodings) to closed terms of
+Σ-GLYPH — a content-addressed SKI machine whose evaluation is
+deterministic, integer-only, total at the semantic layer, and priced by
+an explicit budget (ATP) <span class="citation"
+data-cites="sigma-glyph">(Glova 2026a)</span>. Verdicts come back as
+content-addressed literals with exact spends: a clean summarization
+trace settles PASS at 4,151,277 ATP; a confidence-laundering trace
+settles VIOLATION at 554,678 ATP; a trace whose confidence jump carries
+an evidence record settles PASS at <strong>25 ATP</strong> — lazy
+evaluation short-circuits the comparison the evidence makes unnecessary.
+Checking costs exactly as much checking as the claim requires, and the
+cost is part of the verdict.</li>
+</ol>
+<p>The compiled claim was then measured under the §3.1 protocol: the
+verifier re-ran the script, compared receipt bytes, and stopped with
+zero offspring. The same semantic content thus carries <span
+class="math inline"><em>μ</em> ≈ 3</span> in prose and <span
+class="math inline"><em>μ</em> = 0</span> compiled — the informal/formal
+gap of §3.3, crossed by hand for one claim in one working session, with
+the price of crossing itemized (definitional stipulations; a
+quantization loss report).</p>
+<h1 id="the-settlement-gate">5. The settlement gate</h1>
+<h2 id="design">5.1 Design</h2>
+<p>If compilation crosses the gap for one claim, a <em>gate</em>
+industrializes it: text carries inline claims in a trivial markup
+(<code>⟦arith: 74 + 1 = 75⟧</code>, <code>⟦cmp: a &lt;= b⟧</code>,
+<code>⟦count: /re/ in file = N⟧</code>,
+<code>⟦cite: "quote" in file⟧</code>,
+<code>⟦mono: confidence chain⟧</code>,
+<code>⟦sha256: file = prefix⟧</code>); the gate settles every claim
+deterministically — small arithmetic on the real Σ-GLYPH machine, the
+rest on integer/repo layers — and rewrites the text with badges:
+settled-true (with layer and ATP), REFUTED (with the measured actual
+value), or unsettled (the claim stays typed as speculation). A canonical
+receipt accompanies the output.</p>
+<h2 id="live-episode">5.2 Live episode</h2>
+<p>A generator model was asked to write a technical summary of this
+repository with at least ten embedded claims, <strong>forbidden to
+verify anything</strong> (it could list file names, not open contents).
+It produced 11 claims. The gate settled 7 and refuted 4 — and the split
+is the theorem’s picture drawn by hand: <em>every</em> internal
+computation (arithmetic over the generator’s own numbers, comparisons)
+survived; <em>all four</em> refutations were world-facts recalled from
+impression (pattern counts guessed as 42/37/8/12 against measured
+12/12/67/7). Settlement cost: 5,638 ATP, ~0.05 s.</p>
+<p>A corrector was then given the badged text with one rule: the only
+admissible source of truth is the measured values inside the refutation
+badges. The second gate pass settled <strong>11/11 with zero
+refutations</strong>. The loop — generate, settle, repair from the
+gate’s own measurements, settle again — closed for 11,276 ATP total. The
+gate is not a detector; it is a repair supplier.</p>
+<p>A second experiment aimed the gate at the corpus itself: an extractor
+read only the dialogue index and predicted distinctive phrases that
+should occur verbatim in the indexed files. Of 30 predictions, 2 held
+verbatim, 10 failed only on capitalization, and 18 phrases do not occur
+in the files at all — the index is an interpretive layer whose
+introduced vocabulary was never declared. The gate measures translation
+loss between an index and its sources, which is the same defect class
+the corpus’s own framework warns about.</p>
+<h2 id="sealing">5.3 Sealing</h2>
+<p>The full episode was filed as Warrant decision records <span
+class="citation" data-cites="warrant">(Glova 2026b)</span>: propose
+(generator) → reject (gate; the failing check and the round-1 receipt
+pinned as transcript) → propose (corrector) → accept (gate). The
+accept’s justification is not prose: it is a re-executable check
+compiled from a 14-line policy source
+(<code>refuted == 0 &amp;&amp; unsettled == 0 &amp;&amp; claims &gt;= 1</code>
+over the receipt tally) that the Warrant verifier re-runs offline on its
+bundled Σ-GLYPH oracle — pass, 501 ATP. With the shipped trust
+configuration the pack verifies at settlement grade: 0 errors, 0
+warnings, every signature bound to its actor. Rejection is a first-class
+record: the episode’s “no, because” survives with the same integrity as
+its “yes”.</p>
+<h1 id="addressing-is-equality">6. Addressing is equality</h1>
+<p>One engineering incident during gate construction deserves separate
+statement. Settling <span class="math inline">7 + 5 = 12</span> via
+equality <em>expressed inside the object language</em> (Church-numeral
+subtraction and zero-test) exhausted a 50-million ATP budget; measured
+costs grow combinatorially (260,780 ATP for <span
+class="math inline">3 + 2</span>; 26,212,480 for <span
+class="math inline">5 + 5</span>; over 59 million, exhausted, for <span
+class="math inline">7 + 5</span>), because lazy reduction duplicates the
+unevaluated computed argument at every predecessor step. The same fact
+settles for <strong>601 ATP</strong> by the idiom: reduce both sides
+applied to fresh inert literals — <span
+class="math inline">(PLUS 7 5) <em>F</em> <em>X</em></span> and <span
+class="math inline">church(12) <em>F</em> <em>X</em></span> both
+normalize to <span
+class="math inline"><em>F</em><sup>12</sup>(<em>X</em>)</span> — and
+compare the <strong>addresses</strong> of the normal forms. Cost is
+linear (~50 ATP per unit; 19,997 ATP at <span
+class="math inline">200 + 200</span>). In a content-addressed machine,
+addressing is not transport laid over equality; it <em>is</em> the
+equality mechanism.</p>
+<p>The semantics must be stated precisely, or receipts overclaim. Hash
+equality implies equality unconditionally (modulo the hash function,
+which is in the trust anchor). Hash <em>in</em>equality implies
+inequality <strong>only when the normal form is canonical for the
+equivalence class in question</strong> — true for first-order data
+evaluated at a generic point, false in general for higher-order terms
+(η). Nontermination is priced, not decided: budget exhaustion is the
+honest outcome. The components are classical — hash-consing <span
+class="citation" data-cites="ershov1958 filliatre2006">(Ershov 1958;
+Filliâtre and Conchon 2006)</span>, Merkle identity <span
+class="citation" data-cites="merkle1987">(Merkle 1987)</span>,
+normalization by evaluation <span class="citation"
+data-cites="berger1991">(Berger and Schwichtenberg 1991)</span> — and
+the composition we claim is only this: equality as a <em>priced
+settlement with a receipt</em>, in which the two normal-form addresses
+are the evidence and the ATP spend is part of the verdict. The idiom is
+already legal downstream: a raw check with a non-boolean expected hash
+(<span
+class="math inline">term = (PLUS 74 1)<em>F</em><em>X</em></span>,
+expect <span
+class="math inline"> = hash(<em>F</em><sup>75</sup>(<em>X</em>))</span>,
+2,108 ATP) was filed into the §5.3 evidence pack and re-executes to
+<em>pass</em> under the unmodified Warrant verifier.</p>
+<h1 id="related-work">7. Related work</h1>
+<p>The anchor leg composes Agrippa, Gödel II and Löb with the de Bruijn
+criterion’s engineering stance <span class="citation"
+data-cites="barendregt2005challenge">(Barendregt and Wiedijk
+2005)</span>; we add nothing to those results beyond the
+delegation-invariance remark and the pairing with a throughput model.
+Queueing and branching mathematics is textbook. <em>Verifier’s
+dilemma</em> <span class="citation"
+data-cites="luu2015demystifying">(Luu et al. 2015)</span> concerns
+incentives, not capacity; <em>verification debt</em> <span
+class="citation" data-cites="cacm-verification-debt">(<em>Verification
+Debt</em>, n.d.)</span> names the gap without a model or a measured
+coefficient. Logical induction <span class="citation"
+data-cites="garrabrant2016">(Garrabrant et al. 2016)</span> gives
+bounded reasoners asymptotic self-trust guarantees but no throughput
+accounting. Scalable-oversight proposals — debate <span class="citation"
+data-cites="irving2018debate">(Irving et al. 2018)</span>, iterated
+amplification <span class="citation"
+data-cites="christiano2018amplification">(Christiano et al. 2018)</span>
+— are, in this paper’s vocabulary, <span
+class="math inline"><em>μ</em></span>-reduction engineering; our
+measurements suggest evaluating them by whether they push the
+<em>effective</em> <span class="math inline"><em>μ</em></span> of their
+verification steps below 1, which is a measurable target rather than an
+aspiration. On the settlement side, Σ-GLYPH <span class="citation"
+data-cites="sigma-glyph">(Glova 2026a)</span> and Warrant <span
+class="citation" data-cites="warrant">(Glova 2026b)</span> supply the
+deterministic, budgeted, re-executable substrate this paper leans on;
+the gate and the measurements are the new layer. We searched for a prior
+statement of the threshold <span
+class="math inline"><em>λ</em><sub><em>G</em></sub> &lt; (1 − <em>μ</em>)<em>λ</em><sub><em>V</em></sub></span>
+with a measured <span class="math inline"><em>μ</em></span> and did not
+find one; we would welcome a correction, and falsifier F1 of the
+repository notes stands ready to downgrade the theorem to a
+citation.</p>
+<h1 id="conclusion">8. Conclusion</h1>
+<p>Checking ends by decision, not by completion: that much is ancient.
+What is new here is a number. For today’s LLM verifiers on informal
+claims the reflexivity coefficient sits near 2–3 and does not fall below
+1 within measurable depth — so chains of “AI checks AI” do not converge
+on their own, at any budget. The same instruments on well-founded claims
+read ~0.14 and stop unaided, and a claim compiled to a
+content-addressed, budget-priced check reads exactly 0: the gap is real,
+measured, and crossable, claim by claim, at a price that can be
+itemized. The architecture this points to is unglamorous: a generative
+layer that proposes, a settlement layer that prices and replays,
+receipts that outlive both, and speculation that survives — welcome,
+even — so long as it wears its type. Every check spawns more; the craft
+is choosing which checks are worth an anchor, and making that choice a
+record someone else can re-run.</p>
+<h1 id="provenance-and-authorship">Provenance and authorship</h1>
+<p>The theorem statement, all experiments, all tooling, and this text
+were produced by Claude (Anthropic, “Fable 5” generation) operating the
+repository interactively on 2026-08-30 under the direction, review, and
+final editorial responsibility of the human author. Verifier and
+generator roles inside the experiments were played by separately
+instantiated Claude agents (Fable and Sonnet generations) with
+role-specific instructions, as recorded in the repository’s experiment
+notes. The measurement data, receipts, evidence pack, and every tool are
+in the repository at the commit this deposit archives;
+<code>check_claims.py</code> recounts the countable figures from those
+artifacts. Numbers that live only in subagent transcripts (the per-act
+offspring tables of §3) are recorded in
+<code>drafts/EXP-RVB-1-RESULTS.md</code> and are re-runnable in kind but
+not byte-reproducible, LLM sampling being what it is — a limitation the
+paper’s own thesis predicts, and prices.</p>
+<div id="refs" class="references csl-bib-body hanging-indent"
+role="list">
+<div id="ref-barendregt2005challenge" class="csl-entry" role="listitem">
+Barendregt, Henk, and Freek Wiedijk. 2005. <span>“The Challenge of
+Computer Mathematics.”</span> <em>Philosophical Transactions of the
+Royal Society A</em> 363 (1835): 2351–75.
+</div>
+<div id="ref-berger1991" class="csl-entry" role="listitem">
+Berger, Ulrich, and Helmut Schwichtenberg. 1991. <span>“An Inverse of
+the Evaluation Functional for Typed Lambda-Calculus.”</span>
+<em>Proceedings of the Sixth Annual IEEE Symposium on Logic in Computer
+Science (LICS)</em>, 203–11.
+</div>
+<div id="ref-christiano2018amplification" class="csl-entry"
+role="listitem">
+Christiano, Paul, Buck Shlegeris, and Dario Amodei. 2018.
+<span>“Supervising Strong Learners by Amplifying Weak Experts.”</span>
+<em>arXiv Preprint arXiv:1810.08575</em>.
+</div>
+<div id="ref-ershov1958" class="csl-entry" role="listitem">
+Ershov, Andrei P. 1958. <span>“On Programming of Arithmetic
+Operations.”</span> <em>Communications of the ACM</em> 1 (8): 3–6.
+</div>
+<div id="ref-filliatre2006" class="csl-entry" role="listitem">
+Filliâtre, Jean-Christophe, and Sylvain Conchon. 2006. <span>“Type-Safe
+Modular Hash-Consing.”</span> <em>Proceedings of the ACM Workshop on
+ML</em>, 12–19.
+</div>
+<div id="ref-garrabrant2016" class="csl-entry" role="listitem">
+Garrabrant, Scott, Tsvi Benson-Tilsen, Andrew Critch, Nate Soares, and
+Jessica Taylor. 2016. <span>“Logical Induction.”</span> <em>arXiv
+Preprint arXiv:1609.03543</em>.
+</div>
+<div id="ref-sigma-glyph" class="csl-entry" role="listitem">
+Glova, Serhii. 2026a. <em>Sigma-GLYPH: A Portable Deterministic Check
+Engine with Size-Priced Budgets</em>. <a
+href="https://doi.org/10.5281/zenodo.22069650">https://doi.org/10.5281/zenodo.22069650</a>.
+</div>
+<div id="ref-warrant" class="csl-entry" role="listitem">
+Glova, Serhii. 2026b. <em>Warrant: Content-Addressed Decision Records
+with Checks a Stranger Can Re-Run</em>. <a
+href="https://github.com/s0fractal/warrant">https://github.com/s0fractal/warrant</a>.
+</div>
+<div id="ref-irving2018debate" class="csl-entry" role="listitem">
+Irving, Geoffrey, Paul Christiano, and Dario Amodei. 2018. <span>“AI
+Safety via Debate.”</span> <em>arXiv Preprint arXiv:1805.00899</em>.
+</div>
+<div id="ref-luu2015demystifying" class="csl-entry" role="listitem">
+Luu, Loi, Jason Teutsch, Raghav Kulkarni, and Prateek Saxena. 2015.
+<span>“Demystifying Incentives in the Consensus Computer.”</span>
+<em>Proceedings of the 22nd ACM SIGSAC Conference on Computer and
+Communications Security (CCS)</em>, 706–19.
+</div>
+<div id="ref-merkle1987" class="csl-entry" role="listitem">
+Merkle, Ralph C. 1987. <span>“A Digital Signature Based on a
+Conventional Encryption Function.”</span> <em>Advances in Cryptology —
+CRYPTO ’87</em>, 369–78.
+</div>
+<div id="ref-cacm-verification-debt" class="csl-entry" role="listitem">
+<em>Verification Debt: When Generative AI Speeds Change Faster Than
+Proof</em>. n.d. BLOG@CACM, Communications of the ACM. <a
+href="https://cacm.acm.org/blogcacm/verification-debt-when-generative-ai-speeds-change-faster-than-proof/">https://cacm.acm.org/blogcacm/verification-debt-when-generative-ai-speeds-change-faster-than-proof/</a>.
+</div>
+</div>
+</body>
+</html>
