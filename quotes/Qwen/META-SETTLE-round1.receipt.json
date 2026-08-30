@@ -1,0 +1,72 @@
+{
+  "claims": [
+    {
+      "class": "count",
+      "detail": "actual count = 4",
+      "layer": "repo",
+      "payload": "/REFUTED/ in drafts/SSD-DEMO-0.1.receipt.json = 4",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"actual count = 67\" in drafts/SSD-DEMO-0.1.receipt.json",
+      "verdict": "PASS"
+    },
+    {
+      "atp": 553,
+      "class": "arith",
+      "detail": "7+4=11",
+      "layer": "sigma-glyph",
+      "payload": "7 + 4 = 11",
+      "ski_checks": [
+        {
+          "atp": 304,
+          "expect": "6669b3fa6beb05746814b113bdb6a5e3fc66d670a85668cf1ecb1ad06c9dede5",
+          "means": "NF of 7+4 at a generic point",
+          "term": "98827b74f1272785df6a42bb28430388308f37496443a2607fcbc765a628d90f"
+        },
+        {
+          "atp": 249,
+          "expect": "6669b3fa6beb05746814b113bdb6a5e3fc66d670a85668cf1ecb1ad06c9dede5",
+          "means": "NF of 11 at a generic point",
+          "term": "e20c401d46487fc43fcf5ec9de6c7d59d0529266acc08993c27f9eab771f0306"
+        }
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "atp": 69946,
+      "class": "cmp",
+      "detail": "4 <= 7",
+      "evidence": "c58f4f5acbfb6523",
+      "layer": "sigma-glyph",
+      "payload": "4 <= 7",
+      "verdict": "PASS"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 5",
+      "layer": "repo",
+      "payload": "/sigma-glyph/ in drafts/SSD-DEMO-0.1.receipt.json = 3",
+      "verdict": "REFUTED"
+    },
+    {
+      "class": "count",
+      "detail": "actual count = 4",
+      "layer": "repo",
+      "payload": "/actual count/ in drafts/SSD-DEMO-0.1.receipt.json = 4",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "4d0c12165f1092b99cd981a013de5ed5932c26c8bfc486b6e23e2c2903854ee9",
+  "tally": {
+    "atp_total": 70499,
+    "claims": 6,
+    "refuted": 1,
+    "settled_true": 5,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: 7f2608b1317eef849bbace5b64a66d1546c5e875ef5e3937fd4d71638348d58e
