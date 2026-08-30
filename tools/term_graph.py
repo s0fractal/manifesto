@@ -130,6 +130,49 @@ def main():
                                   for p, n, fs in repeated_edges],
         "component_sizes_top10": [len(c) for c in components[:10]],
     }
+    # ---- collision detector: does the corpus obey its own distinctions? ----
+    # A collision candidate: a pair asserted A != B somewhere, while some math
+    # span elsewhere asserts A = B or A <=> B (identity/equivalence, not
+    # inequality). Deterministic, string-level: candidates for human review,
+    # not verdicts.
+    ident_split = re.compile(r"=|\\iff|⟺|\\equiv|≡")
+    neq_terms = {t for e in edges for t in e}
+    collisions = []
+    for fname in sorted(os.listdir(CORPUS)):
+        if not fname.endswith(".md"):
+            continue
+        with open(os.path.join(CORPUS, fname), encoding="utf-8") as f:
+            text = f.read()
+        for m in MATH_SPAN.finditer(text):
+            span = m.group(1) or m.group(2)
+            if NEQ_SPLIT.search(span):
+                continue
+            body = re.sub(r"\\boxed\s*\{(.*)\}", r"\1", span.strip(), flags=re.S)
+            sides = ident_split.split(body)
+            if len(sides) != 2:
+                continue
+            # a genuine identification: each side is exactly one ≠-term
+            a, b = clean_term(sides[0]), clean_term(sides[1])
+            if not a or not b or a == b:
+                continue
+            pair = frozenset((a, b))
+            if a in neq_terms and b in neq_terms and pair in edges:
+                collisions.append({
+                    "pair": sorted(pair),
+                    "identified_in": fname,
+                    "span": " ".join(span.split())[:120],
+                    "distinguished_in": sorted(edge_files[pair]),
+                })
+    # dedupe identical collision records
+    seen_c, dedup = set(), []
+    for c in collisions:
+        key = (tuple(c["pair"]), c["identified_in"], c["span"])
+        if key not in seen_c:
+            seen_c.add(key)
+            dedup.append(c)
+    report["collision_candidates"] = dedup[:40]
+    report["stats"]["collision_candidates"] = len(dedup)
+
     out = json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2)
     print(out)
     print("\nREPORT_SHA256:", hashlib.sha256(out.encode()).hexdigest())
