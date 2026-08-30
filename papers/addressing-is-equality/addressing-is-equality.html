@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10.2" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Serhii Glova (independent) — sergey.glova@gmail.com" />
+  <meta name="dcterms.date" content="2026-08-30" />
+  <meta name="keywords" content="content-addressed
+computation, hash-consing, normalization by evaluation, combinatory
+logic, deterministic evaluation, verifiable computation" />
+  <title>Addressing Is Equality: Settling Equality of Canonical Data by Normal-Form Address in a Budgeted Content-Addressed Machine</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Addressing Is Equality: Settling Equality of Canonical
+Data by Normal-Form Address in a Budgeted Content-Addressed Machine</h1>
+<p class="author">Serhii Glova (independent) —
+sergey.glova@gmail.com</p>
+<p class="date">2026-08-30</p>
+</header>
+<h1 id="abstract">Abstract</h1>
+<p>In a content-addressed machine with deterministic, total,
+budget-priced evaluation, equality of canonical data does not need to be
+<em>expressed</em>; it can be <em>settled</em>: reduce both sides to
+canonical normal form and compare addresses. We state the idiom
+precisely — soundness is unconditional (modulo the hash function, which
+sits in the trust anchor); completeness holds <strong>only</strong>
+where the normal form is canonical for the equivalence class in question
+(first-order data at a generic point, not higher-order terms);
+nontermination is priced, not decided — and we measure why the statement
+matters. On the Σ-GLYPH reference machine, equality of two-digit Church
+numerals expressed <em>inside</em> the object language (subtraction and
+zero-test) costs 260,780 ATP at <span class="math inline">3 + 2</span>,
+26,212,480 at <span class="math inline">5 + 5</span>, and exhausts a
+50-million budget at <span class="math inline">7 + 5</span>; the address
+idiom settles <span class="math inline">7 + 5 = 12</span> for
+<strong>601 ATP</strong> and is linear thereafter (~50 ATP per unit;
+19,997 at <span class="math inline">200 + 200</span>) — five orders of
+magnitude at two digits, unbounded beyond. The components are classical
+(hash-consing, Merkle identity, normalization by evaluation); the
+composition claimed is equality as a <em>priced settlement with a
+receipt</em>: the two normal-form addresses are the evidence and the
+spend is part of the verdict. We show the idiom is already executable
+downstream without any format change: a raw check whose expected value
+is a non-boolean normal-form hash was filed into a live Warrant evidence
+pack and re-executes to <em>pass</em> (2,108 ATP) under the unmodified
+verifier, alongside a bit-vector-fold predicate (501 ATP) that
+represents the complementary answer to the same cost problem. A
+specification note — not a new primitive — is what we propose; a draft
+(ADR-011) is on file with the upstream project. Every figure above is
+recounted from the repository by the paper’s claims checker.</p>
+<h1 id="the-incident">1. The incident</h1>
+<p>While building a settlement gate for machine-checkable claims
+(companion paper, <code>every-check-spawns-more</code>), we needed to
+settle <code>7+5=12</code> on Σ-GLYPH <span class="citation"
+data-cites="sigma-glyph">(Glova 2026a)</span>: a content-addressed SKI
+machine whose evaluation is deterministic, integer-only, total at the
+semantic layer, and priced by a uint32 budget (ATP) that bounds both
+work and peak materialized size.</p>
+<p>The textbook route encodes equality inside the object language: <span
+class="math inline">EQ <em>m</em> <em>n</em> = ISZERO(SUB <em>m</em> <em>n</em>) ∧ ISZERO(SUB <em>n</em> <em>m</em>)</span>,
+with SUB as an iterated pair-encoded predecessor. Measured costs on the
+reference oracle:</p>
+<table>
+<thead>
+<tr>
+<th>fact</th>
+<th>in-language EQ (ATP)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">3 + 2 = 5</span></td>
+<td>260,780</td>
+</tr>
+<tr>
+<td><span class="math inline">5 + 5 = 10</span></td>
+<td>26,212,480</td>
+</tr>
+<tr>
+<td><span class="math inline">7 + 5 = 12</span></td>
+<td>&gt; 59,452,030 — ATP Exhausted</td>
+</tr>
+</tbody>
+</table>
+<p>The blow-up mechanism is instructive: under lazy tree-semantics
+reduction the <em>computed</em> argument (<span
+class="math inline">PLUS 7 5</span>, an unevaluated closure) is
+duplicated by every predecessor application, and the equality proof pays
+for the argument’s structure again at each of its own steps. Building
+the proof of equality inside the language makes the proof’s cost
+multiply the data’s cost.</p>
+<h1 id="the-idiom">2. The idiom</h1>
+<p>Both sides are applied to fresh inert literals and reduced:</p>
+<p><span
+class="math display">(PLUS 7 5) <em>F</em> <em>X</em> → <em>F</em><sup>12</sup>(<em>X</em>) ← church(12) <em>F</em> <em>X</em></span></p>
+<p>Two conforming machines that reach different normal forms have
+violated determinism, not equality; content addressing therefore makes
+the comparison a comparison of <strong>addresses</strong>. Measured: 601
+ATP at <span class="math inline">7 + 5</span>, linear at ~50 ATP per
+unit of result (1,997 at <span class="math inline">20 + 20</span>; 9,997
+at <span class="math inline">100 + 100</span>; 19,997 at <span
+class="math inline">200 + 200</span>; multiplication 2,213 at <span
+class="math inline">6 × 7</span>, 21,453 at <span
+class="math inline">20 × 20</span>). The receipt is the pair of
+addresses plus the spends — nothing else needs to be believed, because
+everything else re-executes.</p>
+<p>In a content-addressed machine, addressing is not a transport layer
+on top of equality. <strong>It is the equality mechanism.</strong></p>
+<h1
+id="precise-semantics-where-the-slogan-is-true-and-where-it-is-false">3.
+Precise semantics — where the slogan is true and where it is false</h1>
+<p>The two directions of the comparison have different standing, and a
+specification that fails to say so will mint receipts that
+overclaim.</p>
+<ol type="1">
+<li><strong>Soundness, unconditional.</strong> Equal addresses ⟹ equal
+values. The only assumption is collision resistance of the hash (SHA-256
+here), which is already in every content-addressed system’s trust anchor
+and is not discharged from inside.</li>
+<li><strong>Completeness, conditional.</strong> Different addresses ⟹
+different values <strong>only when the normal form is canonical for the
+intended equivalence class.</strong> For first-order data evaluated at a
+generic point — Church numerals as <span
+class="math inline"><em>F</em><sup><em>k</em></sup>(<em>X</em>)</span>,
+tuples of such, tagged sums — normal forms are canonical and the method
+is complete. For arbitrary higher-order terms it is not: syntactically
+distinct normal forms can be extensionally equal (η and beyond).
+“Addressing is equality” is a theorem about canonical data, a falsehood
+about functions.</li>
+<li><strong>Termination, priced.</strong> The idiom is defined when both
+sides normalize within budget; <code>ATP Exhausted</code> on either side
+is a canonical outcome, not a verdict of inequality. This interacts with
+receipt design: a settle-equality receipt must carry the exit kind of
+<em>both</em> evaluations.</li>
+</ol>
+<h1 id="prior-art-and-the-claimed-sliver">4. Prior art, and the claimed
+sliver</h1>
+<p>Every component is classical. Hash-consing gives <span
+class="math inline"><em>O</em>(1)</span> equality of already-constructed
+terms and dates to Ershov <span class="citation"
+data-cites="ershov1958">(Ershov 1958)</span>, with the modern statement
+in Filliâtre–Conchon <span class="citation"
+data-cites="filliatre2006">(Filliâtre and Conchon 2006)</span>; Merkle
+trees <span class="citation" data-cites="merkle1987">(Merkle
+1987)</span> and every content-addressed store (git, Nix, IPFS) identify
+data by root hash; normalization by evaluation <span class="citation"
+data-cites="berger1991">(Berger and Schwichtenberg 1991)</span> decides
+conversion by evaluating at a generic point, which is exactly our <span
+class="math inline"><em>F</em>, <em>X</em></span> trick. What we have
+not found stated is the composition that matters for machine-verifiable
+records: <strong>equality as a settlement carrying a price and a
+receipt</strong> — evaluate under an explicit budget on a machine whose
+spends are part of the canonical result, and let the two normal-form
+addresses <em>be</em> the evidence. The five-orders measurement is then
+not a performance note but a design argument: any ecosystem that makes
+agents express equality in-language taxes them <span
+class="math inline">10<sup>5</sup></span> at two digits, so the idiom
+deserves specification, not rediscovery.</p>
+<p>We would welcome a prior statement; the repository’s falsifier F1
+stands ready to downgrade this note to a citation.</p>
+<h1 id="executed-downstream-the-idiom-inside-warrant-today">5. Executed
+downstream: the idiom inside Warrant, today</h1>
+<p>Warrant <span class="citation" data-cites="warrant">(Glova
+2026b)</span> records decisions whose justifications can be
+re-executable checks; its <code>ski@v1</code> checks are
+<code>{ski, term, atp, expect}</code> blobs re-run on a bundled Σ-GLYPH
+oracle. Two facts make the idiom deployable there <strong>without any
+format change</strong>, and we verified both by execution rather than by
+reading:</p>
+<ol type="1">
+<li>The validator requires only that <code>expect</code> be a NodeHash;
+the runner compares plain result hashes. Nothing demands a Church
+boolean.</li>
+<li>We filed a raw address-equality check — <span
+class="math inline">term = (PLUS 74 1) <em>F</em> <em>X</em></span>,
+<span
+class="math inline">expect = hash(<em>F</em><sup>75</sup>(<em>X</em>))</span>,
+atp 2,108 — into a live evidence pack (the companion paper’s sealed
+correction-loop episode). <code>warrant check</code> re-executes it to
+<em>pass</em>; the pack’s settlement-grade verification stays at 0
+errors, 0 warnings, with the signed records untouched.</li>
+</ol>
+<p>The same pack carries the complementary approach: Warrant’s own WPL
+compiler encodes integer comparison as bit-vector folds (~one stored
+blob per bit), settling a three-clause acceptance predicate for 501 ATP.
+The two are answers to the same enemy — in-language Church arithmetic —
+with different shapes: bit-folds for <em>predicates over small
+facts</em>, address comparison for <em>equality of computed data</em>. A
+specification note covering scope §3 is drafted as ADR-011 in the
+upstream project’s proposals directory, with idiom-first (no kernel
+change) as the recommendation.</p>
+<h1 id="consequences">6. Consequences</h1>
+<p><em>For semantic mass.</em> This repository’s earlier notion of a
+concept’s mass — a weighted sum over the <em>unique</em> hashes of its
+dependency closure — is operationally grounded by the idiom:
+deduplication-by-address is what makes “a million pointers to one
+invariant cost one unit” true rather than rhetorical.</p>
+<p><em>For settlement gates.</em> The gate of the companion paper
+settles arithmetic claims of live generated text at 441–3,893 ATP each
+<em>on the real machine</em>; without the idiom those claims would be
+unsettleable in practice, and the gate’s “priced check per claim” design
+collapses.</p>
+<p><em>A speculative generalization, typed as such.</em> Wherever data
+can be canonicalized, internal equality predicates are a smell:
+expensive equality is a symptom of uncanonicalized data. We do not
+defend this beyond the measurements above.</p>
+<h1 id="falsifiers">Falsifiers</h1>
+<ul>
+<li><strong>F1.</strong> A prior statement of the settlement composition
+(priced, receipted equality-by-address) exists → this note reduces to a
+citation.</li>
+<li><strong>F2.</strong> A class of first-order canonical data on which
+normal-form address comparison yields a false inequality → §3.2’s scope
+is wrong, not merely narrow.</li>
+<li><strong>F3.</strong> A compiler brings in-language equality within
+~10× of the idiom → the design argument collapses to convenience.</li>
+<li><strong>F4.</strong> The Warrant execution proves format-legality,
+not upstream endorsement; if the upstream project’s gate rejects
+ADR-011’s scope note, §5’s “deployable today” claim must be re-qualified
+as “executable but unspecified”.</li>
+</ul>
+<h1 id="provenance">Provenance</h1>
+<p>As with the companion paper: measurements, code and text produced by
+Claude (Anthropic, “Fable 5”) operating this repository interactively on
+2026-08-30 under the human author’s direction and editorial
+responsibility. <code>check_claims.py</code> re-runs every benchmark
+figure above against the machine rather than quoting it.</p>
+<div id="refs" class="references csl-bib-body hanging-indent"
+role="list">
+<div id="ref-berger1991" class="csl-entry" role="listitem">
+Berger, Ulrich, and Helmut Schwichtenberg. 1991. <span>“An Inverse of
+the Evaluation Functional for Typed Lambda-Calculus.”</span>
+<em>Proceedings of the Sixth Annual IEEE Symposium on Logic in Computer
+Science (LICS)</em>, 203–11.
+</div>
+<div id="ref-ershov1958" class="csl-entry" role="listitem">
+Ershov, Andrei P. 1958. <span>“On Programming of Arithmetic
+Operations.”</span> <em>Communications of the ACM</em> 1 (8): 3–6.
+</div>
+<div id="ref-filliatre2006" class="csl-entry" role="listitem">
+Filliâtre, Jean-Christophe, and Sylvain Conchon. 2006. <span>“Type-Safe
+Modular Hash-Consing.”</span> <em>Proceedings of the ACM Workshop on
+ML</em>, 12–19.
+</div>
+<div id="ref-sigma-glyph" class="csl-entry" role="listitem">
+Glova, Serhii. 2026a. <em>Sigma-GLYPH: A Portable Deterministic Check
+Engine with Size-Priced Budgets</em>. <a
+href="https://doi.org/10.5281/zenodo.22069650">https://doi.org/10.5281/zenodo.22069650</a>.
+</div>
+<div id="ref-warrant" class="csl-entry" role="listitem">
+Glova, Serhii. 2026b. <em>Warrant: Content-Addressed Decision Records
+with Checks a Stranger Can Re-Run</em>. <a
+href="https://github.com/s0fractal/warrant">https://github.com/s0fractal/warrant</a>.
+</div>
+<div id="ref-merkle1987" class="csl-entry" role="listitem">
+Merkle, Ralph C. 1987. <span>“A Digital Signature Based on a
+Conventional Encryption Function.”</span> <em>Advances in Cryptology —
+CRYPTO ’87</em>, 369–78.
+</div>
+</div>
+</body>
+</html>
