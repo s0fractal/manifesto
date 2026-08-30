@@ -75,13 +75,21 @@ def findall_bounded(pattern, text, flags=0):
 
 ARITH = re.compile(r"^(-?\d+)\s*([+*-])\s*(-?\d+)\s*=\s*(-?\d+)$")
 CMP = re.compile(r"^(-?\d+)\s*(<=|>=|<|>|=)\s*(-?\d+)$")
-COUNT = re.compile(r"^/(.+)/\s+in\s+(\S+)\s*=\s*(\d+)$")
+COUNT = re.compile(r"^/(.+)/\s+in\s+(\S+)\s*=\s*(\d+)(?:\s+@(\w+))?$")
+BINDARITH = re.compile(r"^(\w+)\s*([+*-])\s*(\w+)\s*=\s*(\w+)$")
 SHA = re.compile(r"^(\S+)\s*=\s*([0-9a-f]{12,64})$")
 CITE = re.compile(r"^\"(.+)\"\s+in\s+(\S+)$", re.S)
 MONO = re.compile(r"^([\d,\s]+?)(?:\s+ev\s+([\d,\s]+))?$")
 
 MACHINE_MAX = 400   # arith via hash-equality of normal forms: linear cost
 CMP_MAX = 12        # cmp needs Church SUB/LEQ: expensive, small values only
+GATE_VERSION = "settle_gate/0.3+deps"  # dependency-bound receipts (Codex F3/F4)
+
+def _dep(path, content):
+    """A dependency record: the path a claim read and the digest of what it
+    actually read, so a receipt commits to the world it settled against."""
+    return {"path": path,
+            "sha256": hashlib.sha256(content.encode("utf-8", "replace")).hexdigest()}
 
 
 def _machine_arith(a, op, b, c):
@@ -110,9 +118,33 @@ def _machine_cmp(a, rel, b):
     return gl.settle_bool(expr)
 
 
-def settle(cls, payload):
-    """Returns dict: verdict PASS|REFUTED|UNSETTLED, layer, detail, atp."""
+def settle(cls, payload, env=None):
+    """Returns dict: verdict PASS|REFUTED|UNSETTLED, layer, detail, atp.
+    `env` is the document's binding environment {name: measured_value}, used by
+    semantic-binding classes so arithmetic operates on MEASURED reality rather
+    than on generator-chosen literals (Codex F3: '3 and 6 were never bound to
+    the sets they count')."""
+    if env is None:
+        env = {}
     payload = payload.strip()
+    if cls == "bindarith":
+        m = BINDARITH.match(payload)
+        if not m:
+            return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed bindarith"}
+        na, op, nb, nc = m[1], m[2], m[3], m[4]
+        missing = [x for x in (na, nb, nc) if x not in env and not x.isdigit()]
+        if missing:
+            return {"verdict": "UNSETTLED", "layer": "bind",
+                    "detail": f"unbound name(s): {', '.join(missing)} "
+                              f"(bind via a measured claim's @name first)"}
+        va = int(na) if na.isdigit() else env[na]
+        vb = int(nb) if nb.isdigit() else env[nb]
+        vc = int(nc) if nc.isdigit() else env[nc]
+        actual = {"+": va + vb, "*": va * vb, "-": va - vb}[op]
+        ok = actual == vc
+        return {"verdict": "PASS" if ok else "REFUTED", "layer": "bind",
+                "detail": f"measured {na}={va} {op} {nb}={vb} = {actual}"
+                          + ("" if ok else f" ≠ {nc}={vc}")}
     if cls == "arith":
         m = ARITH.match(payload)
         if not m:
@@ -152,7 +184,7 @@ def settle(cls, payload):
         m = COUNT.match(payload)
         if not m:
             return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed count"}
-        pat, path, n = m[1], m[2], int(m[3])
+        pat, path, n, name = m[1], m[2], int(m[3]), m[4]
         try:
             fp = resolve_in_repo(path)
         except ValueError as e:
@@ -160,11 +192,15 @@ def settle(cls, payload):
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
         try:
-            actual = len(findall_bounded(pat, read_bounded(fp), re.MULTILINE))
+            content = read_bounded(fp)
+            actual = len(findall_bounded(pat, content, re.MULTILINE))
         except (ValueError, TimeoutError) as e:
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
+        if name:  # bind the MEASURED value (not the claimed n) for semantic binding
+            env[name] = actual
+        det = f"actual count = {actual}" + (f" (bound {name}={actual})" if name else "")
         return {"verdict": "PASS" if actual == n else "REFUTED", "layer": "repo",
-                "detail": f"actual count = {actual}"}
+                "detail": det, "dep": _dep(path, content)}
     if cls == "sha256":
         m = SHA.match(payload)
         if not m:
@@ -177,11 +213,13 @@ def settle(cls, payload):
         if not os.path.isfile(fp):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": f"no file {path}"}
         try:
-            actual = hashlib.sha256(read_bounded(fp).encode("utf-8", "replace")).hexdigest()
+            content = read_bounded(fp)
         except ValueError as e:
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
+        actual = hashlib.sha256(content.encode("utf-8", "replace")).hexdigest()
         return {"verdict": "PASS" if actual.startswith(prefix) else "REFUTED",
-                "layer": "repo", "detail": f"actual {actual[:16]}..."}
+                "layer": "repo", "detail": f"actual {actual[:16]}...",
+                "dep": _dep(path, content)}
     if cls in ("cite", "citei"):
         m = CITE.match(payload)
         if not m:
@@ -204,7 +242,8 @@ def settle(cls, payload):
             found = quote in content
             kind = "verbatim"
         return {"verdict": "PASS" if found else "REFUTED", "layer": "repo",
-                "detail": f"{kind} quote found" if found else f"{kind} quote NOT in file"}
+                "detail": f"{kind} quote found" if found else f"{kind} quote NOT in file",
+                "dep": _dep(path, content)}
     if cls == "mono":
         # ⟦mono: c1,c2,c3 ev i,j⟧ — confidence chain in ppm (0..1000000);
         # invariant 0030: conf[k+1] <= conf[k] unless entry k+1 carries evidence.
@@ -241,10 +280,11 @@ def badge(res, cls, payload):
 
 def gate(text):
     results = []
+    env = {}   # binding environment, populated left-to-right as claims settle
 
     def repl(m):
         cls, payload = m.group(1), m.group(2)
-        res = settle(cls, payload)
+        res = settle(cls, payload, env)
         results.append({"class": cls, "payload": payload.strip(), **res})
         return badge(res, cls, payload)
 
@@ -266,7 +306,18 @@ def main():
              "refuted": sum(r["verdict"] == "REFUTED" for r in results),
              "unsettled": sum(r["verdict"] == "UNSETTLED" for r in results),
              "atp_total": sum(r.get("atp") or 0 for r in results)}
+    # dependency closure: every file a claim actually read, by digest, so a
+    # freshness checker can detect a stale receipt without re-running anything
+    # (Codex F3/F4). Conflicting digests for one path => the file changed
+    # mid-run; recorded as a list so that is visible, not averaged away.
+    deps = {}
+    for r in results:
+        d = r.get("dep")
+        if d:
+            deps.setdefault(d["path"], set()).add(d["sha256"])
+    deps = {p: sorted(v) for p, v in sorted(deps.items())}
     receipt = {"source_sha256": hashlib.sha256(text.encode()).hexdigest(),
+               "gate_version": GATE_VERSION, "deps": deps,
                "tally": tally, "claims": results}
     out_md = src.rsplit(".md", 1)[0] + ".settled.md"
     out_js = src.rsplit(".md", 1)[0] + ".receipt.json"

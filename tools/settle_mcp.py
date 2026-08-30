@@ -31,6 +31,7 @@ import sys
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 import settle_gate  # noqa: E402
 import taint_check  # noqa: E402
+import receipt_freshness  # noqa: E402
 
 PROTOCOL = "2024-11-05"
 
@@ -60,6 +61,19 @@ TOOLS = [
                         "required": ["markdown", "receipt"]},
     },
     {
+        "name": "check_freshness",
+        "description": "Is a settlement receipt still true of the current world? "
+                       "A 0.3+ receipt records the digest of every file each "
+                       "claim read; this recomputes them NOW and reports FRESH / "
+                       "STALE (with the affected claims) / LEGACY — without "
+                       "re-running the gate or any LLM. Answers the 'a receipt "
+                       "silently goes stale when its inputs change' problem.",
+        "inputSchema": {"type": "object",
+                        "properties": {"receipt": {"type": "string",
+                                                   "description": "receipt JSON from settle_text"}},
+                        "required": ["receipt"]},
+    },
+    {
         "name": "check_taint",
         "description": "Detect inherited falsehood across an ORDERED sequence "
                        "of receipts (earlier -> later): flags later numeric "
@@ -82,7 +96,14 @@ def build_receipt(text, results):
              "refuted": sum(r["verdict"] == "REFUTED" for r in results),
              "unsettled": sum(r["verdict"] == "UNSETTLED" for r in results),
              "atp_total": sum(r.get("atp") or 0 for r in results)}
+    deps = {}
+    for r in results:
+        d = r.get("dep")
+        if d:
+            deps.setdefault(d["path"], set()).add(d["sha256"])
+    deps = {p: sorted(v) for p, v in sorted(deps.items())}
     receipt = {"source_sha256": hashlib.sha256(text.encode()).hexdigest(),
+               "gate_version": settle_gate.GATE_VERSION, "deps": deps,
                "tally": tally, "claims": results}
     body = json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2)
     return body + "\nRECEIPT_SHA256: " + hashlib.sha256(body.encode()).hexdigest() + "\n"
@@ -154,8 +175,30 @@ def tool_check_taint(args):
             "poison_set": sorted(poison)}
 
 
+def tool_check_freshness(args):
+    s = args["receipt"]
+    cut = s.rfind("RECEIPT_SHA256")
+    rec = json.loads(s[:cut].strip() if cut != -1 else s)
+    deps = rec.get("deps")
+    if deps is None:
+        return {"verdict": "legacy", "reason": "no deps recorded (pre-0.3 receipt)"}
+    stale = []
+    for path, settled in deps.items():
+        now = receipt_freshness.current_digest(path)
+        if now is None:
+            stale.append({"path": path, "why": "missing/unresolvable"})
+        elif now not in settled:
+            stale.append({"path": path, "why": "changed",
+                          "settled": settled[0][:12], "now": now[:12],
+                          "affected": [c.get("payload") for c in rec.get("claims", [])
+                                       if c.get("dep", {}).get("path") == path]})
+    return {"verdict": "fresh" if not stale else "stale",
+            "dependencies": len(deps), "stale": stale}
+
+
 HANDLERS = {"settle_text": tool_settle_text,
             "verify_receipt": tool_verify_receipt,
+            "check_freshness": tool_check_freshness,
             "check_taint": tool_check_taint}
 
 

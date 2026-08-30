@@ -44,9 +44,9 @@
 
 1. ✅ MCP P0: forgery, path escape, regex/resource bounds, strict fail-closed — **зроблено сьогодні**. Лишок: bounded input schemas на рівні MCP, allowlist roots як конфіг.
 2. SSD-DEMO-0.2 → канонічний **негативний** fixture semantic-binding/coverage (переназвати роль, лишити хибні твердження як демонстрацію, додати marked-vs-unmarked розбір).
-3. Dependency-bound receipts: repo SHA + digest кожного прочитаного файла + checker SHA + runtime + regex dialect + oracle fingerprint; `replay-all` на frozen SHA.
-4. RVB → probability reviewer; контрмоделі опубліковані поруч (частково зроблено — вони тепер у §2.2).
-5. Явні типи `Artifact/Process/Agent/AccountableActor/MoralPatient/Subject/Person`.
+3. ✅ **Dependency-bound receipts — ЗРОБЛЕНО** (`settle_gate/0.3+deps` пише digest кожного прочитаного файла; `tools/receipt_freshness.py` + MCP-тул `check_freshness` перевіряють квитанцію проти світу без LLM: FRESH/STALE-з-іменами-претензій/LEGACY; перевірено на дрейфі). Лишок: repo HEAD SHA + checker SHA + oracle fingerprint у closure; `replay-all`-раннер.
+4. RVB → probability reviewer; контрмоделі опубліковані поруч (зроблено — §2.2).
+5. ✅ **Semantic binding — перший крок ЗРОБЛЕНО**: `⟦count: … @name⟧` прив'язує ВИМІРЯНЕ; `⟦bindarith: a+b=c⟧` рахує над прив'язаним. На самому F3-прикладі laundering "3+6=9" неможливий. Повний semantic binding (претензія→світ поза лічильним) і явні типи `Artifact/Process/Agent/AccountableActor/MoralPatient/Subject/Person` — наступний рівень, відкрито.
 6. Коротка конституція влади: хто типізує, хто відмовляє, хто апелює; repair/forgiveness/forgetting/key-recovery/plural validators.
 7. Provenance/licensing (частково зроблено); один frozen review packet з exact SHA, командами, критеріями фальсифікації.
 
