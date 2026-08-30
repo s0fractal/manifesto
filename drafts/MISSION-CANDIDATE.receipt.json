@@ -1,0 +1,34 @@
+{
+  "claims": [
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"створити **умови для народження нового**\" in README.md",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"а тому, що вони мають **історію, яку можна зрозуміти**\" in README.md",
+      "verdict": "PASS"
+    },
+    {
+      "class": "cite",
+      "detail": "verbatim quote found",
+      "layer": "repo",
+      "payload": "\"Ми не будуємо інструмент контролю\" in README.md",
+      "verdict": "PASS"
+    }
+  ],
+  "source_sha256": "606abfcb238a27acd9e4e2f6aae8b588855e3b071e5f9ba10514974834a21912",
+  "tally": {
+    "atp_total": 0,
+    "claims": 3,
+    "refuted": 0,
+    "settled_true": 3,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: b84703a4302ca114784bf08f9dcaa128adfcceb63d56ec7eb4735d077d9bbb44
