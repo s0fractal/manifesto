@@ -17,7 +17,7 @@ env:
   # would make the test mean something different on every run.
   # The commit carrying the FROZEN receipt. The artifact is rebuilt from the
   # commit that receipt names, not from this one.
-  SIGMA_PIN: 9a20fa405d8fa42d4500534fedc5d05f4a23e0c4
+  SIGMA_PIN: ef16fa3efea4bf7a1931e0bfa643725753fd6d2c
   # Pinned HERE, in this repository, so the comparison is against a digest this
   # repository committed rather than one the producer generated during the run.
   # Without this, CI showed only that a generator agrees with itself.
