@@ -22,13 +22,21 @@ jobs:
       # /Users/s0fractal/Projects/sigma-glyph). CI has no such tree, so the
       # first run of this workflow died on ModuleNotFoundError: sigma_glyph.
       #
-      # Rather than recreate the checkout, this installs the RELEASED package
-      # and points SIGMA_GLYPH at nothing, so the sibling-checkout branch
-      # cannot be taken. The errata's claims then reproduce against a pinned,
-      # published boundary instead of against one machine's working tree —
-      # which is the property ADR-012 exists to establish, demonstrated here on
-      # a real consumer.
-      - name: Install the released Sigma boundary (no source checkout)
+      # Rather than recreate the checkout, this installs a VERSION-PINNED
+      # RELEASED PACKAGE and points SIGMA_GLYPH at nothing, so the
+      # sibling-checkout branch cannot be taken.
+      #
+      # What that establishes, exactly: the errata's claims reproduce from a
+      # clean install of a version-pinned released package, without a source
+      # checkout. Artifact-digest pinning is an ADR-012 requirement and is NOT
+      # what `pip install sigma-glyph==0.6.7` does — a version pin names a
+      # version, not a wheel digest.
+      #
+      # And 0.6.7 is a published package, NOT the adopted anchor-set bundle
+      # v0.7.0. A green job here shows clean-install consumption of a
+      # compatible evaluator API. It does not show that the PyPI artifact
+      # represents the adopted anchor set.
+      - name: Install a version-pinned released package (no source checkout)
         run: pip install "sigma-glyph==0.6.7"
 
       - name: AIE-0.1 errata reproduces against the released boundary
