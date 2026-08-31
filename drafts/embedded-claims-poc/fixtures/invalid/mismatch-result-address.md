@@ -10,7 +10,7 @@ claim can no longer borrow a true claim's address.
 
 ```json capsule
 {
-  "verifier": "glyph://sha256:bf940e0a46eb384218e275ff50bdc0731c7a297a16ce13ff07d5a71e82d3f0cf",
+  "verifier": "glyph://sha256:b4f33ca1ba18b005de4eeba34a550cd65e4481e54a3ce5885831cd6d239636cd",
   "evaluation_id": "deadbeef00000000000000000000000000000000000000000000000000000000"
 }
 ```

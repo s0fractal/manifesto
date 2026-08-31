@@ -10,7 +10,7 @@ shifts the address and the claim is refuted. "Same output" ≠ "same effect".
 
 ```json capsule
 {
-  "verifier": "effect-sandbox://sha256:53f712987d4ad7f4435a93f0c718c217f6138dd68fbba401b9dc296be4369758"
+  "verifier": "effect-sandbox://sha256:e21e9f3ea9f43ecd9d9eb3149ff965dc68c7cc4fca6ab9b4e4fa6f715c975c54"
 }
 ```
 

@@ -70,11 +70,15 @@ def _h(domain, *parts):
 
 
 def _closure_digest(paths):
-    """Digest of the exact bytes of every CODE FILE on the settlement path."""
+    """Digest of the exact bytes of every CODE FILE on the settlement path.
+    Ordered by CONTENT digest, never by path: the identity is over the SET of file
+    contents, so the same code at a different location (a venv elsewhere, another
+    machine) yields the same id. Sorting by absolute path would reintroduce the
+    'one machine's directory layout' dependency this whole boundary exists to kill."""
+    digs = sorted(hashlib.sha256(open(p, "rb").read()).digest() for p in paths)
     m = hashlib.sha256()
-    for p in sorted(paths):
-        with open(p, "rb") as f:
-            m.update(hashlib.sha256(f.read()).digest())
+    for d in digs:
+        m.update(d)
     return m.hexdigest()
 
 

@@ -1,0 +1,45 @@
+name: embedded-claims-poc
+
+# A green board must mean a check ran. This gate reproduces the embedded-claims
+# phase-1 PoC (drafts/embedded-claims-poc/) against a version-pinned RELEASED
+# evaluator, so a change that made a fixture stop reproducing fails here rather
+# than leaving the PoC quietly describing an older tree.
+on: [push, pull_request]
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with: { python-version: '3.12' }
+
+      # The PoC's verifier identities are a code CLOSURE that includes the
+      # evaluator's bytes. The fixtures pin those identities against the released
+      # sigma-glyph==0.6.7 evaluator; a clean install of that version must
+      # reproduce them. Installing a DIFFERENT Sigma changes the evaluator bytes
+      # and the closure digest, so the glyph/settle-gate fixtures would go
+      # UNVERIFIED — that is the closure discipline working, not a flake. Bumping
+      # Sigma is therefore a deliberate act that requires recomputing the pins.
+      #
+      # SIGMA_GLYPH is pointed at nothing so the historical sibling-checkout
+      # branch cannot be taken (tools/sigma_boundary.py ignores it and says so).
+      - name: Install the version-pinned released evaluator (no source checkout)
+        run: pip install "sigma-glyph==0.6.7"
+
+      # What a green job establishes: 17 fixtures + 4 invariants reproduce from a
+      # clean install of the released package. What it does NOT establish (by
+      # design, see the PoC README): this is a REPORT not a receipt; effects are
+      # OBSERVED post-state, not enforced; canonicalization and the interpreter/
+      # environment closure are deferred to phase 2. The identity is over CODE
+      # bytes, path-independent (sorted by content digest), but not over the
+      # interpreter build or OS.
+      - name: PoC fixtures + invariants reproduce against released 0.6.7
+        shell: bash
+        env:
+          SIGMA_GLYPH: /nonexistent-on-purpose
+        run: |
+          set -euo pipefail
+          python3 -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
+          python3 drafts/embedded-claims-poc/test_poc.py | tee poc.log
+          grep -q "ALL PASS (17 fixtures + 4 invariants)" poc.log

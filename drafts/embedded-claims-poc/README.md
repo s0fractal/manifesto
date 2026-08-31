@@ -58,14 +58,23 @@ address), `result_value_id` (the canonical result value), and `evaluation_id`
 
 ## Run
 
-The Σ-GLYPH runtime is consumed as an installed package. One-time setup (the venv
-is gitignored):
+The Σ-GLYPH runtime is consumed as a **version-pinned released package**. The
+fixture verifier-identities are a code closure that includes the evaluator's
+bytes, so they are pinned against `sigma-glyph==0.6.7` — the same version the CI
+gate (`.github/workflows/embedded-claims-poc.yml`) installs. One-time setup (the
+venv is gitignored):
 
 ```sh
 # from the manifesto repo root
 python3 -m venv .venv
-.venv/bin/pip install -e ~/Projects/sigma-glyph     # or: pip install sigma-glyph
+.venv/bin/pip install "sigma-glyph==0.6.7"          # the pinned, reproducible evaluator
 ```
+
+Bumping Sigma is deliberate: a different evaluator changes the closure digest, so
+the glyph/settle-gate fixtures go UNVERIFIED until the pins are recomputed. That
+is the closure discipline working, not a flake. Verifier ids are **path-independent**
+(the closure is sorted by content digest, not by file path), so any 0.6.7 install
+— any venv, any machine, CI — reproduces the same ids.
 
 Then:
 
