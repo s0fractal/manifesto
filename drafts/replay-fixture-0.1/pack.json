@@ -1,0 +1,43 @@
+{
+  "kind": "manifesto/replay-pack@v0",
+  "subject": {
+    "predicate": "count_token",
+    "token": "FLOW",
+    "dependency_id": "drafts/replay-fixture-0.1/source.md",
+    "claimed_occurrences": 3
+  },
+  "dependencies": [
+    {
+      "dependency_id": "drafts/replay-fixture-0.1/source.md",
+      "sha256": "136db2a79a3ac8c915cacbf3f7fdcf0e0ada47931cde2dc757cf504b0a316fba",
+      "embedded_path": "blobs/136db2a79a3ac8c915cacbf3f7fdcf0e0ada47931cde2dc757cf504b0a316fba"
+    }
+  ],
+  "runtime": {
+    "evaluator_artifact_sha256": "cfee921858378493e692f052b8fe253e1a85603b3a93d0df1dde1aba7ba70a6a",
+    "profile_id": "manifesto/glyphlib/settle_nat_eq@v0",
+    "profile_sources": [
+      {
+        "path": "tools/sigma_boundary.py",
+        "sha256": "943def21f00702b45acee27f3d23572311b79b41c78aab51e2e1be0dc29376da"
+      },
+      {
+        "path": "tools/glyphlib.py",
+        "sha256": "701027f3cc837fce8eb41b6a55efedb00268ac72f418fe09d46b63f4b3d33ba7"
+      },
+      {
+        "path": "tools/replay_pack.py",
+        "sha256": "6af402d078cfb001bdbe06341e7ecb96dc8d7c8c8f9a2182daed5eff4a2e2d81"
+      }
+    ]
+  },
+  "computation": {
+    "budget": 5000000,
+    "receipt": {
+      "verdict": "PASS",
+      "atp_spent": 114,
+      "lhs_nf": "24ae75e52772589cb668256e0db06dc4f7cb107142b36aef39f1b7e7aa1f8107",
+      "rhs_nf": "24ae75e52772589cb668256e0db06dc4f7cb107142b36aef39f1b7e7aa1f8107"
+    }
+  }
+}

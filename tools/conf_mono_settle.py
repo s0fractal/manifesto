@@ -23,9 +23,12 @@ import json
 import os
 import sys
 
-SIGMA = os.environ.get("SIGMA_GLYPH", "/Users/s0fractal/Projects/sigma-glyph")
-sys.path.insert(0, os.path.join(SIGMA, "impl"))
-import sigma_glyph as sg  # noqa: E402
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from sigma_boundary import sigma  # noqa: E402
+
+# The evaluator as an INSTALLED PACKAGE. This was a hardcoded
+# absolute path into one machine's checkout; see sigma_boundary.py.
+sg = sigma()
 
 # ---------------------------------------------------------------- Stage B ---
 def sha256_hex(b: bytes) -> str:

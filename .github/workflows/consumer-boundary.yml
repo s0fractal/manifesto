@@ -1,0 +1,141 @@
+name: consumer-boundary
+
+# NON-NORMATIVE. Proves this repository consumes the Σ-GLYPH evaluator as an
+# INSTALLED PACKAGE rather than through a source checkout.
+#
+# HOW THE ARTIFACT GETS HERE, and why it is not published.
+# Publishing the candidate wheel is not authorised, and committing a binary to
+# git is worse. So a producer step checks out sigma-glyph AT A PINNED COMMIT and
+# builds the wheel with sigma's own builder. That checkout is a BUILD input and
+# never an import path: the consumer steps run with it absent from PYTHONPATH,
+# with the historical SIGMA_GLYPH override pointed at a path that cannot exist,
+# and the controls assert the evaluator resolves inside site-packages.
+on: [push, pull_request]
+
+env:
+  # The exact Sigma revision this consumer is tested against. A branch name
+  # would make the test mean something different on every run.
+  # The commit carrying the FROZEN receipt. The artifact is rebuilt from the
+  # commit that receipt names, not from this one.
+  SIGMA_PIN: ef16fa3efea4bf7a1931e0bfa643725753fd6d2c
+  # Pinned HERE, in this repository, so the comparison is against a digest this
+  # repository committed rather than one the producer generated during the run.
+  # Without this, CI showed only that a generator agrees with itself.
+  EXPECTED_ARTIFACT_SHA256: cfee921858378493e692f052b8fe253e1a85603b3a93d0df1dde1aba7ba70a6a
+  EXPECTED_BUILD_COMMIT: 5050ab7354224e586456b26fbd0fffe04301b3b2
+
+jobs:
+  installed-package-consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with: { path: manifesto }
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with: { python-version: '3.12' }
+
+      - name: Fetch the producer at its pinned commit
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/s0fractal/sigma-glyph.git sigma
+          git -C sigma checkout --quiet "$SIGMA_PIN"
+          test "$(git -C sigma rev-parse HEAD)" = "$SIGMA_PIN"
+
+      - name: Rebuild the FROZEN artifact and compare with this repo's pin
+        env:
+          SOURCE_DATE_EPOCH: '1788134400'
+        run: |
+          set -euo pipefail
+          cd sigma
+          # The receipt committed in the producer names the commit its artifact
+          # was built from; build THAT, not the receipt commit.
+          FROZEN_IN_PRODUCER=$(python3 -c "import json;print(json.load(open('campaigns/phase-4a/candidate-receipt.json'))['artifact_sha256'])")
+          BUILD_COMMIT=$(python3 -c "import json;print(json.load(open('campaigns/phase-4a/candidate-receipt.json'))['source_commit'])")
+          test "$FROZEN_IN_PRODUCER" = "$EXPECTED_ARTIFACT_SHA256"
+          test "$BUILD_COMMIT" = "$EXPECTED_BUILD_COMMIT"
+          # Copy the receipt out BEFORE moving the checkout: the build commit
+          # predates the receipt that names it, so after this checkout the file
+          # is gone. The consumer steps use this copy as their evaluator operand.
+          cp campaigns/phase-4a/candidate-receipt.json \
+             "$GITHUB_WORKSPACE/candidate-receipt.json"
+          # A SECOND wheel, from a different commit, for the control that the
+          # operand must be the ENGINE: two candidate wheels can carry a
+          # byte-identical sigma_glyph.py, so only the distribution version
+          # separates them.
+          python3 tools/candidate_artifact.py build \
+            --out "$GITHUB_WORKSPACE/other-candidate"
+          git checkout --quiet "$BUILD_COMMIT"
+          python3 tools/candidate_artifact.py build --out "$GITHUB_WORKSPACE/candidate"
+          python3 tools/candidate_artifact.py verify \
+            --out "$GITHUB_WORKSPACE/candidate" --expect-commit "$BUILD_COMMIT"
+          REBUILT=$(python3 -c "import json;print(json.load(open('$GITHUB_WORKSPACE/candidate/release-manifest.json'))['artifact_sha256'])")
+          echo "frozen (this repo) $EXPECTED_ARTIFACT_SHA256"
+          echo "rebuilt            $REBUILT"
+          test "$REBUILT" = "$EXPECTED_ARTIFACT_SHA256"
+
+      # Digest checked against the manifest before the wheel is installed.
+      - name: Install it into a clean environment, digest-checked first
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          WHEEL=$(python3 -c "import json;print(json.load(open('candidate/release-manifest.json'))['artifact_filename'])")
+          # The digest THIS repository pinned, not the one just generated.
+          EXPECT="$EXPECTED_ARTIFACT_SHA256"
+          ACTUAL=$(python3 -c "import hashlib,sys;print(hashlib.sha256(open('candidate/$WHEEL','rb').read()).hexdigest())")
+          echo "expected $EXPECT"; echo "actual   $ACTUAL"
+          test "$EXPECT" = "$ACTUAL"
+          python3 -m venv consumer-venv
+          ./consumer-venv/bin/pip install --quiet --no-deps "candidate/$WHEEL"
+          ./consumer-venv/bin/python -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
+
+      # From here the sigma checkout must be irrelevant. It is still on disk,
+      # which is the point: if the consumer were still reaching for it, these
+      # steps would pass for the wrong reason, and the controls check the
+      # resolved module path rather than trusting the environment.
+      - name: The consumer boundary holds
+        env:
+          SIGMA_GLYPH: /nonexistent/sigma-glyph--must-not-be-found
+        run: |
+          set -euo pipefail
+          cd manifesto
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/consumer_boundary_controls.py \
+            | tee consumer.log
+          grep -q "CONSUMER-BOUNDARY-CONTROLS: ALL PASS" consumer.log
+
+      - name: Replay and drift are two operations
+        env:
+          SIGMA_GLYPH: /nonexistent/sigma-glyph--must-not-be-found
+        run: |
+          set -euo pipefail
+          cd manifesto
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_controls.py \
+            --evaluator "$GITHUB_WORKSPACE/candidate"/*.whl \
+            --other-wheel "$GITHUB_WORKSPACE/other-candidate"/*.whl \
+            --receipt "$GITHUB_WORKSPACE/candidate-receipt.json" \
+            | tee replay.log
+          grep -q "REPLAY-CONTROLS: ALL PASS" replay.log
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
+            replay drafts/replay-fixture-0.1 \
+            --evaluator "$GITHUB_WORKSPACE/candidate"/*.whl \
+            | tee fixture.log
+          grep -q "REPLAY: MATCH" fixture.log
+          # LEGACY_UNPINNED is a refusal, so the tool exits non-zero — which is
+          # correct, and `set -e` would otherwise read the right answer as a
+          # failed step. The verdict is what is asserted here, not the status.
+          set +e
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
+            replay drafts/ssd-pack \
+            --evaluator "$GITHUB_WORKSPACE/candidate"/*.whl | tee legacy.log
+          legacy_status=${PIPESTATUS[0]}
+          set -e
+          grep -q "REPLAY: LEGACY_UNPINNED" legacy.log
+          test "$legacy_status" -ne 0  # a refusal must not report success
+
+      - name: The AIE errata still reproduces against the candidate artifact
+        env:
+          SIGMA_GLYPH: /nonexistent/sigma-glyph--must-not-be-found
+        run: |
+          set -euo pipefail
+          cd manifesto
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/aie_errata_check.py \
+            | tee errata.log
+          grep -q "AIE-ERRATA-CHECK: ALL PASS" errata.log
