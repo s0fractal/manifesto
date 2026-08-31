@@ -23,6 +23,23 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import glyphlib as g                                            # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+# Which correction IDs any control here actually decides, and which it does not.
+# Printed on every run, because "11/11 pass" next to "eleven corrections" reads
+# as eleven corrections proved, and it is four.
+EXECUTABLE = ("C2", "C5", "C6", "C11")
+DOCUMENTATION_ONLY = ("C1", "C3", "C4", "C7", "C8", "C9", "C10")
+
+# The upstream source of the eleven items, bound by digest rather than by a
+# path into a sibling checkout. Nothing here reads that repository at runtime.
+UPSTREAM = {
+    "repo": "sigma-glyph",
+    "commit": "81ff660566b8354eccbda849aa21ef35aceedc07",
+    "path": "proposals/adr-011/MANIFESTO-CORRECTIONS.md",
+    "sha256": "ccd0ced49cf6d2b633108070e90048ab5ea65ce8da35bd50fe04ba9f41152d59",
+    "receiving_base": "443324f842959f73679916bbc900ffc5e8fbab33",
+}
+
 results = []
 
 
@@ -53,7 +70,10 @@ def plus():
 
 
 def main():
-    print("AIE-0.1 errata — reproduced against tools/glyphlib.py\n")
+    print("AIE-0.1 errata — reproduced against tools/glyphlib.py")
+    print(f"  corrections from {UPSTREAM['repo']}:{UPSTREAM['path']}")
+    print(f"  at {UPSTREAM['commit'][:12]}, sha256 {UPSTREAM['sha256'][:16]}…")
+    print(f"  received on manifesto base {UPSTREAM['receiving_base'][:12]}\n")
     src = inspect.getsource(g.settle_nat_eq)
 
     # C2/C6 — the counterexample runs HERE, not only upstream.
@@ -78,14 +98,16 @@ def main():
     # C9 — the 601 ATP headline belongs to the PERMISSIVE harness.
     verdict9, atp9, _ = g.settle_nat_eq(g.A(plus(), g.church(7), g.church(5)),
                                         g.church(12))
-    chk("C9. this harness settles PLUS 7 5 = 12, at the 601 ATP AIE-0.1 quotes",
+    chk("C6. this harness settles PLUS 7 5 = 12, at the 601 ATP AIE-0.1 quotes",
         verdict9 == "PASS" and atp9 == 601, f"{verdict9} at {atp9} ATP")
-    chk("C9b. it settles it because it admits ANY expression: there is no "
-        "admission step at all",
+    chk("C6b. it settles it because it admits ANY expression: there is no "
+        "admission step at all — so the 601 figure is not reproducible under "
+        "any admitted profile",
         "admit" not in src and "domain" not in src)
 
-    # C7/C10 — no profile identity of any kind travels with a verdict.
-    chk("C10. a verdict carries no profile id, no commitment and no Book "
+    # C11 — no profile identity of any kind travels with a verdict, so
+    #       cross-agent dedup by address cannot know it compared like with like.
+    chk("C11. a verdict carries no profile id, no commitment and no Book "
         "anchor — nothing that says under WHICH profile it was settled",
         not any(token in src for token in
                 ("profile_id", "profile_commitment", "book_anchor")))
@@ -136,8 +158,18 @@ def main():
         'em != "NF"' not in blinded and 'en != "NF"' in src)
 
     print()
+    print("  executable correction IDs: " + ", ".join(EXECUTABLE))
+    print("  documentation-only IDs:    " + ", ".join(DOCUMENTATION_ONLY))
+    print(f"  controls/mutations:        {sum(results)}/{len(results)} pass")
+    print()
     if all(results):
-        print(f"AIE-ERRATA-CHECK: ALL PASS ({len(results)}/{len(results)})")
+        # NOT "11 corrections mechanically decided". Eleven checks decide four
+        # of the eleven correction IDs; the other seven are editorial and no
+        # control here touches them. Conflating the two counts is the exact
+        # defect this errata is about.
+        print(f"AIE-ERRATA-CHECK: ALL PASS ({len(results)}/{len(results)} "
+              f"executable checks, covering {len(EXECUTABLE)} of 11 correction "
+              f"IDs; {len(DOCUMENTATION_ONLY)} are documentation-only)")
         return 0
     print(f"AIE-ERRATA-CHECK: FAILURES ({sum(results)}/{len(results)})")
     return 1

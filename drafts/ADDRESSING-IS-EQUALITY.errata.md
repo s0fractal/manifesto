@@ -7,15 +7,35 @@ about it. This file states what is false in it, what is narrower than it says,
 and what is still open.
 
 **Origin.** The upstream review of `sigma-glyph:proposals/ADR-011` produced
-eleven items (`proposals/adr-011/MANIFESTO-CORRECTIONS.md`). They are treated
-here as claims about *this* repository, reproduced against this checkout rather
-than copied. Reproduced at `443324f842959f73679916bbc900ffc5e8fbab33`.
+eleven items. They are treated here as claims about *this* repository,
+reproduced against this checkout rather than copied.
 
-**Executable part:** `python3 tools/aie_errata_check.py` → `ALL PASS (11/11)`.
+```text
+source repo      sigma-glyph
+source commit    81ff660566b8354eccbda849aa21ef35aceedc07
+source path      proposals/adr-011/MANIFESTO-CORRECTIONS.md
+source sha256    ccd0ced49cf6d2b633108070e90048ab5ea65ce8da35bd50fe04ba9f41152d59
+receiving base   443324f842959f73679916bbc900ffc5e8fbab33   (manifesto/main)
+```
+
+The binding is commit-plus-path-plus-digest. Nothing here reads a sibling
+checkout at runtime, so this repository does not acquire a dependency on where
+`sigma-glyph` happens to be on disk.
+
+**Executable part:** `python3 tools/aie_errata_check.py`.
+
+```text
+executable correction IDs: C2, C5, C6, C11
+documentation-only IDs:    C1, C3, C4, C7, C8, C9, C10
+controls/mutations:        11/11 pass
+```
+
 Eight controls plus three mutations, each mutation required to flip its own
-control. The corrections that are editorial carry no control and are marked
-**documentation** below; a checker whose unchecked list is invisible is the
-defect this repository keeps naming in other people's guards.
+control. **Eleven checks are not eleven corrections decided.** They decide four
+of the eleven IDs; the other seven are editorial and no control touches them.
+Reading `11/11` beside "eleven corrections" as eleven corrections proved is
+exactly the defect this errata exists to correct, so the tool prints the split
+on every run.
 
 ---
 
@@ -82,8 +102,8 @@ this tree. **PARTIAL** — corrected in one surface, not in another.
 | C7 | "the method is **complete**" for first-order data is asserted, not established; upstream files it under NOT ESTABLISHED, and reflection/preservation under ARGUED. | **OPEN** | `drafts/…:39`, `papers/…:110–112`. |
 | C8 | §5.2–§5.4 (semantic mass, SSD gate, Warrant dedup) inherit the unconditional reading. | **OPEN** | `drafts/…:49–51`, `papers/…:170–180`. |
 | C9 | The title/slogan asserts a theorem the text later retracts. | **PARTIAL** | The draft concedes it in §3 but asserts it in the title and status line. The paper concedes it at `:87`. |
-| C10 | `profile_id` is a label, not an identity; the current `profile_commitment` is local, not portable. | **OPEN** | Not mentioned in either document. Control C10 shows a verdict here carries no profile id, no commitment and no Book anchor at all. |
-| C11 | Cross-agent justification dedup (`drafts/…:51`) is exactly the cross-implementation case, so it is blocked while portable settlement is blocked. | **OPEN** | `drafts/…:51`. |
+| C10 | **F3 is closer to live than the draft suggests.** The EQN blow-up is attributed in §2 to lazy reduction without sharing — a property of the reducer that measured it, not of the language. The 10⁵ ratio is therefore an artifact of one compiler-plus-reducer pair until re-measured on another, which is F3's own condition. Not refuted; not dormant either. | **OPEN** | `drafts/…:57` (F3). Say that F3 has not been tested and that the ratio is harness-relative. No control here decides it: testing F3 means re-measuring on a second compiler+reducer, which this errata does not do. |
+| C11 | **Cross-agent dedup needs portable settlement, which is blocked.** Two agents agreeing on an address settled the same thing only if they settled under the same profile — and naming a profile is not identifying one. Upstream answers with a `profile_commitment` that holds *within one Python module* and explicitly not across implementations. Cross-agent dedup is precisely the cross-implementation case. | **OPEN** | `drafts/…:51`. Control `C11` shows the local harness is a step behind even that: a verdict here carries **no** profile id, no commitment and no Book anchor at all, so there is nothing to compare profiles by. |
 
 ---
 
@@ -138,12 +158,21 @@ per-claim `dep.sha256`, and then re-reads the *current* file rather than the
 pinned bytes. A repo-layer claim is therefore a statement about a moving
 target with a digest recorded beside it and not enforced.
 
-**Nothing here was regenerated or committed.** The sealed pack is historical
-evidence of a decision taken on 2026-08-30 and rewriting it would destroy what
-it is for. The regeneration was run in a scratch copy and the working tree
-restored. What this needs is a decision — pin the repo-layer dependencies and
-verify against the pinned bytes, or mark repo-layer claims as valid only at the
-recorded `source_sha256` — and that decision is not this errata's to take.
+**Nothing here was regenerated or committed, and E2 is not fixed in this
+change.** The sealed pack is historical evidence of a decision taken on
+2026-08-30; rewriting it would destroy what it is for. The regeneration was run
+in a scratch copy and the working tree restored.
+
+The requirement it implies belongs to the consumer boundary, not to an errata:
+
+> **Repo-layer dependencies must be content-addressed and re-executed from the
+> pinned bytes.** Replaying a historical receipt reads the bytes the receipt
+> names. Reading the *current* file is a different operation — a drift check —
+> and must be reported as drift, never as a refutation of the original
+> settlement.
+
+That is carried into `ADR-012` as a boundary requirement rather than patched
+here.
 
 ---
 
@@ -151,8 +180,11 @@ recorded `source_sha256` — and that decision is not this errata's to take.
 
 - That the corrected sentences are well argued. It checks that the old ones are
   false or wider than their evidence.
-- Anything about C1, C3, C4, C7, C8, C9, C11 by execution: those are
+- Anything about C1, C3, C4, C7, C8, C9 or C10 by execution: those are
   documentation items, listed above as such, and no control here decides them.
+  C10 in particular would need the 10⁵ ratio re-measured on a second
+  compiler-plus-reducer pair — that is what testing F3 means, and it is not
+  done here.
 - That `tools/glyphlib.py` should change. It is an experimental harness that
   argues no domain; the correction is to the *claims made about it*, not
   necessarily to it.

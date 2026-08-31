@@ -278,13 +278,13 @@
       This verifies <b>identity</b>: that a term's bytes hash to a given address. It recomputes
       seven canonical node addresses from their bytes and compares them to pinned values — that
       is all, and it is enough to be worth doing.
-      It is the <code>ts-sigma</code> v0 layer: it runs <b>no evaluator</b>, so there is no
-      budget, no exit and no receipt here. It therefore <b>settles nothing</b> — a settlement,
-      in this stack's sense, is a verdict carried by two receipts with their exits, under a named
-      profile with an admitted domain. An earlier version of this page said it showed that "two
-      constructions reaching the same normal form share one address (equality-by-address)"; this
-      page computes no normal forms, and equal addresses prove identity of what came back rather
-      than equality of any inputs
+      It is the <code>ts-sigma</code> v0 layer. This page produces no evaluation receipt, exit,
+      ATP account, or admitted evaluation profile, so it establishes <b>address integrity</b>
+      only. ADR-011's pairwise equality settlement would additionally require two side receipts;
+      other settlement profiles have their own contracts.
+      An earlier version of this page said it showed that "two constructions reaching the same
+      normal form share one address (equality-by-address)"; this page computes no normal forms,
+      and equal addresses prove identity of what came back rather than equality of any inputs
       (<a href="../drafts/ADDRESSING-IS-EQUALITY.errata.md">errata</a>).
       And it verifies the derivation, not the meaning: that these bytes carry the intended
       concept is a separate, human obligation.
