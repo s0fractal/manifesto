@@ -17,10 +17,27 @@ jobs:
       # reproduce the corrections against tools/glyphlib.py as it stands, so a
       # change to the harness that made a correction stop reproducing fails
       # here rather than leaving the errata quietly describing an older tree.
-      - name: AIE-0.1 errata reproduces against this checkout
+      # tools/glyphlib.py reaches the evaluator through a hardcoded absolute
+      # path to a sibling checkout (`SIGMA_GLYPH`, default
+      # /Users/s0fractal/Projects/sigma-glyph). CI has no such tree, so the
+      # first run of this workflow died on ModuleNotFoundError: sigma_glyph.
+      #
+      # Rather than recreate the checkout, this installs the RELEASED package
+      # and points SIGMA_GLYPH at nothing, so the sibling-checkout branch
+      # cannot be taken. The errata's claims then reproduce against a pinned,
+      # published boundary instead of against one machine's working tree —
+      # which is the property ADR-012 exists to establish, demonstrated here on
+      # a real consumer.
+      - name: Install the released Sigma boundary (no source checkout)
+        run: pip install "sigma-glyph==0.6.7"
+
+      - name: AIE-0.1 errata reproduces against the released boundary
         shell: bash
+        env:
+          SIGMA_GLYPH: /nonexistent-on-purpose
         run: |
           set -euo pipefail
+          python3 -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
           python3 tools/aie_errata_check.py | tee errata.log
           # The verdict AND the coverage split, so a green job cannot be read
           # as "eleven corrections mechanically decided" when it is four.
