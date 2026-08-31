@@ -1,0 +1,27 @@
+{
+  "kind": "manifesto/replay-pack@v0",
+  "subject": {
+    "predicate": "count_token",
+    "token": "FLOW",
+    "dependency_id": "drafts/replay-fixture-0.1/source.md",
+    "claimed_occurrences": 3
+  },
+  "dependencies": [
+    {
+      "dependency_id": "drafts/replay-fixture-0.1/source.md",
+      "sha256": "136db2a79a3ac8c915cacbf3f7fdcf0e0ada47931cde2dc757cf504b0a316fba",
+      "embedded_path": "blobs/136db2a79a3ac8c915cacbf3f7fdcf0e0ada47931cde2dc757cf504b0a316fba"
+    }
+  ],
+  "computation": {
+    "evaluator_artifact_sha256": "not-recorded-in-this-fixture",
+    "profile_id": "manifesto/glyphlib/settle_nat_eq@v0",
+    "budget": 5000000,
+    "receipt": {
+      "verdict": "PASS",
+      "atp_spent": 114,
+      "lhs_nf": "24ae75e52772589cb668256e0db06dc4f7cb107142b36aef39f1b7e7aa1f8107",
+      "rhs_nf": "24ae75e52772589cb668256e0db06dc4f7cb107142b36aef39f1b7e7aa1f8107"
+    }
+  }
+}

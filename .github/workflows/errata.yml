@@ -36,6 +36,11 @@ jobs:
       # v0.7.0. A green job here shows clean-install consumption of a
       # compatible evaluator API. It does not show that the PyPI artifact
       # represents the adopted anchor set.
+      # NOT evidence about the Phase 4A candidate artifact. This exercises the
+      # ALREADY-PUBLISHED 0.6.7 for general API compatibility, which is a
+      # different question from whether a specific candidate wheel works; that
+      # one is answered by `consumer-boundary.yml`, which builds the artifact
+      # from a pinned Sigma commit and installs it by digest.
       - name: Install a version-pinned released package (no source checkout)
         run: pip install "sigma-glyph==0.6.7"
 

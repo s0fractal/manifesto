@@ -1,0 +1,98 @@
+name: consumer-boundary
+
+# NON-NORMATIVE. Proves this repository consumes the Σ-GLYPH evaluator as an
+# INSTALLED PACKAGE rather than through a source checkout.
+#
+# HOW THE ARTIFACT GETS HERE, and why it is not published.
+# Publishing the candidate wheel is not authorised, and committing a binary to
+# git is worse. So a producer step checks out sigma-glyph AT A PINNED COMMIT and
+# builds the wheel with sigma's own builder. That checkout is a BUILD input and
+# never an import path: the consumer steps run with it absent from PYTHONPATH,
+# with the historical SIGMA_GLYPH override pointed at a path that cannot exist,
+# and the controls assert the evaluator resolves inside site-packages.
+on: [push, pull_request]
+
+env:
+  # The exact Sigma revision this consumer is tested against. A branch name
+  # would make the test mean something different on every run.
+  SIGMA_PIN: 3caf2da5c21fecde55f9f8c231bc70146f8b0539
+
+jobs:
+  installed-package-consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with: { path: manifesto }
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with: { python-version: '3.12' }
+
+      - name: Fetch the producer at its pinned commit
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/s0fractal/sigma-glyph.git sigma
+          git -C sigma checkout --quiet "$SIGMA_PIN"
+          test "$(git -C sigma rev-parse HEAD)" = "$SIGMA_PIN"
+
+      - name: Build the candidate artifact from that commit
+        env:
+          SOURCE_DATE_EPOCH: '1788134400'
+        run: |
+          set -euo pipefail
+          cd sigma
+          python3 tools/candidate_artifact.py build --out "$GITHUB_WORKSPACE/candidate"
+          python3 tools/candidate_artifact.py verify \
+            --out "$GITHUB_WORKSPACE/candidate" --expect-commit "$SIGMA_PIN"
+
+      # Digest checked against the manifest before the wheel is installed.
+      - name: Install it into a clean environment, digest-checked first
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          WHEEL=$(python3 -c "import json;print(json.load(open('candidate/release-manifest.json'))['artifact_filename'])")
+          EXPECT=$(python3 -c "import json;print(json.load(open('candidate/release-manifest.json'))['artifact_sha256'])")
+          ACTUAL=$(python3 -c "import hashlib,sys;print(hashlib.sha256(open('candidate/$WHEEL','rb').read()).hexdigest())")
+          echo "expected $EXPECT"; echo "actual   $ACTUAL"
+          test "$EXPECT" = "$ACTUAL"
+          python3 -m venv consumer-venv
+          ./consumer-venv/bin/pip install --quiet --no-deps "candidate/$WHEEL"
+          ./consumer-venv/bin/python -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
+
+      # From here the sigma checkout must be irrelevant. It is still on disk,
+      # which is the point: if the consumer were still reaching for it, these
+      # steps would pass for the wrong reason, and the controls check the
+      # resolved module path rather than trusting the environment.
+      - name: The consumer boundary holds
+        env:
+          SIGMA_GLYPH: /nonexistent/sigma-glyph--must-not-be-found
+        run: |
+          set -euo pipefail
+          cd manifesto
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/consumer_boundary_controls.py \
+            | tee consumer.log
+          grep -q "CONSUMER-BOUNDARY-CONTROLS: ALL PASS" consumer.log
+
+      - name: Replay and drift are two operations
+        env:
+          SIGMA_GLYPH: /nonexistent/sigma-glyph--must-not-be-found
+        run: |
+          set -euo pipefail
+          cd manifesto
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_controls.py \
+            | tee replay.log
+          grep -q "REPLAY-CONTROLS: ALL PASS" replay.log
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
+            replay drafts/replay-fixture-0.1 | tee fixture.log
+          grep -q "REPLAY: MATCH" fixture.log
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
+            replay drafts/ssd-pack | tee legacy.log
+          grep -q "REPLAY: LEGACY_UNPINNED" legacy.log
+
+      - name: The AIE errata still reproduces against the candidate artifact
+        env:
+          SIGMA_GLYPH: /nonexistent/sigma-glyph--must-not-be-found
+        run: |
+          set -euo pipefail
+          cd manifesto
+          "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/aie_errata_check.py \
+            | tee errata.log
+          grep -q "AIE-ERRATA-CHECK: ALL PASS" errata.log
