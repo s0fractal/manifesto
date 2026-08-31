@@ -52,6 +52,11 @@ jobs:
           BUILD_COMMIT=$(python3 -c "import json;print(json.load(open('campaigns/phase-4a/candidate-receipt.json'))['source_commit'])")
           test "$FROZEN_IN_PRODUCER" = "$EXPECTED_ARTIFACT_SHA256"
           test "$BUILD_COMMIT" = "$EXPECTED_BUILD_COMMIT"
+          # Copy the receipt out BEFORE moving the checkout: the build commit
+          # predates the receipt that names it, so after this checkout the file
+          # is gone. The consumer steps use this copy as their evaluator operand.
+          cp campaigns/phase-4a/candidate-receipt.json \
+             "$GITHUB_WORKSPACE/candidate-receipt.json"
           git checkout --quiet "$BUILD_COMMIT"
           python3 tools/candidate_artifact.py build --out "$GITHUB_WORKSPACE/candidate"
           python3 tools/candidate_artifact.py verify \
@@ -97,12 +102,12 @@ jobs:
           set -euo pipefail
           cd manifesto
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_controls.py \
-            --evaluator "$GITHUB_WORKSPACE/sigma/campaigns/phase-4a/candidate-receipt.json" \
+            --evaluator "$GITHUB_WORKSPACE/candidate-receipt.json" \
             | tee replay.log
           grep -q "REPLAY-CONTROLS: ALL PASS" replay.log
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
             replay drafts/replay-fixture-0.1 \
-            --evaluator "$GITHUB_WORKSPACE/sigma/campaigns/phase-4a/candidate-receipt.json" \
+            --evaluator "$GITHUB_WORKSPACE/candidate-receipt.json" \
             | tee fixture.log
           grep -q "REPLAY: MATCH" fixture.log
           # LEGACY_UNPINNED is a refusal, so the tool exits non-zero — which is
