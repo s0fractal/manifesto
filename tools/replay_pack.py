@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Replay a dependency-bound pack, and — separately — check it for drift.
 
-    python3 tools/replay_pack.py build  <pack> --evaluator <receipt-or-wheel>
-    python3 tools/replay_pack.py replay <pack> --evaluator <receipt-or-wheel>
+    python3 tools/replay_pack.py build  <pack> --evaluator <wheel>
+    python3 tools/replay_pack.py replay <pack> --evaluator <wheel>
     python3 tools/replay_pack.py drift  <pack>
 
 NON-NORMATIVE, and deliberately small: enough for one fixture, not a general
@@ -165,9 +165,12 @@ def evaluator_digest(operand):
     `--evaluator` used to take any JSON carrying `artifact_sha256`, so the
     operand and the engine could be different things entirely: with the wheel of
     one commit installed and the receipt of another supplied, replay still said
-    `MATCH`. A receipt describes an artifact; it is not one. The expected digest
-    may still come from a receipt — see `--expect-artifact` — but what is
-    checked and what executes must be the same bytes.
+    `MATCH`. A receipt describes an artifact; it is not one, and it is not
+    accepted here. What is checked and what executes must be the same bytes.
+
+    The pack carries its own expected digest, so no second operand is needed: a
+    receipt may be what a reader consults to learn which wheel to fetch, but it
+    never stands in for the wheel at replay time.
     """
     path = Path(operand)
     if not path.is_file():
@@ -476,7 +479,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("command", choices=("build", "replay", "drift"))
     ap.add_argument("pack")
-    ap.add_argument("--evaluator", help="a wheel, or a receipt naming one")
+    ap.add_argument("--evaluator",
+                    help="the wheel that is installed in this interpreter; a "
+                         "receipt is not accepted as an artifact")
     args = ap.parse_args()
     if args.command == "build":
         return build(args.pack, args.evaluator)
