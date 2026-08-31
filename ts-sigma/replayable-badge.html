@@ -275,11 +275,19 @@
   <section>
     <h2>What this honestly is — and isn't</h2>
     <p class="note">
-      This verifies <b>identity</b>: that a term's bytes hash to a given address, and that two
-      constructions reaching the same normal form share one address (equality-by-address). It is
-      the <code>ts-sigma</code> v0 layer — it does <b>not</b> run the ATP-priced evaluator, so it
-      settles content addresses, not arbitrary computation. And it verifies the derivation, not
-      the meaning: that these bytes carry the intended concept is a separate, human obligation.
+      This verifies <b>identity</b>: that a term's bytes hash to a given address. It recomputes
+      seven canonical node addresses from their bytes and compares them to pinned values — that
+      is all, and it is enough to be worth doing.
+      It is the <code>ts-sigma</code> v0 layer. This page produces no evaluation receipt, exit,
+      ATP account, or admitted evaluation profile, so it establishes <b>address integrity</b>
+      only. ADR-011's pairwise equality settlement would additionally require two side receipts;
+      other settlement profiles have their own contracts.
+      An earlier version of this page said it showed that "two constructions reaching the same
+      normal form share one address (equality-by-address)"; this page computes no normal forms,
+      and equal addresses prove identity of what came back rather than equality of any inputs
+      (<a href="../drafts/ADDRESSING-IS-EQUALITY.errata.md">errata</a>).
+      And it verifies the derivation, not the meaning: that these bytes carry the intended
+      concept is a separate, human obligation.
       The honest claim is small and exact — which is the whole point.
     </p>
   </section>
@@ -366,7 +374,7 @@
     }
     const allGood = ok === names.length;
     badge.className = "badge " + (allGood ? "state-check" : "state-fail");
-    badgeVal.textContent = allGood ? `${ok}/${names.length} settled` : `${names.length - ok} mismatch`;
+    badgeVal.textContent = allGood ? `${ok}/${names.length} addresses verified` : `${names.length - ok} mismatch`;
     const now = new Date();
     const t = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     verdict.innerHTML = allGood

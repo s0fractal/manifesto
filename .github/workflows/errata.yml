@@ -1,0 +1,61 @@
+name: errata
+
+# A green board must mean a check ran. Before this workflow the only status on
+# a manifesto pull request was a secret scan, so "green" said nothing about
+# whether the errata's claims still reproduce.
+on: [push, pull_request]
+
+jobs:
+  aie-errata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with: { python-version: '3.12' }
+
+      # The eleven checks behind drafts/ADDRESSING-IS-EQUALITY.errata.md. They
+      # reproduce the corrections against tools/glyphlib.py as it stands, so a
+      # change to the harness that made a correction stop reproducing fails
+      # here rather than leaving the errata quietly describing an older tree.
+      # tools/glyphlib.py reaches the evaluator through a hardcoded absolute
+      # path to a sibling checkout (`SIGMA_GLYPH`, default
+      # /Users/s0fractal/Projects/sigma-glyph). CI has no such tree, so the
+      # first run of this workflow died on ModuleNotFoundError: sigma_glyph.
+      #
+      # Rather than recreate the checkout, this installs a VERSION-PINNED
+      # RELEASED PACKAGE and points SIGMA_GLYPH at nothing, so the
+      # sibling-checkout branch cannot be taken.
+      #
+      # What that establishes, exactly: the errata's claims reproduce from a
+      # clean install of a version-pinned released package, without a source
+      # checkout. Artifact-digest pinning is an ADR-012 requirement and is NOT
+      # what `pip install sigma-glyph==0.6.7` does — a version pin names a
+      # version, not a wheel digest.
+      #
+      # And 0.6.7 is a published package, NOT the adopted anchor-set bundle
+      # v0.7.0. A green job here shows clean-install consumption of a
+      # compatible evaluator API. It does not show that the PyPI artifact
+      # represents the adopted anchor set.
+      - name: Install a version-pinned released package (no source checkout)
+        run: pip install "sigma-glyph==0.6.7"
+
+      - name: AIE-0.1 errata reproduces against the released boundary
+        shell: bash
+        env:
+          SIGMA_GLYPH: /nonexistent-on-purpose
+        run: |
+          set -euo pipefail
+          python3 -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
+          python3 tools/aie_errata_check.py | tee errata.log
+          # The verdict AND the coverage split, so a green job cannot be read
+          # as "eleven corrections mechanically decided" when it is four.
+          grep -q "AIE-ERRATA-CHECK: ALL PASS" errata.log
+          grep -q "executable correction IDs: C2, C5, C6, C11" errata.log
+          grep -q "documentation-only IDs:    C1, C3, C4, C7, C8, C9, C10" errata.log
+          grep -q "controls/mutations:        11/11 pass" errata.log
+
+      # The seven addresses the badge pins, recomputed by a route that is not
+      # the page's own JavaScript.
+      - name: The replayable badge's pinned addresses recompute
+        shell: bash
+        run: python3 tools/badge_addresses_check.py
