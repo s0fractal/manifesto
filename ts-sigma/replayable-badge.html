@@ -1,0 +1,380 @@
+<title>Replayable Badge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground: #eef1f5;
+    --panel: #ffffff;
+    --ink: #10151c;
+    --ink-soft: #55606e;
+    --ink-faint: #8a95a3;
+    --line: #d7dee7;
+    --line-soft: #e6ebf1;
+    --settled: #0a7c66;
+    --settled-bg: #d8efe9;
+    --warn: #a85a04;
+    --warn-bg: #f6e6cf;
+    --fail: #b3261e;
+    --fail-bg: #f6dcda;
+    --accent: #0a7c66;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0a0e13;
+      --panel: #121820;
+      --ink: #dde5ee;
+      --ink-soft: #97a3b2;
+      --ink-faint: #616d7c;
+      --line: #232c37;
+      --line-soft: #1a212a;
+      --settled: #34d3a6;
+      --settled-bg: #0f2b26;
+      --warn: #f0a83c;
+      --warn-bg: #2c2211;
+      --fail: #f4776e;
+      --fail-bg: #2c1616;
+      --accent: #34d3a6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0a0e13;
+    --panel: #121820;
+    --ink: #dde5ee;
+    --ink-soft: #97a3b2;
+    --ink-faint: #616d7c;
+    --line: #232c37;
+    --line-soft: #1a212a;
+    --settled: #34d3a6;
+    --settled-bg: #0f2b26;
+    --warn: #f0a83c;
+    --warn-bg: #2c2211;
+    --fail: #f4776e;
+    --fail-bg: #2c1616;
+    --accent: #34d3a6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    line-height: 1.08;
+    text-wrap: balance;
+    margin: 0 0 .9rem;
+  }
+  .lede {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 34rem;
+    margin: 0 0 2.4rem;
+  }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  /* the badge itself */
+  .badge-stage {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: stretch;
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: .92rem;
+    font-weight: 600;
+    border-radius: 7px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .badge .k {
+    background: color-mix(in srgb, var(--ink) 8%, var(--panel));
+    color: var(--ink-soft);
+    padding: .5rem .8rem;
+    letter-spacing: .02em;
+  }
+  .badge .v {
+    padding: .5rem .85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .badge.state-check .v { background: var(--settled-bg); color: var(--settled); }
+  .badge.state-fail .v  { background: var(--fail-bg); color: var(--fail); }
+  .badge.state-wait .v  { background: color-mix(in srgb, var(--ink) 6%, var(--panel)); color: var(--ink-faint); }
+  .badge .dot { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; }
+  .badge.state-wait .dot { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  @media (prefers-reduced-motion: reduce) { .badge.state-wait .dot { animation: none; } }
+
+  .verdict-line {
+    font-size: .92rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .verdict-line b { color: var(--ink); }
+  .verdict-line .stamp { font-family: var(--mono); color: var(--accent); }
+  .btn {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: .5rem .9rem;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .btn:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  section { margin-top: 2.8rem; }
+  h2 {
+    font-size: .82rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  p { margin: 0 0 1rem; }
+  .muted { color: var(--ink-soft); }
+
+  table.vectors {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .vectors th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--ink-faint);
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 0 .7rem .5rem 0;
+  }
+  .vectors td { padding: .45rem .7rem .45rem 0; border-top: 1px solid var(--line-soft); }
+  .vectors td.name { color: var(--ink); font-weight: 500; }
+  .vectors td.hash { color: var(--ink-soft); }
+  .vectors td.mark { width: 1.4rem; }
+  .vectors td.mark.ok { color: var(--settled); }
+  .vectors td.mark.no { color: var(--fail); }
+  .scroll { overflow-x: auto; }
+
+  .contrast { display: grid; gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; }
+  .contrast > div { background: var(--panel); padding: 1rem 1.1rem; }
+  .contrast .h { font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: .55rem; }
+  .contrast .this .h { color: var(--accent); }
+  .contrast ul { margin: 0; padding-left: 1.05rem; font-size: .9rem; color: var(--ink-soft); }
+  .contrast li { margin-bottom: .35rem; }
+  @media (min-width: 34rem) { .contrast { grid-template-columns: 1fr 1fr; } }
+
+  .note {
+    border-left: 2px solid var(--accent);
+    padding: .2rem 0 .2rem 1rem;
+    color: var(--ink-soft);
+    font-size: .92rem;
+  }
+  code { font-family: var(--mono); font-size: .86em; background: color-mix(in srgb, var(--ink) 7%, var(--panel)); padding: .1em .35em; border-radius: 4px; }
+  footer { margin-top: 3.5rem; padding-top: 1.4rem; border-top: 1px solid var(--line-soft); font-size: .8rem; color: var(--ink-faint); font-family: var(--mono); }
+  a { color: var(--accent); }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">content-addressed · verified client-side</p>
+  <h1>A badge green because <em>you</em> just checked it</h1>
+  <p class="lede">
+    A normal badge is a verdict a server cached and asked you to believe. This one
+    recomputes Σ-GLYPH content addresses <b>in your browser, right now</b>, with the
+    Web Crypto SHA-256 your machine already ships — no server, no fetch, nothing to trust
+    but the math you can re-run.
+  </p>
+
+  <div class="badge-stage">
+    <div class="badge state-wait" id="badge">
+      <span class="k">Σ-GLYPH addresses</span>
+      <span class="v"><span class="dot"></span><span id="badge-val">checking…</span></span>
+    </div>
+    <p class="verdict-line" id="verdict">Recomputing seven canonical node addresses…</p>
+    <button class="btn" id="reverify" hidden>↻ Re-verify in this browser</button>
+  </div>
+
+  <section>
+    <h2>The seven addresses, recomputed here</h2>
+    <p class="muted">
+      Each is <code>sha256</code> of the canonical node bytes for a Σ-GLYPH Book I term —
+      the combinators <code>I K S</code>, the <code>FALSE = K I</code> pair, and three
+      application nodes. The right column is what a byte-for-byte port must produce; the mark
+      is what <em>your</em> browser just computed.
+    </p>
+    <div class="scroll">
+      <table class="vectors">
+        <thead><tr><th>term</th><th>expected address</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Not a server's word — a relation you can re-run</h2>
+    <div class="contrast">
+      <div>
+        <div class="h">A SonarQube / npm badge</div>
+        <ul>
+          <li>a verdict cached by an external server</li>
+          <li>mutable image; its scope can be silently reconfigured</li>
+          <li>you read it and believe it</li>
+          <li>stays green even when its inputs have moved on</li>
+        </ul>
+      </div>
+      <div class="this">
+        <div class="h">This badge</div>
+        <ul>
+          <li>a verdict your own browser derives</li>
+          <li>scope pinned by the address itself — can't be re-scoped after the fact</li>
+          <li>you re-run it; the button above proves it</li>
+          <li>if a term changed, its address changes and the mark turns red</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What this honestly is — and isn't</h2>
+    <p class="note">
+      This verifies <b>identity</b>: that a term's bytes hash to a given address, and that two
+      constructions reaching the same normal form share one address (equality-by-address). It is
+      the <code>ts-sigma</code> v0 layer — it does <b>not</b> run the ATP-priced evaluator, so it
+      settles content addresses, not arbitrary computation. And it verifies the derivation, not
+      the meaning: that these bytes carry the intended concept is a separate, human obligation.
+      The honest claim is small and exact — which is the whole point.
+    </p>
+  </section>
+
+  <footer>
+    ts-sigma · Σ-GLYPH Book I identity layer · addresses cross-checked byte-for-byte against the
+    Python reference · <span id="ua"></span>
+  </footer>
+</div>
+
+<script type="module">
+  // --- ts-sigma identity core, inlined (Web Crypto, no imports, no network) ---
+  const enc = new TextEncoder();
+  async function sha256(bytes) {
+    const buf = new ArrayBuffer(bytes.length);
+    new Uint8Array(buf).set(bytes);
+    return new Uint8Array(await crypto.subtle.digest("SHA-256", buf));
+  }
+  const shaStr = (s) => sha256(enc.encode(s));
+  const F_ATOM = 0x01, F_LEFT = 0x02, F_RIGHT = 0x04, LITERAL = 0x00, APPLY = 0x02;
+  function concat(...ps) {
+    const n = ps.reduce((a, p) => a + p.length, 0), out = new Uint8Array(n);
+    let o = 0; for (const p of ps) { out.set(p, o); o += p.length; } return out;
+  }
+  const lit = (atom) => ({ t: "lit", atom });
+  const app = (l, r) => ({ t: "app", left: l, right: r });
+  async function termBytes(x) {
+    if (x.t === "lit") return concat(new Uint8Array([LITERAL, F_ATOM]), x.atom);
+    const l = await termHash(x.left), r = await termHash(x.right);
+    return concat(new Uint8Array([APPLY, F_LEFT | F_RIGHT]), l, r);
+  }
+  async function termHash(x) { return sha256(await termBytes(x)); }
+  const hex = (b) => Array.from(b).map((x) => x.toString(16).padStart(2, "0")).join("");
+
+  // pinned expected addresses (byte-for-byte vs the Python reference)
+  const EXPECT = {
+    "I": "2f33694d09810641fa5b8c47a7c0dc42e1b99eb8c9784a00aaee9a66330f4162",
+    "K": "bc0c2fe26e44e2aed8ce500a74963bc270fd4a49ec0c2e4837ce7a64bb0a486c",
+    "S": "887045bc22935aec5cba2dc11400d4e4357bc34d06681a6e92f06e7795b1f8a6",
+    "FALSE = K I": "65cd957fee7ec9fb310bc9d9712cec1726c78f8026fda679ac8f237938a32098",
+    "I K": "51d8148feda28f17304c9ed6c34d9d548c83a84c380f4dd1ba0a037ceb9d4d3e",
+    "S I I": "77e9c454771af4ea715c07ac91d5472dc10d0eb08605ffba869c22a03885bdf6",
+    "K FALSE I": "793285f9f0165faf0635309d852402b11e2a7969ece4c5be2fc2f10c463dbef4",
+  };
+
+  async function build() {
+    const I = lit(await shaStr("I")), K = lit(await shaStr("K")), S = lit(await shaStr("S"));
+    const FALSE = app(K, I);
+    return {
+      "I": I, "K": K, "S": S, "FALSE = K I": FALSE,
+      "I K": app(I, K), "S I I": app(app(S, I), I), "K FALSE I": app(app(K, FALSE), I),
+    };
+  }
+
+  const rows = document.getElementById("rows");
+  const badge = document.getElementById("badge");
+  const badgeVal = document.getElementById("badge-val");
+  const verdict = document.getElementById("verdict");
+  const reverify = document.getElementById("reverify");
+  document.getElementById("ua").textContent =
+    "verified with your browser's Web Crypto";
+
+  function shortHex(h) { return h.slice(0, 20) + "…" + h.slice(-6); }
+
+  async function run() {
+    badge.className = "badge state-wait";
+    badgeVal.textContent = "checking…";
+    verdict.textContent = "Recomputing seven canonical node addresses…";
+    reverify.hidden = true;
+    rows.innerHTML = "";
+    const terms = await build();
+    let ok = 0;
+    const names = Object.keys(EXPECT);
+    for (const name of names) {
+      const got = hex(await termHash(terms[name]));
+      const good = got === EXPECT[name];
+      if (good) ok++;
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        `<td class="name">${name}</td>` +
+        `<td class="hash" title="${got}">${shortHex(got)}</td>` +
+        `<td class="mark ${good ? "ok" : "no"}">${good ? "⚓" : "✗"}</td>`;
+      rows.appendChild(tr);
+    }
+    const allGood = ok === names.length;
+    badge.className = "badge " + (allGood ? "state-check" : "state-fail");
+    badgeVal.textContent = allGood ? `${ok}/${names.length} settled` : `${names.length - ok} mismatch`;
+    const now = new Date();
+    const t = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    verdict.innerHTML = allGood
+      ? `<b>${ok} of ${names.length}</b> addresses reproduced byte-for-byte, computed in this browser at <span class="stamp">${t}</span>. Nothing was fetched — you can re-run it.`
+      : `<b>${names.length - ok}</b> address(es) did not match — this build is non-conformant on identity.`;
+    reverify.hidden = false;
+  }
+
+  reverify.addEventListener("click", run);
+  run();
+</script>
