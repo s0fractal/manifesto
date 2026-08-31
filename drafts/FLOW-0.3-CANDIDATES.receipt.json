@@ -1,0 +1,14 @@
+{
+  "claims": [],
+  "deps": {},
+  "gate_version": "settle_gate/0.3+deps",
+  "source_sha256": "60ea6fc1f452804f9fcc1cdaac0744beefa93b4947ed8d52d0ff7a79c16357d8",
+  "tally": {
+    "atp_total": 0,
+    "claims": 0,
+    "refuted": 0,
+    "settled_true": 0,
+    "unsettled": 0
+  }
+}
+RECEIPT_SHA256: c6729986aa26d30398a0d87cdbfe4c73c00ccfa205105848f578b3911e89bcc9
