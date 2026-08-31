@@ -14,7 +14,7 @@
     }
   ],
   "runtime": {
-    "evaluator_artifact_sha256": "69f9567440b581fb255e91c8f08caeb86008367a9f08490d6482b22e5e612443",
+    "evaluator_artifact_sha256": "cfee921858378493e692f052b8fe253e1a85603b3a93d0df1dde1aba7ba70a6a",
     "profile_id": "manifesto/glyphlib/settle_nat_eq@v0",
     "profile_sources": [
       {
