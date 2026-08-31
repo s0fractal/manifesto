@@ -4,3 +4,6 @@
 scratch/
 dist/
 __pycache__/
+
+# python venv for sigma-glyph runtime (embedded-claims PoC)
+.venv/
