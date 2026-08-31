@@ -18,7 +18,7 @@ bibliography: references.bib
 In a content-addressed machine with deterministic, total, budget-priced
 evaluation, equality of canonical data does not need to be *expressed*; it
 can be *settled*: reduce both sides to canonical normal form and compare
-addresses. We state the idiom precisely — soundness is unconditional
+addresses. We state the idiom precisely — soundness holds only on an admitted domain (NOT unconditionally: see the correction below)
 (modulo the hash function, which sits in the trust anchor); completeness
 holds **only** where the normal form is canonical for the equivalence class
 in question (first-order data at a generic point, not higher-order terms);
@@ -83,17 +83,28 @@ at $20\times20$). The receipt is the pair of addresses plus the spends —
 nothing else needs to be believed, because everything else re-executes.
 
 In a content-addressed machine, addressing is not a transport layer on top
-of equality. **It is the equality mechanism.**
+of equality: it is **identity of what came back** — and that becomes an
+equality verdict *only* on an admitted domain (§3.1). The slogan names the
+engineering finding, not a theorem.
 
 # 3. Precise semantics — where the slogan is true and where it is false
 
 The two directions of the comparison have different standing, and a
 specification that fails to say so will mint receipts that overclaim.
 
-1. **Soundness, unconditional.** Equal addresses ⟹ equal values. The only
-   assumption is collision resistance of the hash (SHA-256 here), which is
-   already in every content-addressed system's trust anchor and is not
-   discharged from inside.
+1. **Soundness, only on an admitted domain (corrected 2026-08-31, ADR-011).**
+   The earlier draft claimed equal addresses ⟹ equal values *unconditionally*.
+   That is false, and the counterexample runs on this repository's own
+   evaluator: let $a = \lambda f.\lambda x.x$ (Church zero) and
+   $b = \lambda f.\lambda x.X$ (the constant returning the profile's marker
+   $X$). These are different functions, yet observed at $(F,X)$ both reduce to
+   the same address `8785b7dd…` — because Church zero's second argument *is*
+   $X$ — while at $(F,Y)$ they differ. Equal addresses prove **identity of what
+   came back**, not equality of the inputs. Soundness holds only when the
+   submitted terms lie in an *admitted domain* that refuses terms naming the
+   markers (an `EqualityProfile` with an `admitted_domain` check). Collision
+   resistance of SHA-256 remains assumed on top of that. "Addressing is
+   equality" is the historical name of the engineering finding, not a theorem.
 2. **Completeness, conditional.** Different addresses ⟹ different values
    **only when the normal form is canonical for the intended equivalence
    class.** For first-order data evaluated at a generic point — Church
