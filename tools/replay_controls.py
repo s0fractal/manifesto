@@ -22,8 +22,13 @@ import json
 import shutil
 import subprocess
 import sys
+import hashlib
 import tempfile
 from pathlib import Path
+
+
+def sha256_file(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "drafts/replay-fixture-0.1"
@@ -76,7 +81,13 @@ def control(label, mutate, expected, evaluator, command="replay"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--evaluator", required=True)
+    ap.add_argument("--evaluator", required=True,
+                    help="the wheel that is INSTALLED in this interpreter")
+    ap.add_argument("--other-wheel",
+                    help="a second, differently-versioned wheel: the operand "
+                         "that is not the engine")
+    ap.add_argument("--receipt", help="a receipt, which must NOT be accepted "
+                                      "as an artifact")
     args = ap.parse_args()
     evaluator = args.evaluator
 
@@ -98,11 +109,65 @@ def main():
                 "evaluator_artifact_sha256", "f" * 64)),
             "EVALUATOR_MISMATCH", evaluator)
 
+    # --- the operand must be the engine, and the engine must be identified
+    if args.other_wheel:
+        control("a pack+operand naming a DIFFERENT artifact than the INSTALLED "
+                "one is EVALUATOR_MISMATCH, even when the module bytes are "
+                "identical (this mutation used to give MATCH)",
+                lambda copy: edit_pack(copy, lambda p: p["runtime"].__setitem__(
+                    "evaluator_artifact_sha256", sha256_file(args.other_wheel))),
+                "EVALUATOR_MISMATCH", args.other_wheel)
+    else:
+        print("  SKIP  no --other-wheel given, so the operand/engine "
+              "divergence control did not run")
+        results.append(False)
+
+    chk("a RECEIPT is not accepted as the evaluator artifact",
+        verdict("replay", FIXTURE, args.receipt) == "EVALUATOR_UNVERIFIED"
+        if args.receipt else False,
+        "no --receipt given" if not args.receipt else
+        verdict("replay", FIXTURE, args.receipt))
+
     # --- the profile is pinned by the sources that define it
     control("a changed profile source is PROFILE_MISMATCH",
             lambda copy: edit_pack(copy, lambda p: p["runtime"]["profile_sources"][0]
                                    .__setitem__("sha256", "a" * 64)),
             "PROFILE_MISMATCH", evaluator)
+
+    control("an EMPTY profile_sources list is PROFILE_MISMATCH, not a pack "
+            "that checks nothing (this mutation used to give MATCH)",
+            lambda copy: edit_pack(copy, lambda p: p["runtime"].__setitem__(
+                "profile_sources", [])),
+            "PROFILE_MISMATCH", evaluator)
+    control("a DROPPED profile source is PROFILE_MISMATCH",
+            lambda copy: edit_pack(copy, lambda p: p["runtime"].__setitem__(
+                "profile_sources", p["runtime"]["profile_sources"][:-1])),
+            "PROFILE_MISMATCH", evaluator)
+    control("an EXTRA profile source is PROFILE_MISMATCH",
+            lambda copy: edit_pack(copy, lambda p: p["runtime"]["profile_sources"]
+                                   .append({"path": "tools/settle_gate.py",
+                                            "sha256": "b" * 64})),
+            "PROFILE_MISMATCH", evaluator)
+    control("a foreign profile_id is PROFILE_MISMATCH (this mutation used to "
+            "give MATCH)",
+            lambda copy: edit_pack(copy, lambda p: p["runtime"].__setitem__(
+                "profile_id", "other/profile@v9")),
+            "PROFILE_MISMATCH", evaluator)
+
+    # --- a broken pack of this format is not an era
+    def invalid_json(copy):
+        (copy / "pack.json").write_text("{ broken")
+
+    control("an unreadable pack.json is MALFORMED_PACK, not LEGACY_UNPINNED "
+            "(this mutation used to be filed as legacy)",
+            invalid_json, "MALFORMED_PACK", evaluator)
+    control("...and drift says the same",
+            invalid_json, "MALFORMED_PACK", evaluator, command="drift")
+
+    control("a dependency_id escaping the repository is MALFORMED_PACK in drift",
+            lambda copy: edit_pack(copy, lambda p: p["dependencies"][0]
+                                   .__setitem__("dependency_id", "../outside.md")),
+            "MALFORMED_PACK", evaluator, command="drift")
 
     # --- the receipt comparison is closed: every field, and only these fields
     for field in RECEIPT_FIELDS:

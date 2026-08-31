@@ -104,13 +104,14 @@ def contained(root, relative, what):
 
 
 def load(pack_dir):
+    """`(pack, problem)`. A missing file and an unreadable one are different."""
     path = Path(pack_dir) / "pack.json"
     if not path.is_file():
-        return None
+        return None, None
     try:
-        return json.loads(path.read_text())
-    except ValueError:
-        return None
+        return json.loads(path.read_text()), None
+    except (ValueError, OSError) as failure:
+        return None, f"pack.json is present but cannot be read: {failure}"
 
 
 def classify(pack_dir):
@@ -120,7 +121,12 @@ def classify(pack_dir):
     pack that CLAIMS this format and is broken is MALFORMED, which is a
     different thing and must not be filed under history.
     """
-    pack = load(pack_dir)
+    pack, unreadable = load(pack_dir)
+    if unreadable:
+        # A pack.json that exists and is broken is a DEFECT, not an era. Filing
+        # it as legacy would put a corrupted new pack in the same bucket as a
+        # settlement taken before the format existed.
+        return None, MALFORMED_PACK, unreadable
     if pack is None:
         return None, LEGACY_UNPINNED, (
             "this pack recorded no dependency closure, so the bytes its "
@@ -154,24 +160,89 @@ def classify(pack_dir):
 
 
 def evaluator_digest(operand):
-    """The artifact digest an operand names: a wheel, or a receipt naming one."""
+    """The digest of a WHEEL. A receipt is not accepted as the artifact.
+
+    `--evaluator` used to take any JSON carrying `artifact_sha256`, so the
+    operand and the engine could be different things entirely: with the wheel of
+    one commit installed and the receipt of another supplied, replay still said
+    `MATCH`. A receipt describes an artifact; it is not one. The expected digest
+    may still come from a receipt — see `--expect-artifact` — but what is
+    checked and what executes must be the same bytes.
+    """
     path = Path(operand)
-    if not path.exists():
-        return None, f"the evaluator operand {operand} does not exist"
-    if path.is_file() and path.suffix == ".whl":
-        if not zipfile.is_zipfile(path):
-            return None, f"{operand} is not a wheel"
-        return sha256(path.read_bytes()), None
-    if path.is_dir():
-        path = path / "candidate-receipt.json"
+    if not path.is_file():
+        return None, f"the evaluator operand {operand} is not a file"
+    if path.suffix != ".whl" or not zipfile.is_zipfile(path):
+        return None, (f"the evaluator operand must be a wheel; {operand} is "
+                      f"not one. A receipt describes an artifact and cannot "
+                      f"stand in for it")
+    return sha256(path.read_bytes()), None
+
+
+def wheel_distribution(wheel):
+    """`(name, version)` from the wheel's own METADATA."""
+    with zipfile.ZipFile(wheel) as archive:
+        meta = [n for n in archive.namelist()
+                if n.endswith(".dist-info/METADATA")]
+        if not meta:
+            return None, None
+        text = archive.read(meta[0]).decode()
+    name = version = None
+    for line in text.splitlines():
+        if line.startswith("Name: "):
+            name = line[6:].strip()
+        elif line.startswith("Version: "):
+            version = line[9:].strip()
+        elif not line.strip():
+            break
+    return name, version
+
+
+def executing_module_is(wheel, module):
+    """Does the engine about to run come from THIS wheel?
+
+    Comparing digests proves something about a file on disk. It proves nothing
+    about the interpreter that is about to execute, which imports whatever is
+    installed — so with wheel A supplied and wheel B installed, replay said
+    `MATCH`.
+
+    Two things are compared, and the second is why one is not enough. The module
+    BYTES must be those the wheel carries; and the INSTALLED DISTRIBUTION must
+    be the wheel's own name and version. Two candidate wheels built from
+    different commits can carry a byte-identical `sigma_glyph.py` — the module
+    did not change between them — so bytes alone cannot tell which artifact is
+    installed. The version can: it carries the source commit.
+    """
+    installed = Path(getattr(module, "__file__", "") or "")
+    if not installed.is_file():
+        return "the imported evaluator has no readable file to compare"
+    member = installed.name
+    with zipfile.ZipFile(wheel) as archive:
+        if member not in archive.namelist():
+            return (f"the wheel does not carry {member}, so the running module "
+                    f"cannot have come from it")
+        carried = archive.read(member)
+    if carried != installed.read_bytes():
+        return (f"the running {member} ({sha256(installed.read_bytes())[:16]}…) "
+                f"is not the one in the supplied wheel "
+                f"({sha256(carried)[:16]}…): the operand and the engine are "
+                f"different artifacts")
+
+    name, version = wheel_distribution(wheel)
+    if not name:
+        return f"the wheel {wheel} carries no METADATA to identify it by"
     try:
-        document = json.loads(Path(path).read_text())
-    except (OSError, ValueError) as failure:
-        return None, f"cannot read an artifact digest from {operand}: {failure}"
-    digest = document.get("artifact_sha256")
-    if not digest:
-        return None, f"{operand} records no artifact_sha256"
-    return digest, None
+        import importlib.metadata as metadata
+        found = metadata.version(name)
+    except Exception as failure:                      # noqa: BLE001 - reported
+        return (f"cannot determine which distribution provides the running "
+                f"evaluator: {failure}")
+    if found != version:
+        return (f"the running evaluator is {name} {found}, the supplied wheel "
+                f"is {name} {version}. The module bytes happen to agree — they "
+                f"are identical between these two artifacts — but the installed "
+                f"distribution is a different one")
+    return None
 
 
 def _say(operation, verdict, reason=""):
@@ -199,6 +270,25 @@ def _check_runtime(pack, evaluator):
             f"the pack was settled with artifact "
             f"{runtime['evaluator_artifact_sha256'][:16]}…, the supplied "
             f"evaluator is {digest[:16]}…")
+
+    # The wheel checked must be the engine that runs. Importing here, before any
+    # settlement, so the comparison is against the module that will do the work.
+    from sigma_boundary import sigma
+    mismatch = executing_module_is(Path(evaluator), sigma())
+    if mismatch:
+        return EVALUATOR_MISMATCH, mismatch
+
+    if runtime.get("profile_id") != PROFILE_ID:
+        return PROFILE_MISMATCH, (
+            f"the pack names profile {runtime.get('profile_id')!r}; this tool "
+            f"implements {PROFILE_ID!r}. A pack may not choose which profile "
+            f"it is replayed under")
+    declared = {source["path"] for source in runtime.get("profile_sources", [])}
+    if declared != set(PROFILE_SOURCES):
+        return PROFILE_MISMATCH, (
+            f"the pack pins {sorted(declared)}; this profile is defined by "
+            f"{sorted(PROFILE_SOURCES)}. Checking only what the pack chose to "
+            f"list means an empty list checks nothing")
 
     for source in runtime["profile_sources"]:
         current = ROOT / source["path"]
@@ -268,7 +358,6 @@ def build(pack_dir, evaluator, token="FLOW"):
     budget = 5_000_000
     verdict, atp, meta = settle_nat_eq(church(occurrences), church(occurrences),
                                        budget)
-    head = os.popen("git -C %s rev-parse HEAD" % ROOT).read().strip()  # noqa
 
     pack = {
         "kind": PACK_KIND,
@@ -285,7 +374,6 @@ def build(pack_dir, evaluator, token="FLOW"):
         ],
         "runtime": {
             "evaluator_artifact_sha256": digest,
-            "consumer_commit": head,
             "profile_id": PROFILE_ID,
             "profile_sources": [
                 {"path": path, "sha256": sha256((ROOT / path).read_bytes())}
@@ -363,7 +451,10 @@ def drift(pack_dir):
 
     outcome = SAME
     for dependency in pack["dependencies"]:
-        current = ROOT / dependency["dependency_id"]
+        current, refusal = contained(ROOT, dependency.get("dependency_id"),
+                                     "dependency_id")
+        if refusal:
+            return _say("DRIFT", MALFORMED_PACK, refusal)
         if not current.is_file():
             print(f"  {CURRENT_MISSING}: {dependency['dependency_id']} is not "
                   f"in the checkout any more")

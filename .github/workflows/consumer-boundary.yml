@@ -57,6 +57,12 @@ jobs:
           # is gone. The consumer steps use this copy as their evaluator operand.
           cp campaigns/phase-4a/candidate-receipt.json \
              "$GITHUB_WORKSPACE/candidate-receipt.json"
+          # A SECOND wheel, from a different commit, for the control that the
+          # operand must be the ENGINE: two candidate wheels can carry a
+          # byte-identical sigma_glyph.py, so only the distribution version
+          # separates them.
+          python3 tools/candidate_artifact.py build \
+            --out "$GITHUB_WORKSPACE/other-candidate"
           git checkout --quiet "$BUILD_COMMIT"
           python3 tools/candidate_artifact.py build --out "$GITHUB_WORKSPACE/candidate"
           python3 tools/candidate_artifact.py verify \
@@ -102,12 +108,14 @@ jobs:
           set -euo pipefail
           cd manifesto
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_controls.py \
-            --evaluator "$GITHUB_WORKSPACE/candidate-receipt.json" \
+            --evaluator "$GITHUB_WORKSPACE/candidate"/*.whl \
+            --other-wheel "$GITHUB_WORKSPACE/other-candidate"/*.whl \
+            --receipt "$GITHUB_WORKSPACE/candidate-receipt.json" \
             | tee replay.log
           grep -q "REPLAY-CONTROLS: ALL PASS" replay.log
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
             replay drafts/replay-fixture-0.1 \
-            --evaluator "$GITHUB_WORKSPACE/candidate-receipt.json" \
+            --evaluator "$GITHUB_WORKSPACE/candidate"/*.whl \
             | tee fixture.log
           grep -q "REPLAY: MATCH" fixture.log
           # LEGACY_UNPINNED is a refusal, so the tool exits non-zero — which is
@@ -115,7 +123,8 @@ jobs:
           # failed step. The verdict is what is asserted here, not the status.
           set +e
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
-            replay drafts/ssd-pack | tee legacy.log
+            replay drafts/ssd-pack \
+            --evaluator "$GITHUB_WORKSPACE/candidate"/*.whl | tee legacy.log
           legacy_status=${PIPESTATUS[0]}
           set -e
           grep -q "REPLAY: LEGACY_UNPINNED" legacy.log

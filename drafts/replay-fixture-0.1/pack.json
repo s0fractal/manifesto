@@ -14,8 +14,7 @@
     }
   ],
   "runtime": {
-    "evaluator_artifact_sha256": "cfee921858378493e692f052b8fe253e1a85603b3a93d0df1dde1aba7ba70a6a",
-    "consumer_commit": "0d5664e138e8c5f0f67d8fa60d1952ed9eefcf9a",
+    "evaluator_artifact_sha256": "69f9567440b581fb255e91c8f08caeb86008367a9f08490d6482b22e5e612443",
     "profile_id": "manifesto/glyphlib/settle_nat_eq@v0",
     "profile_sources": [
       {
@@ -28,7 +27,7 @@
       },
       {
         "path": "tools/replay_pack.py",
-        "sha256": "fa98357b6905428592ecc0cde4e42bbe734fd263e713ee95e627cfda53a721d0"
+        "sha256": "7479e6ea9f4c017bf22aed9361f82e44f0a5713d7d47d9b100df5902deb6fd2c"
       }
     ]
   },

@@ -65,11 +65,15 @@ replay -> MATCH | REPLAY_MISMATCH | DEPENDENCY_MISSING | EVALUATOR_UNVERIFIED
 drift  -> SAME  | DRIFT | CURRENT_MISSING | MALFORMED_PACK | LEGACY_UNPINNED
 ```
 
-A `MATCH` there requires the pinned dependency bytes, the pinned **evaluator
-artifact** (supplied as an operand and compared before anything executes), the
-pinned **profile sources**, and every field of a **closed** receipt. A pack of
-the new format that is broken is `MALFORMED_PACK`, which is not the same as
-being historical — a defect must not be filed as an era.
+A `MATCH` there requires the pinned dependency bytes; the pinned **evaluator
+artifact**, supplied as a **wheel** and checked to be the engine that actually
+runs — a receipt describes an artifact and is not accepted as one; the pinned
+**profile sources**, whose set and `profile_id` must be this profile's rather
+than whatever the pack chose to list; and every field of a **closed** receipt.
+
+A pack of the new format that is broken — including a `pack.json` that exists
+and will not parse — is `MALFORMED_PACK`. That is not the same as being
+historical: a defect must not be filed as an era.
 
 `drafts/replay-fixture-0.1/` is the first such pack. Its historical replay stays
 `MATCH` while its current checkout reports `DRIFT`, which is the combination
