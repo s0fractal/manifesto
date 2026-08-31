@@ -83,9 +83,16 @@ jobs:
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
             replay drafts/replay-fixture-0.1 | tee fixture.log
           grep -q "REPLAY: MATCH" fixture.log
+          # LEGACY_UNPINNED is a refusal, so the tool exits non-zero — which is
+          # correct, and `set -e` would otherwise read the right answer as a
+          # failed step. The verdict is what is asserted here, not the status.
+          set +e
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
             replay drafts/ssd-pack | tee legacy.log
+          legacy_status=${PIPESTATUS[0]}
+          set -e
           grep -q "REPLAY: LEGACY_UNPINNED" legacy.log
+          test "$legacy_status" -ne 0  # a refusal must not report success
 
       - name: The AIE errata still reproduces against the candidate artifact
         env:
