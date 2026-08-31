@@ -13,9 +13,26 @@
       "embedded_path": "blobs/136db2a79a3ac8c915cacbf3f7fdcf0e0ada47931cde2dc757cf504b0a316fba"
     }
   ],
-  "computation": {
-    "evaluator_artifact_sha256": "not-recorded-in-this-fixture",
+  "runtime": {
+    "evaluator_artifact_sha256": "cfee921858378493e692f052b8fe253e1a85603b3a93d0df1dde1aba7ba70a6a",
+    "consumer_commit": "0d5664e138e8c5f0f67d8fa60d1952ed9eefcf9a",
     "profile_id": "manifesto/glyphlib/settle_nat_eq@v0",
+    "profile_sources": [
+      {
+        "path": "tools/sigma_boundary.py",
+        "sha256": "943def21f00702b45acee27f3d23572311b79b41c78aab51e2e1be0dc29376da"
+      },
+      {
+        "path": "tools/glyphlib.py",
+        "sha256": "701027f3cc837fce8eb41b6a55efedb00268ac72f418fe09d46b63f4b3d33ba7"
+      },
+      {
+        "path": "tools/replay_pack.py",
+        "sha256": "fa98357b6905428592ecc0cde4e42bbe734fd263e713ee95e627cfda53a721d0"
+      }
+    ]
+  },
+  "computation": {
     "budget": 5000000,
     "receipt": {
       "verdict": "PASS",

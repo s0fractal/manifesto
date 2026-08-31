@@ -15,7 +15,14 @@ on: [push, pull_request]
 env:
   # The exact Sigma revision this consumer is tested against. A branch name
   # would make the test mean something different on every run.
-  SIGMA_PIN: 3caf2da5c21fecde55f9f8c231bc70146f8b0539
+  # The commit carrying the FROZEN receipt. The artifact is rebuilt from the
+  # commit that receipt names, not from this one.
+  SIGMA_PIN: 9a20fa405d8fa42d4500534fedc5d05f4a23e0c4
+  # Pinned HERE, in this repository, so the comparison is against a digest this
+  # repository committed rather than one the producer generated during the run.
+  # Without this, CI showed only that a generator agrees with itself.
+  EXPECTED_ARTIFACT_SHA256: cfee921858378493e692f052b8fe253e1a85603b3a93d0df1dde1aba7ba70a6a
+  EXPECTED_BUILD_COMMIT: 5050ab7354224e586456b26fbd0fffe04301b3b2
 
 jobs:
   installed-package-consumer:
@@ -33,15 +40,26 @@ jobs:
           git -C sigma checkout --quiet "$SIGMA_PIN"
           test "$(git -C sigma rev-parse HEAD)" = "$SIGMA_PIN"
 
-      - name: Build the candidate artifact from that commit
+      - name: Rebuild the FROZEN artifact and compare with this repo's pin
         env:
           SOURCE_DATE_EPOCH: '1788134400'
         run: |
           set -euo pipefail
           cd sigma
+          # The receipt committed in the producer names the commit its artifact
+          # was built from; build THAT, not the receipt commit.
+          FROZEN_IN_PRODUCER=$(python3 -c "import json;print(json.load(open('campaigns/phase-4a/candidate-receipt.json'))['artifact_sha256'])")
+          BUILD_COMMIT=$(python3 -c "import json;print(json.load(open('campaigns/phase-4a/candidate-receipt.json'))['source_commit'])")
+          test "$FROZEN_IN_PRODUCER" = "$EXPECTED_ARTIFACT_SHA256"
+          test "$BUILD_COMMIT" = "$EXPECTED_BUILD_COMMIT"
+          git checkout --quiet "$BUILD_COMMIT"
           python3 tools/candidate_artifact.py build --out "$GITHUB_WORKSPACE/candidate"
           python3 tools/candidate_artifact.py verify \
-            --out "$GITHUB_WORKSPACE/candidate" --expect-commit "$SIGMA_PIN"
+            --out "$GITHUB_WORKSPACE/candidate" --expect-commit "$BUILD_COMMIT"
+          REBUILT=$(python3 -c "import json;print(json.load(open('$GITHUB_WORKSPACE/candidate/release-manifest.json'))['artifact_sha256'])")
+          echo "frozen (this repo) $EXPECTED_ARTIFACT_SHA256"
+          echo "rebuilt            $REBUILT"
+          test "$REBUILT" = "$EXPECTED_ARTIFACT_SHA256"
 
       # Digest checked against the manifest before the wheel is installed.
       - name: Install it into a clean environment, digest-checked first
@@ -49,7 +67,8 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           WHEEL=$(python3 -c "import json;print(json.load(open('candidate/release-manifest.json'))['artifact_filename'])")
-          EXPECT=$(python3 -c "import json;print(json.load(open('candidate/release-manifest.json'))['artifact_sha256'])")
+          # The digest THIS repository pinned, not the one just generated.
+          EXPECT="$EXPECTED_ARTIFACT_SHA256"
           ACTUAL=$(python3 -c "import hashlib,sys;print(hashlib.sha256(open('candidate/$WHEEL','rb').read()).hexdigest())")
           echo "expected $EXPECT"; echo "actual   $ACTUAL"
           test "$EXPECT" = "$ACTUAL"
@@ -78,10 +97,13 @@ jobs:
           set -euo pipefail
           cd manifesto
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_controls.py \
+            --evaluator "$GITHUB_WORKSPACE/sigma/campaigns/phase-4a/candidate-receipt.json" \
             | tee replay.log
           grep -q "REPLAY-CONTROLS: ALL PASS" replay.log
           "$GITHUB_WORKSPACE/consumer-venv/bin/python" tools/replay_pack.py \
-            replay drafts/replay-fixture-0.1 | tee fixture.log
+            replay drafts/replay-fixture-0.1 \
+            --evaluator "$GITHUB_WORKSPACE/sigma/campaigns/phase-4a/candidate-receipt.json" \
+            | tee fixture.log
           grep -q "REPLAY: MATCH" fixture.log
           # LEGACY_UNPINNED is a refusal, so the tool exits non-zero — which is
           # correct, and `set -e` would otherwise read the right answer as a

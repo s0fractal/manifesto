@@ -59,9 +59,17 @@ New packs carry their dependency bytes with them, and replay and drift are two
 operations that cannot be confused:
 
 ```text
-replay(pack)  -> MATCH | REPLAY_MISMATCH | DEPENDENCY_MISSING | LEGACY_UNPINNED
-drift(pack)   -> SAME  | DRIFT           | CURRENT_MISSING
+replay -> MATCH | REPLAY_MISMATCH | DEPENDENCY_MISSING | EVALUATOR_UNVERIFIED
+          | EVALUATOR_MISMATCH | PROFILE_MISMATCH | MALFORMED_PACK
+          | LEGACY_UNPINNED
+drift  -> SAME  | DRIFT | CURRENT_MISSING | MALFORMED_PACK | LEGACY_UNPINNED
 ```
+
+A `MATCH` there requires the pinned dependency bytes, the pinned **evaluator
+artifact** (supplied as an operand and compared before anything executes), the
+pinned **profile sources**, and every field of a **closed** receipt. A pack of
+the new format that is broken is `MALFORMED_PACK`, which is not the same as
+being historical — a defect must not be filed as an era.
 
 `drafts/replay-fixture-0.1/` is the first such pack. Its historical replay stays
 `MATCH` while its current checkout reports `DRIFT`, which is the combination

@@ -28,6 +28,20 @@ def chk(label, condition, detail=""):
           + (f" — {detail}" if detail and not condition else ""))
 
 
+def source_problems(text):
+    """The two properties a consumer source must have, as (label, clean) pairs.
+
+    A function rather than an inline expression, so a mutation can be run
+    through exactly the same predicates the real files are.
+    """
+    return [
+        ("contains no absolute path into a Sigma checkout",
+         "/Users/" not in text and "Projects/sigma-glyph" not in text),
+        ("does not inject a Sigma checkout onto sys.path",
+         "os.path.join(SIGMA" not in text),
+    ]
+
+
 def run(code, env=None, cwd=None):
     environment = dict(os.environ)
     environment.pop("PYTHONPATH", None)
@@ -57,10 +71,8 @@ def main():
     # No absolute path or sibling discovery survives in the consumer sources.
     for name in ("glyphlib.py", "conf_mono_settle.py"):
         text = (TOOLS / name).read_text()
-        chk(f"{name} contains no absolute path into a Sigma checkout",
-            "/Users/" not in text and "Projects/sigma-glyph" not in text)
-        chk(f"{name} does not inject a Sigma checkout onto sys.path",
-            'os.path.join(SIGMA' not in text and '"impl"' not in text)
+        for label, clean in source_problems(text):
+            chk(f"{name} {label}", clean)
 
     # A missing package must refuse, by name, and say what was expected.
     missing = run(f"import sys; sys.path.insert(0, {str(TOOLS)!r});"
@@ -107,12 +119,33 @@ def main():
         chk("...and the run says out loud that it was ignored",
             "IGNORED" in text, text.strip()[-160:])
 
-    # M1: restore the defect. The absolute-path injection must break a control.
-    restored = ('SIGMA = os.environ.get("SIGMA_GLYPH", '
-                '"/Users/s0fractal/Projects/sigma-glyph")')
-    chk("M1. the restored absolute-path injection is exactly what the source "
-        "controls above forbid",
-        "/Users/" in restored and "/Users/" not in (TOOLS / "glyphlib.py").read_text())
+    # M1. RESTORE THE DEFECT, in a copy of the real consumer source, and
+    #     require the same predicates that pass above to fail on it.
+    #
+    #     The first version of this control built a string and checked that the
+    #     string contained "/Users/". That is a fact about a literal, not
+    #     evidence that reintroducing the injection breaks the gate — and a
+    #     mutation that mutates nothing is the defect this file exists to catch.
+    with tempfile.TemporaryDirectory() as scratch:
+        mutant = Path(scratch) / "glyphlib.py"
+        original = (TOOLS / "glyphlib.py").read_text()
+        mutant.write_text(original.replace(
+            "from sigma_boundary import sigma  # noqa: E402",
+            'SIGMA = os.environ.get("SIGMA_GLYPH", '
+            '"/Users/s0fractal/Projects/sigma-glyph")\n'
+            'sys.path.insert(0, os.path.join(SIGMA, "impl"))\n'
+            "from sigma_boundary import sigma  # noqa: E402"))
+        broke = [label for label, clean in source_problems(mutant.read_text())
+                 if not clean]
+        chk("M1. the restored absolute-path injection makes the source controls "
+            "fail, and names which",
+            len(broke) == 2, f"failed: {broke or 'nothing — the mutation did not bite'}")
+        for label in broke:
+            print(f"        would fail: {label}")
+        chk("M1b. and the real source still passes them",
+            not [label for label, clean
+                 in source_problems((TOOLS / "glyphlib.py").read_text())
+                 if not clean])
 
     print()
     if all(results):
