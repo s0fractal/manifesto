@@ -13,6 +13,15 @@ classification: cs.LO, cs.PL, cs.CR
 bibliography: references.bib
 ---
 
+> ⚠️ **This paper has errata.** Several claims below are false as written or
+> wider than their evidence — see
+> [`drafts/ADDRESSING-IS-EQUALITY.errata.md`](../../drafts/ADDRESSING-IS-EQUALITY.errata.md),
+> reproduced by execution with `python3 tools/aie_errata_check.py`. In
+> particular: the `601 ATP` figure belongs to the permissive
+> `tools/glyphlib.py` harness, which admits any expression; the upstream safety
+> profile `church@v0` refuses `PLUS 7 5` and cannot settle it. The address
+> `8785b7dd…` is this harness's marker, not an `EqualityProfile` marker.
+
 # Abstract
 
 In a content-addressed machine with deterministic, total, budget-priced
