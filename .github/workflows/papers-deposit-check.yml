@@ -26,12 +26,19 @@ jobs:
       - name: Install the version-pinned released evaluator (no source checkout)
         run: pip install "sigma-glyph==0.6.7"
 
-      - name: Mechanism + mutations green (evaluator-independent)
+      - name: Deposit-gate mechanism + mutations green (evaluator-independent)
         shell: bash
         run: |
           set -euo pipefail
           python3 papers/test_deposit_check.py | tee mech.log
           grep -q "GREEN: the deposit-check mechanism checks and fails-closed correctly." mech.log
+
+      - name: Corpus exporter mechanism (F1-F9) green (no quarantine, no evaluator)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 papers/corpus/test_corpus.py | tee corpus.log
+          grep -q "GREEN: extraction is mechanical+reproducible; mapping is explicit and fails-closed." corpus.log
 
       - name: Each paper binds its candidate + closed ledger set; report is honest
         shell: bash
