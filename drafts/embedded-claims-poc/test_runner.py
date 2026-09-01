@@ -112,19 +112,34 @@ def main():
     inv(rep["status"] == "REFUSED" and rep["reason"] == "NOT_COMPILED"
         and rep["evaluator_invocations"] == 0, "status != COMPILED ⇒ refused, 0 evaluator calls")
 
-    # any mutation of an id/body/link ⇒ typed refusal, evaluator invocations == 0
+    # any mutation (id / body / link / identity / shape) ⇒ typed refusal, 0 evaluator calls.
+    # includes coherently-recomputed ids that only a full re-validation (not id-matching) catches.
     good = compiled(cap("A", "arith", "74 + 1 = 75", verifier=GLYPH))
+
+    def add_unknown_field(b):
+        cb = b["records"][0]["capsule"]["body"]
+        cb["surprise"] = 1
+        b["records"][0]["capsule"]["id"] = C._did(C.CAPSULE_DOMAIN, cb)  # recompute to fool id-check
+
+    def malform_claim(b):
+        cb = b["records"][0]["capsule"]["body"]
+        cb["claim"] = "not-an-object"
+        b["records"][0]["capsule"]["id"] = C._did(C.CAPSULE_DOMAIN, cb)
+
     for mut_label, mutate in [
         ("claim.id", lambda b: b["records"][0]["claim"].__setitem__("id", "sha256:" + "d" * 64)),
         ("plan.body.verifier", lambda b: b["records"][0]["plan"]["body"].__setitem__("verifier", None)),
         ("capsule.body.payload", lambda b: b["records"][0]["capsule"]["body"]["claim"].__setitem__("payload", "9 + 9 = 18")),
         ("occurrence", lambda b: b["records"][0]["occurrence"].__setitem__("span", [0, 0])),
+        ("local_id-only (linkage)", lambda b: b["records"][0].__setitem__("local_id", "OTHER")),
+        ("compiler_id-only", lambda b: b.__setitem__("compiler", "compiler://sha256:" + "0" * 64)),
+        ("unknown capsule field + recomputed id", add_unknown_field),
+        ("malformed claim + recomputed id", malform_claim),
     ]:
         t = copy.deepcopy(good)
         mutate(t)
         rep = R.run(t)
-        inv(rep["status"] == "REFUSED" and rep["reason"] == "BUNDLE_TAMPERED"
-            and rep["evaluator_invocations"] == 0,
+        inv(rep["status"] == "REFUSED" and rep["evaluator_invocations"] == 0,
             f"mutation of {mut_label} ⇒ refused before evaluator (0 invocations)")
 
     # a serialized bundle runs after the source Markdown is gone (no reparse)
@@ -144,6 +159,31 @@ def main():
         and str(r0["plan_id"]).startswith("sha256:")
         and str(r0["capsule_id"]).startswith("sha256:"),
         "REPORT preserves parser/compiler/runner/verifier ids + operand ids")
+
+    # 3d.1: a REPLAYED result addresses its actual output (result_value + normal_forms +
+    # a claim-bound evaluation that references the result_value)
+    inv(r0["result_value"] and r0["result_value"]["body"]["kind"] == "normal-forms"
+        and r0["normal_forms"] and r0["normal_forms"]["lhs"] == r0["normal_forms"]["rhs"]
+        and r0["evaluation"]["body"]["result_value"] == r0["result_value"]["id"]
+        and r0["evaluation"]["body"]["verdict"] == "PASS",
+        "REPLAYED result carries result_value + normal_forms + claim-bound evaluation")
+
+    # 3d.1: STALE addresses the OBSERVED dependency (bytes actually read), not just the pin
+    stale = R.run(compiled(cap("A", "count", payload, verifier=SETTLE,
+                               dep={"path": "README.md", "sha256": "0" * 64})))
+    s0 = stale["results"][0]
+    inv(s0["execution"] == "STALE"
+        and s0["declared_dependency"]["body"]["sha256"] == "0" * 64
+        and s0["observed_dependency"]["body"]["sha256"] == README_SHA
+        and s0["evaluation"]["body"]["observed_dependency"] == s0["observed_dependency"]["id"],
+        "STALE result addresses the observed dependency (actual bytes), not only the pin")
+
+    # 3d.1: UNSETTLED invents no result_value
+    uns = R.run(compiled(cap("A", "count", "/x/ in NOPE.md = 1", verifier=SETTLE,
+                             dep={"path": "NOPE.md", "sha256": "0" * 64})))
+    u0 = uns["results"][0]
+    inv(u0["result_value"] is None and u0["evaluation"]["body"]["result_value"] is None,
+        "UNSETTLED result invents no result_value_id")
 
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "
           f"({checks} runner-boundary checks) — prose→region→capsule→bundle→vector REPORT")

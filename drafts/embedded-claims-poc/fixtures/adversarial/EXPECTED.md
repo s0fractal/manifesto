@@ -91,8 +91,23 @@ id/link from `capsule.body` and refuses the whole bundle on any mismatch BEFORE 
 evaluator is invoked (a mutation ⇒ 0 evaluator invocations). Then it settles each claim
 and returns one result per record — the document gets NO global `MATCH`, the REPORT is a
 vector. Execution never raises `binding` above `ASSERTED`. The REPORT preserves parser_id,
-compiler_id, runner id, the per-record verifier identity, and every operand id. This
-closes the chain technically; it does not "close the truth of the document".
+compiler_id, runner id, the per-record verifier identity, and every operand id.
+
+3d.1 completes the address chain: before any evaluator call the runner also runs a closed,
+exception-safe `validate_bundle` (capsule.v2 schema, local_id linkage + uniqueness, actual
+compiler identity), so an incoherent mutation — a changed local_id, a swapped compiler id,
+an unknown field with a recomputed capsule id, a malformed claim — is refused with 0
+evaluator invocations rather than run (or crash). Each result also addresses the ACTUAL
+operands and output: `declared_dependency` vs `observed_dependency` (the bytes the evaluator
+really read — a STALE result names both), a `result_value {id, body}`, and a claim-bound
+`evaluation {id, body}`; `UNSETTLED` invents no result_value.
+
+**Honest limit.** Content-addressing catches an *incoherent* mutation. A *fully recomputed,
+schema-valid* bundle is a NEW bundle, not a detectable tamper — telling it from the
+historical original needs an external commitment / signature / receipt, which this layer
+does not claim. The execution chain and the address-of-proof chain close here;
+receipt/authenticity stays honestly open — the next, separate boundary. This closes the
+chain technically; it does not "close the truth of the document".
 
 ## Status
 

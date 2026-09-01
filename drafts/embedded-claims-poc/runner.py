@@ -1,28 +1,31 @@
 #!/usr/bin/env python3
 """
-runner.py — embedded-claims PoC, phase 2 step 3d: the verifier / runner.
+runner.py — embedded-claims PoC, phase 2 step 3d/3d.1: the verifier / runner.
 
-The last layer, across the epistemic membrane:
+    document → PARSE → COMPILE  ──epistemic membrane──  EXECUTE → vector REPORT
 
-    document → PARSE → COMPILE  ──membrane──  EXECUTE → vector REPORT
+Consumes a COMPILED bundle and NOTHING else (reads no Markdown). Before any evaluator
+call it VALIDATES the bundle (closed capsule.v2 schema, local_id linkage + uniqueness,
+actual compiler identity, exception-safe on malformed structures) and RE-DERIVES every
+id/link from `capsule.body`; any failure refuses the whole bundle with the evaluator
+invocation count still 0. Then it settles each claim and returns one result per record —
+the document gets NO global MATCH; the REPORT is a vector (§13.11: local greenness is
+non-transitive). Execution never raises `binding` above `ASSERTED`.
 
-It consumes a COMPILED bundle and NOTHING else — it never reads Markdown. For each
-record it first re-derives every id and link from `capsule.body` (the single source of
-truth) and refuses the WHOLE bundle on any mismatch BEFORE the evaluator is ever
-invoked; then it settles each contained claim and returns a per-record two-axis result.
+Honest limit (Codex): content-addressing catches an INCOHERENT mutation — an id that no
+longer matches its body, a broken link, an invalid shape. A FULLY recomputed, schema-valid
+bundle is a NEW bundle, not a detectable tamper; distinguishing it from the historical
+original needs an external commitment / signature / receipt, which this layer does NOT
+claim. That is the next, separate boundary.
 
-Frozen boundary (operator + Codex):
-  - accepts only `status == COMPILED`; anything else is a whole-bundle refusal;
-  - re-verifies all ids/links; a mutation ⇒ typed refusal, evaluator invocations = 0;
-  - reads no Markdown — the serialized bundle is sufficient;
-  - one result PER record; the document gets NO global MATCH — the REPORT is a vector;
-  - execution never raises `binding` above `ASSERTED`;
-  - the REPORT preserves parser_id, compiler_id, runner_id, the per-record verifier
-    identity, and every operand id.
+3d.1 REPORT: each result addresses the ACTUAL operands and output —
+declared_dependency vs observed_dependency (the bytes the evaluator really read),
+result_value {id, body} (normal forms / post-state / measured), and a claim-bound
+evaluation {id, body}. UNSETTLED gets no invented result_value.
 
-It settles nothing itself: settlement reuses the same engine as the legacy PoC
-(settle_core / settle_gate / the Σ-GLYPH evaluator). `COMPILED` did not mean `REPLAYED`;
-this is where replay actually happens, per record, and only after the bundle verifies.
+Settlement reuses the same engine as the legacy PoC (settle_core / settle_gate / Σ-GLYPH).
+COMPILED did not mean REPLAYED; replay happens here, per record, only after the bundle
+verifies.
 """
 import hashlib
 import os
@@ -33,17 +36,16 @@ TOOLS = os.path.normpath(os.path.join(HERE, "..", "..", "tools"))
 sys.path.insert(0, TOOLS)
 sys.path.insert(0, HERE)
 import canonical      # noqa: E402
-import compiler       # noqa: E402  (id scheme authority: record_id + _did + domains)
-import settle_core as sc  # noqa: E402  (verifier_id, WORLD_CLASSES, settle_effect)
+import compiler       # noqa: E402
+import settle_core as sc  # noqa: E402
 
 RUNNER = [os.path.abspath(__file__), os.path.join(HERE, "canonical.py"),
           os.path.join(HERE, "compiler.py")]
+RESULT_VALUE_DOMAIN = "manifesto.result-value.v0"
+EVALUATION_DOMAIN = "manifesto.evaluation.v0"
 
 
 def runner_id():
-    """Orchestration identity (runner + id authority), path-independent. The engine
-    that actually decides each verdict is bound separately, per record, by the verifier
-    identity in the result."""
     digs = sorted(hashlib.sha256(open(p, "rb").read()).digest() for p in RUNNER)
     m = hashlib.sha256()
     for d in digs:
@@ -51,15 +53,39 @@ def runner_id():
     return "runner://sha256:" + m.hexdigest()
 
 
+def validate_bundle(cr):
+    """Closed, exception-safe structural validation BEFORE any id recompute or evaluator
+    call. Returns a list of typed errors (empty = ok). Catches the mutations content
+    addressing alone misses: unknown capsule fields (schema), a local_id changed out of
+    its claim (linkage), a swapped compiler identity, and malformed nested structures."""
+    errors = []
+    if cr.get("compiler") != compiler.compiler_id():
+        errors.append({"code": "COMPILER_IDENTITY_MISMATCH"})
+    seen = set()
+    for i, rec in enumerate(cr.get("records", [])):
+        if not isinstance(rec, dict):
+            errors.append({"code": "MALFORMED_RECORD", "index": i}); continue
+        cap = rec.get("capsule")
+        if not isinstance(cap, dict) or not isinstance(cap.get("body"), dict):
+            errors.append({"code": "MALFORMED_CAPSULE", "index": i}); continue
+        cb = cap["body"]
+        v = compiler.validate_v2(cb)          # closed capsule.v2 schema
+        if v:
+            errors.append({"code": "CAPSULE_SCHEMA_INVALID", "index": i, "detail": v}); continue
+        lid = rec.get("local_id")
+        if lid != cb.get("claim", {}).get("local_id"):
+            errors.append({"code": "LOCAL_ID_LINKAGE", "index": i})
+        if lid in seen:
+            errors.append({"code": "DUPLICATE_LOCAL_ID", "index": i})
+        seen.add(lid)
+    return errors
+
+
 def _reverify(rec):
-    """Re-derive every id/link from capsule.body + occurrence; return the list of
-    fields that do not reproduce (empty means intact)."""
+    """Re-derive every id/link from capsule.body + occurrence; list what does not match."""
     bad = []
-    cap = rec.get("capsule") or {}
-    cb = cap.get("body")
-    if not isinstance(cb, dict) or "claim" not in cb:
-        return ["capsule.body"]
-    if cap.get("id") != compiler._did(compiler.CAPSULE_DOMAIN, cb):
+    cb = rec["capsule"]["body"]
+    if rec["capsule"].get("id") != compiler._did(compiler.CAPSULE_DOMAIN, cb):
         bad.append("capsule.id")
     claim = cb["claim"]
     claim_body = {"class": claim.get("class"), "payload": claim.get("payload")}
@@ -74,11 +100,10 @@ def _reverify(rec):
     plan_body = {"claim": claim_id, "verifier": cb.get("verifier"), "dependency": dep_id}
     if rec.get("plan") != {"id": canonical.record_id("plan", plan_body), "body": plan_body}:
         bad.append("plan")
+    exp_b = None
     if "binding" in cb:
         bbody = {"claim": claim_id, **cb["binding"]}
         exp_b = {"id": canonical.record_id("binding", bbody), "body": bbody}
-    else:
-        exp_b = None
     if rec.get("binding") != exp_b:
         bad.append("binding")
     if rec.get("occurrence_id") != compiler._did(compiler.OCCURRENCE_DOMAIN,
@@ -102,7 +127,7 @@ def _summary(facts):
 
 
 def _settle_one(rec):
-    """Settle one verified record. INVOKES the evaluator. Two independent axes."""
+    """Settle one verified record. INVOKES the evaluator. Two axes + addressed operands."""
     cb = rec["capsule"]["body"]
     cls, payload = cb["claim"]["class"], cb["claim"]["payload"]
     if cls == "effect":
@@ -112,6 +137,7 @@ def _settle_one(rec):
         res = gate.settle(cls, payload, {})
     layer = res.get("layer")
     verifier = sc.verifier_id(layer)
+    verdict = res["verdict"]
 
     facts = []
     pinned = rec["plan"]["body"].get("verifier")
@@ -119,37 +145,68 @@ def _settle_one(rec):
         facts.append("VERIFIER_MISSING")
     elif pinned != verifier:
         facts.append("VERIFIER_MISMATCH")
-    v = res["verdict"]
     facts.append({"PASS": "RESULT_MATCH", "REFUTED": "RESULT_MISMATCH"}
-                 .get(v, "RESULT_UNSETTLED"))
+                 .get(verdict, "RESULT_UNSETTLED"))
+
+    declared_dependency = rec.get("dependency")
+    obs = res.get("dep")                       # the bytes the evaluator ACTUALLY read
+    observed_dependency = ({"id": canonical.record_id("dependency", obs), "body": obs}
+                           if obs else None)
     if cls in sc.WORLD_CLASSES:
-        dep = rec.get("dependency")
-        actual = res.get("dep") or {}
-        if not dep:
+        if not declared_dependency:
             facts.append("DEPENDENCY_MISSING")
         else:
-            if actual.get("path") and dep["body"].get("path") != actual.get("path"):
+            db = declared_dependency["body"]
+            if obs and obs.get("path") and db.get("path") != obs.get("path"):
                 facts.append("DEPENDENCY_PATH_MISMATCH")
-            if actual.get("sha256") and dep["body"].get("sha256") != actual.get("sha256"):
+            if obs and obs.get("sha256") and db.get("sha256") != obs.get("sha256"):
                 facts.append("DEPENDENCY_STALE")
 
-    binding_axis = "ASSERTED" if rec.get("binding") else "UNTIED"   # never raised
+    # result value — a stable body only when there is one (no invented id for UNSETTLED)
+    result_value, normal_forms = None, None
+    checks = res.get("ski_checks")
+    if verdict in ("PASS", "REFUTED") and checks and len(checks) >= 2:
+        lhs, rhs = checks[0]["expect"], checks[1]["expect"]
+        normal_forms = {"lhs": lhs, "rhs": rhs}
+        rv = {"kind": "normal-forms", "lhs": lhs, "rhs": rhs}
+        result_value = {"id": compiler._did(RESULT_VALUE_DOMAIN, rv), "body": rv}
+    elif cls == "effect" and res.get("state_digest"):
+        rv = {"kind": "post-state", "state": res["state_digest"],
+              "stdout": res.get("stdout_digest")}
+        result_value = {"id": compiler._did(RESULT_VALUE_DOMAIN, rv), "body": rv}
+    elif verdict in ("PASS", "REFUTED") and cls in sc.WORLD_CLASSES and observed_dependency:
+        rv = {"kind": "world", "observed_dependency": observed_dependency["id"],
+              "detail": res.get("detail")}
+        result_value = {"id": compiler._did(RESULT_VALUE_DOMAIN, rv), "body": rv}
+
+    eval_body = {
+        "claim": rec["claim"]["id"], "plan": rec["plan"]["id"],
+        "declared_dependency": declared_dependency["id"] if declared_dependency else None,
+        "observed_dependency": observed_dependency["id"] if observed_dependency else None,
+        "verifier": verifier,
+        "result_value": result_value["id"] if result_value else None,
+        "verdict": verdict,
+    }
+    evaluation = {"id": compiler._did(EVALUATION_DOMAIN, eval_body), "body": eval_body}
+
     return {
-        "local_id": rec["local_id"],
-        "class": cls, "payload": payload,
+        "local_id": rec["local_id"], "class": cls, "payload": payload,
         "execution": _summary(facts), "execution_facts": sorted(facts),
-        "binding": binding_axis,
+        "binding": "ASSERTED" if rec.get("binding") else "UNTIED",   # never raised
         "verifier": verifier, "layer": layer, "atp": res.get("atp"),
         "claim_id": rec["claim"]["id"], "plan_id": rec["plan"]["id"],
-        "dependency_id": rec["dependency"]["id"] if rec.get("dependency") else None,
         "binding_id": rec["binding"]["id"] if rec.get("binding") else None,
         "capsule_id": rec["capsule"]["id"], "occurrence_id": rec["occurrence_id"],
         "occurrence": rec["occurrence"],
+        "declared_dependency": declared_dependency,
+        "observed_dependency": observed_dependency,
+        "normal_forms": normal_forms,
+        "result_value": result_value,
+        "evaluation": evaluation,
     }
 
 
 def run(compile_report):
-    """COMPILED bundle → vector REPORT. No Markdown. No document-level MATCH."""
     base = {"runner": runner_id(),
             "parser_id": compile_report.get("parser_id"),
             "compiler_id": compile_report.get("compiler"),
@@ -157,13 +214,19 @@ def run(compile_report):
     if compile_report.get("status") != "COMPILED":
         return {**base, "status": "REFUSED", "reason": "NOT_COMPILED",
                 "detail": f"compile status {compile_report.get('status')!r} != COMPILED"}
-    # pass 1: re-verify EVERY record before any evaluator call
-    for rec in compile_report.get("records", []):
-        bad = _reverify(rec)
-        if bad:
-            return {**base, "status": "REFUSED", "reason": "BUNDLE_TAMPERED",
-                    "detail": {"local_id": rec.get("local_id"), "fields": bad}}
-    # pass 2: settle each (this is the only place the evaluator runs)
+    try:
+        verrs = validate_bundle(compile_report)
+        if verrs:
+            return {**base, "status": "REFUSED", "reason": "INVALID_BUNDLE", "detail": verrs}
+        for rec in compile_report.get("records", []):
+            bad = _reverify(rec)
+            if bad:
+                return {**base, "status": "REFUSED", "reason": "BUNDLE_TAMPERED",
+                        "detail": {"local_id": rec.get("local_id"), "fields": bad}}
+    except Exception as e:   # malformed structure ⇒ typed refusal, never a crash
+        return {**base, "status": "REFUSED", "reason": "MALFORMED_BUNDLE",
+                "detail": f"{type(e).__name__}: {e}"}
+
     results, n = [], 0
     for rec in compile_report.get("records", []):
         results.append(_settle_one(rec))

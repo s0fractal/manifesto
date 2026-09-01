@@ -80,4 +80,4 @@ jobs:
         run: |
           set -euo pipefail
           python3 drafts/embedded-claims-poc/test_runner.py | tee run.log
-          grep -q "ALL PASS (14 runner-boundary checks)" run.log
+          grep -qE "^ALL PASS \([0-9]+ runner-boundary checks\)" run.log
