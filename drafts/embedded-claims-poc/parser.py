@@ -41,7 +41,7 @@ END = re.compile(r"^<!-- manifesto-claims:end -->$")
 CLOSER = re.compile(r"^ {0,3}`{3,}[ \t]*$")   # a valid CommonMark closing fence
 
 FATAL = {"UNKNOWN_PROFILE", "UNEXPECTED_END", "NESTED_OR_DUP_BEGIN", "MISSING_END",
-         "UNCLOSED_FENCE"}
+         "UNCLOSED_FENCE", "UNSUPPORTED_LINE_ENDING"}
 PINNED = {"markdown-it-py": "4.2.0", "mdurl": "0.1.2"}
 
 
@@ -83,8 +83,31 @@ def _line_offsets(text):
     return offs
 
 
+def _line_ending_error(text):
+    """Uniform LF or uniform CRLF are fine. A lone CR (old-Mac) or a mix of LF and
+    CRLF is a typed failure — line endings must not silently change what the protocol
+    sees (Codex): a CRLF document must not vanish into NO_LIVE_REGION."""
+    total_nl = text.count("\n")
+    crlf = text.count("\r\n")
+    lone_cr = text.count("\r") - crlf
+    if lone_cr > 0:
+        return "lone CR (\\r not part of CRLF)"
+    if crlf and crlf != total_nl:
+        return "mixed LF and CRLF line endings"
+    return None
+
+
 def parse(text):
-    lines = text.split("\n")
+    le_err = _line_ending_error(text)
+    if le_err:
+        return {"parser": parser_id(), "status": "INVALID", "regions": [],
+                "capsules": [],
+                "errors": [{"code": "UNSUPPORTED_LINE_ENDING", "line": 0,
+                            "detail": le_err}]}
+    raw_lines = text.split("\n")
+    # structural lines drop a single trailing CR (CRLF); byte offsets stay over the
+    # ORIGINAL bytes, so spans are faithful regardless of line ending.
+    lines = [ln[:-1] if ln.endswith("\r") else ln for ln in raw_lines]
     offs = _line_offsets(text)
     tokens = MarkdownIt("commonmark").parse(text)
 
@@ -203,8 +226,8 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("usage: parser.py <file.md>", file=sys.stderr)
         sys.exit(2)
-    with open(sys.argv[1], encoding="utf-8") as f:
-        rep = parse(f.read())
+    with open(sys.argv[1], "rb") as f:          # raw bytes, not universal-newline text
+        rep = parse(f.read().decode("utf-8"))
     print(f"status={rep['status']} regions={len(rep['regions'])} "
           f"capsules={len(rep['capsules'])} errors={_codes(rep)}")
     print(json.dumps(rep, ensure_ascii=False, sort_keys=True))

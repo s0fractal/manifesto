@@ -93,8 +93,30 @@ def main():
     print(("ok   " if pid_ok else "FAIL ") + "parser_id binds installed dependency closure")
     failures += 0 if pid_ok else 1
 
+    # line-ending ingress (Codex 3b.1): CRLF parses identically with faithful byte spans;
+    # mixed / lone-CR is a typed failure, never a silent NO_LIVE_REGION.
+    lf = open(os.path.join(HERE, "fixtures/adversarial/09-claim-inside-capsule.md"),
+              "rb").read().decode("utf-8")
+    crlf = lf.replace("\n", "\r\n")
+    r = P.parse(crlf)
+    raw = crlf.encode("utf-8")
+    crlf_ok = (r["status"] == V and len(r["capsules"]) == 1
+               and raw[r["capsules"][0]["span"][0]:r["capsules"][0]["span"][1]]
+               .decode("utf-8") == r["capsules"][0]["body_raw"])
+    print(("ok   " if crlf_ok else "FAIL ") + "CRLF ingress: VALID, one capsule, faithful span")
+    failures += 0 if crlf_ok else 1
+
+    def codes(rep):
+        return sorted({e["code"] for e in rep["errors"]})
+    mixed = P.parse(lf.replace("\n", "\r\n", 1))
+    lone = P.parse("<!-- x -->\rmore\ntext")
+    le_ok = (mixed["status"] == "INVALID" and codes(mixed) == ["UNSUPPORTED_LINE_ENDING"]
+             and lone["status"] == "INVALID" and codes(lone) == ["UNSUPPORTED_LINE_ENDING"])
+    print(("ok   " if le_ok else "FAIL ") + "mixed / lone-CR endings are typed UNSUPPORTED_LINE_ENDING")
+    failures += 0 if le_ok else 1
+
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "
-          f"({len(GOLDEN)} PARSE specimens + 2 invariants) — capsule-only; COMPILE is 3c")
+          f"({len(GOLDEN)} PARSE specimens + 4 invariants) — capsule-only; COMPILE is 3c")
     return 0 if failures == 0 else 1
 
 

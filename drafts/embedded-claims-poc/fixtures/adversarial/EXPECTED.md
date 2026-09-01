@@ -49,6 +49,9 @@ capsule + settlement of the contained claim.
    source slice (the source occurrence the compiler needs), and the span slices back to it.
 5. **parser_id binds the runtime.** The identity closes over parser.py + the lock + the
    installed bytes/versions of markdown_it and mdurl; path-independent, checked cross-venv.
+6. **Line-ending ingress.** Files are read as bytes; uniform LF and uniform CRLF parse
+   identically with byte-faithful spans; mixed or lone-CR endings are a typed
+   `UNSUPPORTED_LINE_ENDING`, never a silent `NO_LIVE_REGION`.
 
 ## Status
 
