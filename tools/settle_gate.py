@@ -292,10 +292,14 @@ def gate(text):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--strict"]
+    args = [a for a in sys.argv[1:] if a not in ("--strict", "--no-write")]
     strict = "--strict" in sys.argv   # P1 fix (Codex): fail-closed on ANY non-PASS
+    # --no-write: diagnostic run, print the tally/receipt digest but write no files.
+    # Default remains write-on (the .settled.md / .receipt.json artifacts are canonical
+    # evidence and stay tracked); --no-write is for read-only inspection.
+    nowrite = "--no-write" in sys.argv
     if len(args) != 1:
-        print("usage: settle_gate.py [--strict] <file.md>", file=sys.stderr)
+        print("usage: settle_gate.py [--strict] [--no-write] <file.md>", file=sys.stderr)
         return 2
     src = args[0]
     with open(src, encoding="utf-8") as f:
@@ -319,17 +323,20 @@ def main():
     receipt = {"source_sha256": hashlib.sha256(text.encode()).hexdigest(),
                "gate_version": GATE_VERSION, "deps": deps,
                "tally": tally, "claims": results}
-    out_md = src.rsplit(".md", 1)[0] + ".settled.md"
-    out_js = src.rsplit(".md", 1)[0] + ".receipt.json"
-    with open(out_md, "w", encoding="utf-8") as f:
-        f.write(settled_text)
     body = json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2)
-    with open(out_js, "w", encoding="utf-8") as f:
-        f.write(body + "\nRECEIPT_SHA256: "
-                + hashlib.sha256(body.encode()).hexdigest() + "\n")
+    receipt_sha = hashlib.sha256(body.encode()).hexdigest()
     print(json.dumps(tally, sort_keys=True))
-    print("settled ->", out_md)
-    print("receipt ->", out_js)
+    if nowrite:
+        print("RECEIPT_SHA256:", receipt_sha, "(--no-write: nothing written)")
+    else:
+        out_md = src.rsplit(".md", 1)[0] + ".settled.md"
+        out_js = src.rsplit(".md", 1)[0] + ".receipt.json"
+        with open(out_md, "w", encoding="utf-8") as f:
+            f.write(settled_text)
+        with open(out_js, "w", encoding="utf-8") as f:
+            f.write(body + "\nRECEIPT_SHA256: " + receipt_sha + "\n")
+        print("settled ->", out_md)
+        print("receipt ->", out_js)
     if strict:
         # a publication/CI gate must fail on refuted OR unsettled (unsupported,
         # malformed, budget-exhausted, path-refused): only all-PASS exits 0.

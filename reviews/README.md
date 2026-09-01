@@ -78,7 +78,7 @@ python3 papers/every-check-spawns-more/check_claims.py   # 30 figures, GREEN exp
 python3 papers/addressing-is-equality/check_claims.py    # benchmarks re-execute
 python3 tools/term_graph.py                              # distinction graph + collisions
 python3 tools/conf_mono_settle.py                        # COMPILE-0030 receipts
-python3 tools/settle_gate.py drafts/SSD-DEMO-0.2.md      # gate, second pass
+python3 tools/settle_gate.py --no-write drafts/SSD-DEMO-0.2.md      # gate, second pass
 pip install warrant-verify && cd drafts/ssd-pack && \
   warrant --store .warrants verify --settlement --trust-config trust.json
 ```

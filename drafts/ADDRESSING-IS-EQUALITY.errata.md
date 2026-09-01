@@ -135,7 +135,7 @@ layer that settles no equality.
 Running the repository's own declared command on the pinned source:
 
 ```text
-python3 tools/settle_gate.py drafts/SSD-DEMO-0.2.md
+python3 tools/settle_gate.py --no-write drafts/SSD-DEMO-0.2.md
 {"atp_total": 5638, "claims": 11, "refuted": 3, "settled_true": 8, "unsettled": 0}
 ```
 
