@@ -2,7 +2,19 @@
 
 Consolidates deliverables §7.3–§7.8. Nothing here deposits, tags, licenses, or reserves a DOI.
 
-## A. The checkers are STALE-GREEN / machine-bound; replace them (Codex P0-S2)
+## A. Checker — IMPLEMENTED as a closed-manifest deposit gate (Codex P0-S2 / P0-4 closed)
+
+**Status (2026-09-01).** Built: `papers/deposit_check.py` + `papers/addressing-is-equality/claim-manifest.json`,
+mechanism/mutation tests in `papers/test_deposit_check.py`. The old `check_claims.py` is now a
+deprecation shim to the gate (it no longer reads `manifest.json` for the Warrant ATP, and no longer
+depends on an absolute author-machine ADR path). **Current deposit report (BLOCKED, exit 1):**
+`B1` **CHECKED** (glyphlib replay — 601 / 19,997 / 260,780 ATP, each bound to a term/AST hash + the
+`glyphlib` digest + normal-form addresses); `B3`, `B6` **CHECKED** (`aie_errata_check.py` executed,
+exit 0); `B2` **EXCLUDED: DERIVED_FROM_B1**; `B5` **EXCLUDED: ARGUED_OBLIGATION**; `B8` **EXCLUDED:
+DEFINITIONAL**; `B4` **REFUSED: PROFILE_NOT_VENDORED** (church@v0 @196c45a is not vendored);
+`B7` **REFUSED: COMMAND_UNAVAILABLE** (`warrant` absent — it no longer reads `manifest.json` and calls
+it "re-executes"). Vendoring the DRAFT profile flips B4 to CHECKED; installing `warrant` lets B7
+actually execute. The design the gate implements:
 
 **The current checkers pass but decide much less than their banners claim.** `check_claims.py`
 verifies the two Warrant ATP values by **reading `manifest.json`** — it does not execute the check,
@@ -167,10 +179,10 @@ status_note: >
 | every abstract claim is a ledger row | **yes** | B1–B8 |
 | no historical false claim outside history/counterexample | **yes** | unconditional soundness / bare 601 ATP / "released profile" / `ISZERO∘SUB` removed; typed blocklist; errata in §8 |
 | assumptions adjacent | **yes** | §3 boundary; §4 contract stated as argued obligations |
-| every number replayed or classified | **PARTIAL / BLOCKED** | ATP replay + receipts re-derived and surface-labeled, but the paper says figures are "bound by AST hash" (§1, §5) and **the checker emits no term/AST hashes** — the closed-manifest checker (§A) is not implemented |
-| positive and negative fixtures both exercised | **yes** | cost matrix + marker collision + M1/M2/M3 + admission refusal of `PLUS 7 5` |
-| candidate paper bound to the checker | **BLOCKED** | deleting `paper-v0.2-draft.md` leaves the checker green (Codex P0-4); no candidate digest / closed claim-ID set consumed |
-| DRAFT profile vendored + admission fixtures | **BLOCKED** | `church@v0` @196c45a is not yet vendored/pinned; admission/refusal fixtures not in the deposit |
+| every number replayed or classified | **yes (implemented)** | the gate re-executes B1 and **binds each figure to a term/AST hash** + evaluator digest + normal-form addresses; B3/B6 execute `aie_errata_check.py`; nothing is string-presence |
+| positive and negative fixtures both exercised | **yes** | cost matrix (B1) + marker collision + M1/M2/M3 + admission refusal (B3/B6 executed by the gate) |
+| candidate paper bound to the checker | **yes (implemented)** | `deposit_check.py` binds the candidate by digest and the closed B1–B8 set; deleting/mutating the draft or a claim ID → `FAIL_CLOSED` exit 3 (Codex P0-4 closed) |
+| DRAFT profile vendored + admission fixtures | **BLOCKED** | the gate REFUSES B4 as `PROFILE_NOT_VENDORED`; `church@v0` @196c45a must be vendored/pinned with admission/refusal fixtures |
 | current/legacy and permissive/DRAFT-profile not conflated | **yes** | surface label throughout; evaluator wheel split from profile commit |
 | CI/replay/review/publication/adoption distinct | **yes** | §0; §7 two Warrant credits; §8 |
 | "what would weaken the central claim" | **yes** | §9 typed falsifiers |

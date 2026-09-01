@@ -4,7 +4,25 @@ Consolidates deliverables §7.3–§7.8 of the rewrite brief: checker gap list, 
 non-reproducible-sentence list, clean-environment reproduction, and a deposit manifest proposal.
 Nothing here deposits, tags, licenses, or reserves a DOI.
 
-## A. Checker — the current one is STALE-GREEN; replace it (Codex P0-S2)
+## A. Checker — IMPLEMENTED as a closed-manifest deposit gate (Codex P0-S2 / P0-4 closed)
+
+**Status (2026-09-01).** The closed-manifest gate below is now built: `papers/deposit_check.py`
+(engine + CLI) driven by `papers/every-check-spawns-more/claim-manifest.json`, with mechanism +
+mutation tests in `papers/test_deposit_check.py` (all six required mutations: delete candidate,
+number-change-with-stale-literal, claim-ID drift, profile swap, missing vendored profile,
+receipt/source mismatch — plus duplicate-id and errored-strategy). The old `check_claims.py` is now a
+deprecation shim to the gate. Deleting `paper-v0.2-draft.md` now yields `ENGINE: FAIL_CLOSED
+(CANDIDATE_MISSING), exit 3` — the stale-green hole is closed.
+
+**Current deposit report for this paper (honestly BLOCKED, exit 1):** `C5` **CHECKED** (COMPILE-0030
+replayed live: verdicts `[PASS, VIOLATION, PASS]`, ATP 4,151,277 / 554,678 / 25); `C8` **REFUSED:
+SOURCE_MISMATCH** (the `SSD-INDEX-AUDIT` receipt commits `dad53f…` but the current source is `0a75d8…`
+— the exact drift Codex flagged, now machine-caught); `C1 C2 C3 C4 C7` **REFUSED:
+FROZEN_CORPUS_NOT_DEPOSITED**; `C6` **REFUSED: SIMULATION_NOT_DEPOSITED**. When the frozen corpus and
+the scheduler simulation are deposited, those rows move addressably to CHECKED — no re-derivation from
+summary numbers.
+
+The design the gate implements:
 
 **The current `check_claims.py` is stale-green with respect to this ledger.** It searches
 `EXP-RVB-1-RESULTS.md` for μ **literals** — it does not parse a row, recount an act, verify a
@@ -140,9 +158,9 @@ A "yes" here must correspond to an implemented, executable gate. Several do not 
 | every abstract claim is a ledger row | **yes** | ledger rows are **C1–C8** (there is no C9) |
 | no historical false claim outside history/counterexample | **yes** | theorem/bound/phase-transition removed (MIGRATION §A); typed blocklist |
 | model assumptions adjacent to the statement | **yes** | §5 policies-first; §7 states no model |
-| every number re-derived / replayed / classified | **PARTIAL / BLOCKED** | COMPILE-0030 + AIE replay & receipts are re-derived; the per-act ô tables are **transcript-only, not re-derived** — the closed-manifest checker (§A) is not implemented |
-| positive and negative fixtures exercised | **PARTIAL / BLOCKED** | controls + gate boundary present; the promised **scheduler-counterexample simulation does not exist yet** (§7, ledger open list) |
-| candidate paper bound to the checker | **BLOCKED** | deleting `paper-v0.2-draft.md` leaves the checker green (Codex P0-4); no candidate digest / closed claim-ID set is consumed |
+| every number re-derived / replayed / classified | **PARTIAL (honest)** | the gate re-derives C5 (COMPILE-0030 live) and **REFUSES** the per-act ô tables as `FROZEN_CORPUS_NOT_DEPOSITED` — no string-presence credit; C8 is `REFUSED: SOURCE_MISMATCH` |
+| positive and negative fixtures exercised | **PARTIAL / BLOCKED** | controls + gate boundary present; the promised **scheduler-counterexample simulation does not exist yet** (§7, ledger open list) → C6 `REFUSED: SIMULATION_NOT_DEPOSITED` |
+| candidate paper bound to the checker | **yes (implemented)** | `deposit_check.py` binds the candidate by digest and the closed C1–C8 set; deleting/mutating the draft or a claim ID → `FAIL_CLOSED` exit 3 (Codex P0-4 closed); mutation suite in `test_deposit_check.py` |
 | current and legacy pipelines not conflated | **yes** | §8 labels the legacy inline gate |
 | CI / replay / review / publication / adoption kept distinct | **yes** | §0 status vocabulary |
 | "what would weaken the central claim" | **yes** | §9 typed falsifiers |

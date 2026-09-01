@@ -1,0 +1,69 @@
+{
+  "paper": "every-check-spawns-more",
+  "base": "../..",
+  "candidate": {
+    "path": "papers/every-check-spawns-more/paper-v0.2-draft.md",
+    "sha256": "b7fac3ca38dde5804ad1f99ab8dc99baa783ce869e429a0b987f1b0a813d5ef8"
+  },
+  "ledger": {
+    "path": "papers/every-check-spawns-more/CLAIM-LEDGER.md",
+    "closed_ids": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8"]
+  },
+  "claims": {
+    "C1": {
+      "strategy": "refused", "reason": "FROZEN_CORPUS_NOT_DEPOSITED",
+      "class": "measurement", "title": "verifier-reported ô round-1/round-2 counts",
+      "operands": ["drafts/EXP-RVB-1-RESULTS.md#1-2"]
+    },
+    "C2": {
+      "strategy": "refused", "reason": "FROZEN_CORPUS_NOT_DEPOSITED",
+      "class": "measurement", "title": "ô ~2-3; verifier split confounded",
+      "operands": ["drafts/EXP-RVB-1-RESULTS.md#crossed"]
+    },
+    "C3": {
+      "strategy": "refused", "reason": "FROZEN_CORPUS_NOT_DEPOSITED",
+      "class": "measurement", "title": "ô non-zero through sampled depths",
+      "operands": ["drafts/EXP-RVB-1-RESULTS.md#2"]
+    },
+    "C4": {
+      "strategy": "refused", "reason": "FROZEN_CORPUS_NOT_DEPOSITED",
+      "class": "measurement", "title": "termination controls ~0.14",
+      "operands": ["drafts/EXP-RVB-1-NC", "drafts/EXP-RVB-NC2"]
+    },
+    "C5": {
+      "strategy": "evaluator_replay", "runner": "compile_0030",
+      "class": "measurement", "title": "COMPILE-0030 terminal zero-obligation sub-act (separate axis)",
+      "script": "tools/conf_mono_settle.py",
+      "expect_verdicts": ["PASS", "VIOLATION", "PASS"],
+      "expect_atp": {
+        "clean_summarization": 4151277,
+        "confidence_laundering": 554678,
+        "licensed_by_evidence": 25
+      },
+      "operands": ["tools/conf_mono_settle.py", "drafts/COMPILE-0030-CONF-MONO.md"]
+    },
+    "C6": {
+      "strategy": "refused", "reason": "SIMULATION_NOT_DEPOSITED",
+      "class": "negative_result",
+      "title": "scheduler counterexamples retire v0.1 closed forms (executable sim owed)",
+      "operands": ["reviews/2026-09-codex-papers-v0.2.md#counterexamples"]
+    },
+    "C7": {
+      "strategy": "refused", "reason": "FROZEN_CORPUS_NOT_DEPOSITED",
+      "class": "measurement", "title": "glossary intervention ô 3.13->2.11",
+      "operands": ["drafts/EXP-RVB-2"]
+    },
+    "C8": {
+      "strategy": "receipt_tally",
+      "class": "measurement+negative",
+      "title": "legacy inline gate 4/11 and index audit 30/28/10/18",
+      "receipts": [
+        {"receipt": "drafts/SSD-DEMO-0.1.receipt.json", "source": "drafts/SSD-DEMO-0.1.md",
+         "field": "tally.refuted", "expected": 4},
+        {"receipt": "drafts/SSD-INDEX-AUDIT.receipt.json", "source": "drafts/SSD-INDEX-AUDIT.md",
+         "field": "tally.refuted", "expected": 28}
+      ],
+      "operands": ["drafts/SSD-DEMO-0.1.md", "drafts/SSD-INDEX-AUDIT.md"]
+    }
+  }
+}

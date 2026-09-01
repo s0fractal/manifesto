@@ -1,0 +1,69 @@
+{
+  "paper": "addressing-is-equality",
+  "base": "../..",
+  "candidate": {
+    "path": "papers/addressing-is-equality/paper-v0.2-draft.md",
+    "sha256": "8cc37f16ef84d54fb779b615e04818299cf95ca38687006e7a910b2ff1f683ae"
+  },
+  "ledger": {
+    "path": "papers/addressing-is-equality/CLAIM-LEDGER.md",
+    "closed_ids": ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]
+  },
+  "claims": {
+    "B1": {
+      "strategy": "evaluator_replay", "runner": "glyphlib",
+      "class": "measurement", "title": "address idiom vs in-language EQN=AND(LEQ,LEQ) costs",
+      "cases": [
+        {"label": "idiom 7+5=12", "kind": "nat_eq", "op": "+", "a": 7, "b": 5, "c": 12,
+         "expect_verdict": "PASS", "expect_atp": 601},
+        {"label": "idiom 200+200=400", "kind": "nat_eq", "op": "+", "a": 200, "b": 200, "c": 400,
+         "expect_verdict": "PASS", "expect_atp": 19997},
+        {"label": "in-language EQN 3+2=5", "kind": "bool_eqn", "op": "+", "a": 3, "b": 2, "c": 5,
+         "atp": 60000000, "expect_verdict": "PASS", "expect_atp": 260780}
+      ],
+      "operands": ["tools/glyphlib.py"]
+    },
+    "B2": {
+      "strategy": "excluded", "reason": "DERIVED_FROM_B1",
+      "class": "engineering_finding", "title": "the cost gap motivates the address idiom",
+      "operands": ["B1"]
+    },
+    "B3": {
+      "strategy": "evaluator_replay", "runner": "script_exit0",
+      "class": "negative_result", "title": "marker collision + M1/M2/M3 (executable)",
+      "script": "tools/aie_errata_check.py",
+      "operands": ["tools/aie_errata_check.py"]
+    },
+    "B4": {
+      "strategy": "vendored_profile", "reason": "profile obligation",
+      "class": "profile_obligation",
+      "title": "church@v0 admitted domain; refuses PLUS 7 5",
+      "path": "vendored/adr-011@196c45a",
+      "commit": "196c45a2f9074a472b96af1a6bae2c67533edbb1",
+      "operands": ["vendored/adr-011@196c45a"]
+    },
+    "B5": {
+      "strategy": "excluded", "reason": "ARGUED_OBLIGATION",
+      "class": "profile_obligation", "title": "preservation obligation (argued, not proved)",
+      "operands": ["papers/addressing-is-equality/paper-v0.2-draft.md#4"]
+    },
+    "B6": {
+      "strategy": "evaluator_replay", "runner": "script_exit0",
+      "class": "method_invariant", "title": "budget exhaustion = UNSETTLED; full budget per side",
+      "script": "tools/aie_errata_check.py",
+      "operands": ["tools/aie_errata_check.py"]
+    },
+    "B7": {
+      "strategy": "command", "class": "conformance",
+      "title": "stored SKI check re-executes (PASS 2108 ATP); pack LEGACY_UNPINNED",
+      "cmd": ["warrant", "--store", ".warrants", "check", "0597575d"],
+      "operands": ["drafts/ssd-pack"]
+    },
+    "B8": {
+      "strategy": "excluded", "reason": "DEFINITIONAL",
+      "class": "representation_invariant",
+      "title": "hash-relative observation identity (under named assumptions)",
+      "operands": ["papers/addressing-is-equality/paper-v0.2-draft.md#4"]
+    }
+  }
+}

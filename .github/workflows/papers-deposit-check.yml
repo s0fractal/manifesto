@@ -1,0 +1,61 @@
+name: papers-deposit-check
+
+# The closed-manifest deposit gate for papers/ (Codex closure P0-4). Green here
+# means TWO separate things are true, and the job keeps them separate:
+#   1. the gate MECHANISM checks and fails-closed correctly (test_deposit_check.py,
+#      including all six required mutations) — evaluator-independent;
+#   2. each paper's claim-manifest still BINDS its candidate draft by digest and its
+#      closed ledger set (engine == OK). Editing a draft without re-pinning its
+#      manifest turns this red — that is the freshness discipline, not a flake.
+#
+# Green does NOT mean deposit-clean: both papers are expected to be DEPOSIT: BLOCKED
+# (Paper A refuses the not-yet-deposited frozen corpus; Paper B refuses the
+# un-vendored DRAFT profile and the absent `warrant` CLI). That is the honest shape
+# of absence the gate exists to record; the corpus/profile later flip specific
+# claims from REFUSED to CHECKED.
+on: [push, pull_request]
+
+jobs:
+  deposit-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with: { python-version: '3.12' }
+
+      - name: Install the version-pinned released evaluator (no source checkout)
+        run: pip install "sigma-glyph==0.6.7"
+
+      - name: Mechanism + mutations green (evaluator-independent)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 papers/test_deposit_check.py | tee mech.log
+          grep -q "GREEN: the deposit-check mechanism checks and fails-closed correctly." mech.log
+
+      - name: Each paper binds its candidate + closed ledger set; report is honest
+        shell: bash
+        env:
+          SIGMA_GLYPH: /nonexistent-on-purpose
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import sys, json
+          sys.path.insert(0, "papers")
+          from deposit_check import evaluate
+          reports = {}
+          for p in ("every-check-spawns-more", "addressing-is-equality"):
+              r = evaluate(f"papers/{p}/claim-manifest.json")
+              reports[p] = r
+              assert r["engine"] == "OK", f"{p}: engine FAIL_CLOSED: {r['engine_faults']}"
+              assert r["deposit"] == "BLOCKED", f"{p}: expected BLOCKED at this stage"
+              print(f"{p}: engine OK; CHECKED={r['summary']['checked']} "
+                    f"EXCLUDED={r['summary']['excluded']} REFUSED={r['summary']['refused']}")
+          a, b = reports["every-check-spawns-more"], reports["addressing-is-equality"]
+          # Lock the contract: live-evaluator claims must actually re-derive,
+          # and absence must be REFUSED (not string-matched).
+          assert "C5" in a["summary"]["checked"], "Paper A C5 (COMPILE-0030) must re-derive"
+          assert "B1" in b["summary"]["checked"], "Paper B B1 (glyphlib costs) must re-derive"
+          assert "FROZEN_CORPUS_NOT_DEPOSITED" in {c["reason"] for c in a["claims"]}
+          print("contract locked: live claims re-derive; absence is refused, not string-matched")
+          PY
