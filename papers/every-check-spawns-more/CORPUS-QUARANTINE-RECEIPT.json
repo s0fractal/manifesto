@@ -1,0 +1,456 @@
+{
+  "schema": "manifesto.corpus-quarantine-receipt.v0",
+  "generated": "2026-09-01",
+  "step": "1.5 — preservation snapshot. NOT evidence deposit, NOT publication clearance.",
+  "quarantine_location": "/Users/s0fractal/.manifesto-corpus-quarantine (outside git, chmod 700, blobs chmod 400, content-addressed)",
+  "source_inventory": "papers/every-check-spawns-more/CORPUS-SOURCE-INVENTORY.json",
+  "policy": "copied ONLY the explicit inventory paths (no glob); digest verified before AND after copy; drift recorded as SOURCE_DRIFT, never a silent inventory update; nothing normalized/edited. Blobs stay OUT of git until a separate CLEARED_FOR_PUBLICATION gate.",
+  "counts": {
+    "VERIFIED": 55,
+    "SOURCE_DRIFT": 0,
+    "MISSING": 0
+  },
+  "total": 55,
+  "records": [
+    {
+      "agent": "agent-a2ecdc850157aa9ca",
+      "experiment": "audit/root-selection",
+      "inventory_sha256": "5b4122c96363a7ff69189beb23b97174df4d1413bd4e72cbc039a8f143261809",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a2ecdc850157aa9ca.jsonl",
+      "copied_sha256": "5b4122c96363a7ff69189beb23b97174df4d1413bd4e72cbc039a8f143261809",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a16835edfbb158e15",
+      "experiment": "audit/root-selection",
+      "inventory_sha256": "2ca23cf2a1bfb7ebb754f9d34192c7460df7bc2670aefd965429a33e8eb20668",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a16835edfbb158e15.jsonl",
+      "copied_sha256": "2ca23cf2a1bfb7ebb754f9d34192c7460df7bc2670aefd965429a33e8eb20668",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-af44c956e1c653d62",
+      "experiment": "audit/root-selection",
+      "inventory_sha256": "12550b2aa79c2c939aee2e8707dc2781c008290c213448e6cd174d9298d27760",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-af44c956e1c653d62.jsonl",
+      "copied_sha256": "12550b2aa79c2c939aee2e8707dc2781c008290c213448e6cd174d9298d27760",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a280b456ba5d18004",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "0915b524e1a344262d87fe6f1a0b8f87b3e362c8bfce907c992bfc5b17e76484",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a280b456ba5d18004.jsonl",
+      "copied_sha256": "0915b524e1a344262d87fe6f1a0b8f87b3e362c8bfce907c992bfc5b17e76484",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a61988c45724884fc",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "a7f70711dddd7b6dc42ba738cef23423e8c47bdadedcf05e71b98d72d2a4b8d8",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a61988c45724884fc.jsonl",
+      "copied_sha256": "a7f70711dddd7b6dc42ba738cef23423e8c47bdadedcf05e71b98d72d2a4b8d8",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a7130f94a63743fd5",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "81206a732230c82060b8bd001e5fbf276c4edbc23296781629afa6dbd578fa93",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a7130f94a63743fd5.jsonl",
+      "copied_sha256": "81206a732230c82060b8bd001e5fbf276c4edbc23296781629afa6dbd578fa93",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ace5f65fb07ea4929",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "0c2052a8cc87ff6683fb20b540aaa3c2bff130fbfd9e73d362ef1c41bed4ac64",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ace5f65fb07ea4929.jsonl",
+      "copied_sha256": "0c2052a8cc87ff6683fb20b540aaa3c2bff130fbfd9e73d362ef1c41bed4ac64",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a1c0cb31f55fafac2",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "650da1628c0d95e7eff50709e9d27e201974a0e64db4fb662c66f6c5c318bf04",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a1c0cb31f55fafac2.jsonl",
+      "copied_sha256": "650da1628c0d95e7eff50709e9d27e201974a0e64db4fb662c66f6c5c318bf04",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ae8734303330c359d",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "99a85e6357c6dc8e91c235b08586ee4c212ed100d696f69bd8b3a3c8833268d6",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ae8734303330c359d.jsonl",
+      "copied_sha256": "99a85e6357c6dc8e91c235b08586ee4c212ed100d696f69bd8b3a3c8833268d6",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a7925c63d8250444c",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "44d2d3edf77b31d1974db993a6707adf83b82242a59aef22d511655d65f25a27",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a7925c63d8250444c.jsonl",
+      "copied_sha256": "44d2d3edf77b31d1974db993a6707adf83b82242a59aef22d511655d65f25a27",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a5e6bbc8c5493de29",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "036520746265586f68f5d1188ea10160c99c44490624e013c03c3d7ddd844152",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a5e6bbc8c5493de29.jsonl",
+      "copied_sha256": "036520746265586f68f5d1188ea10160c99c44490624e013c03c3d7ddd844152",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a96b5db16658ad032",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "fd1e504ced751239f15fb2161b9f7c62582d2c1d0dd904c8e9c4ca8d0f15a592",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a96b5db16658ad032.jsonl",
+      "copied_sha256": "fd1e504ced751239f15fb2161b9f7c62582d2c1d0dd904c8e9c4ca8d0f15a592",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ab8274bcd688dceef",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "ace4fec3027ddf6591dcf9b0e0a9dcad12a328b363c60f6556b1df3a21091e85",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ab8274bcd688dceef.jsonl",
+      "copied_sha256": "ace4fec3027ddf6591dcf9b0e0a9dcad12a328b363c60f6556b1df3a21091e85",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a6682f6ceea7569e2",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "ab8ef1359a5040843753397c18a53c59ab56c036f4c34af65ee2c816998e971e",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a6682f6ceea7569e2.jsonl",
+      "copied_sha256": "ab8ef1359a5040843753397c18a53c59ab56c036f4c34af65ee2c816998e971e",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a59da734bb752f123",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "e5091b746f7024b61aa6a810c5be26d23dcf14cfbc2c1ad68f85c1e40214e355",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a59da734bb752f123.jsonl",
+      "copied_sha256": "e5091b746f7024b61aa6a810c5be26d23dcf14cfbc2c1ad68f85c1e40214e355",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a74180eb9478d385a",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "aeea60ca0bf5f009d712f0a361be0668896347ace5caeb7024e7fcf2f2c2c8f3",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a74180eb9478d385a.jsonl",
+      "copied_sha256": "aeea60ca0bf5f009d712f0a361be0668896347ace5caeb7024e7fcf2f2c2c8f3",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a0eda1deea730b879",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "99a2c169415b598c305d1ec60df7a6d187c51394fd5dfeeb7969a4e37a6c65f8",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a0eda1deea730b879.jsonl",
+      "copied_sha256": "99a2c169415b598c305d1ec60df7a6d187c51394fd5dfeeb7969a4e37a6c65f8",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a38287b9dd6a49461",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "5784ffa1be7bc451c7a98ea64b602fcb81357bef6bf8de2dbc7357d08b3a4c8d",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a38287b9dd6a49461.jsonl",
+      "copied_sha256": "5784ffa1be7bc451c7a98ea64b602fcb81357bef6bf8de2dbc7357d08b3a4c8d",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-aa5a32fe8a85c1809",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "7eb4b73b36b41cf0d241a0ecbc5a9eade5eb8e93f7a5429c7aee87bc985b1608",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-aa5a32fe8a85c1809.jsonl",
+      "copied_sha256": "7eb4b73b36b41cf0d241a0ecbc5a9eade5eb8e93f7a5429c7aee87bc985b1608",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ada51025225f88c87",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "c7ba35d3df35cef6827a6b13a075b4128cd9959795eeaaa102d57a43e9abc0b5",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ada51025225f88c87.jsonl",
+      "copied_sha256": "c7ba35d3df35cef6827a6b13a075b4128cd9959795eeaaa102d57a43e9abc0b5",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a700944565f64aed3",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "08694626479b92c884360dad0486c2be97bdedab62300872b325c573d47e80bc",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a700944565f64aed3.jsonl",
+      "copied_sha256": "08694626479b92c884360dad0486c2be97bdedab62300872b325c573d47e80bc",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-af3442e0a70a4ca45",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "8e7c6de8337016a3445c163390162a6b15e7a584bfd564792f880e4583072525",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-af3442e0a70a4ca45.jsonl",
+      "copied_sha256": "8e7c6de8337016a3445c163390162a6b15e7a584bfd564792f880e4583072525",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ab8454e235e42cc73",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "0d1ed0ab940513c3f7c8d0742c4eecc7ef6aa1c9496cf2c3c86c8b899a3a0366",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ab8454e235e42cc73.jsonl",
+      "copied_sha256": "0d1ed0ab940513c3f7c8d0742c4eecc7ef6aa1c9496cf2c3c86c8b899a3a0366",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ad4440f7e4c4a1065",
+      "experiment": "EXP-RVB-1-NC",
+      "inventory_sha256": "52587c83e72890bf9e59bd993751281b76e78d19a9578d9643e1bba77ebcb1a4",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ad4440f7e4c4a1065.jsonl",
+      "copied_sha256": "52587c83e72890bf9e59bd993751281b76e78d19a9578d9643e1bba77ebcb1a4",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a53bda7aed2063547",
+      "experiment": "EXP-RVB-1-NC",
+      "inventory_sha256": "eac23cc77c2d3b5488e68c1612a2db8262d1f69dd8dcf71a5ab7ff170e84b2a5",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a53bda7aed2063547.jsonl",
+      "copied_sha256": "eac23cc77c2d3b5488e68c1612a2db8262d1f69dd8dcf71a5ab7ff170e84b2a5",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ac3a672a64e4cf841",
+      "experiment": "EXP-RVB-1-NC",
+      "inventory_sha256": "11fb6bb1cd9f18a5564d51c629e4b98921602bfd331eaa382e3605d281f159e2",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ac3a672a64e4cf841.jsonl",
+      "copied_sha256": "11fb6bb1cd9f18a5564d51c629e4b98921602bfd331eaa382e3605d281f159e2",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ac8a908ab52b4019a",
+      "experiment": "EXP-RVB-1-NC",
+      "inventory_sha256": "b9dc1342deb8d3842dc4d024945aec15d30c29f869ab2cde2d5b8738bc8281c6",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ac8a908ab52b4019a.jsonl",
+      "copied_sha256": "b9dc1342deb8d3842dc4d024945aec15d30c29f869ab2cde2d5b8738bc8281c6",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-abe596c9087f03b50",
+      "experiment": "EXP-RVB-1-NC",
+      "inventory_sha256": "73469e86b23c0073f8834f8c40280e35bd996f57e3cfa94120ca59dcb173494e",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-abe596c9087f03b50.jsonl",
+      "copied_sha256": "73469e86b23c0073f8834f8c40280e35bd996f57e3cfa94120ca59dcb173494e",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a9d61a30ad3402aa1",
+      "experiment": "EXP-RVB-1-NC",
+      "inventory_sha256": "5bf8c041facfa0f437288bb74b9ea5523aceddab30e653f30f4629c25c8d1148",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a9d61a30ad3402aa1.jsonl",
+      "copied_sha256": "5bf8c041facfa0f437288bb74b9ea5523aceddab30e653f30f4629c25c8d1148",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a433b97cf7929198f",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "1062d88cc6fbefe08fb6e8f33b9889abc3d5297b02f108a8f346005843d5bb0f",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a433b97cf7929198f.jsonl",
+      "copied_sha256": "1062d88cc6fbefe08fb6e8f33b9889abc3d5297b02f108a8f346005843d5bb0f",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a3a36c7d6b122a13e",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "57a6bec35c9f009811afad147b5445b148c3a1900a71f8900bd3834fca852e9d",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a3a36c7d6b122a13e.jsonl",
+      "copied_sha256": "57a6bec35c9f009811afad147b5445b148c3a1900a71f8900bd3834fca852e9d",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-abd4a40657f92cad1",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "d74ea89ae2119f25361c2f4fd34aaf5da0865a3cb4a42cfda013fd1757189b4c",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-abd4a40657f92cad1.jsonl",
+      "copied_sha256": "d74ea89ae2119f25361c2f4fd34aaf5da0865a3cb4a42cfda013fd1757189b4c",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a13122b303a9fc77d",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "8b6c4c6fdd28502208f3c380b037713ed896cc943137eb98f6a8ffb35ed0d04e",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a13122b303a9fc77d.jsonl",
+      "copied_sha256": "8b6c4c6fdd28502208f3c380b037713ed896cc943137eb98f6a8ffb35ed0d04e",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a2604aa329acf15e5",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "1a528b31a8dc04346909efe34e22bb759836ec57927743772fa49810e4aaf339",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a2604aa329acf15e5.jsonl",
+      "copied_sha256": "1a528b31a8dc04346909efe34e22bb759836ec57927743772fa49810e4aaf339",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a02df3125721aa995",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "a078a6bac1e52c843cbb6a5990c8891310d26b0d04a2171221b319d11663f946",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a02df3125721aa995.jsonl",
+      "copied_sha256": "a078a6bac1e52c843cbb6a5990c8891310d26b0d04a2171221b319d11663f946",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a65cc0675bf277951",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "48c9ecb83497d6ec1e403f34f60872b51341aae0c7a55ce3407b7cd5655dcbde",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a65cc0675bf277951.jsonl",
+      "copied_sha256": "48c9ecb83497d6ec1e403f34f60872b51341aae0c7a55ce3407b7cd5655dcbde",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-ac8d5baa8e6d2ccb5",
+      "experiment": "EXP-RVB-NC2",
+      "inventory_sha256": "543abb5db96306af350c2668487265b20bd7988ae124237b3d2999e158f09324",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-ac8d5baa8e6d2ccb5.jsonl",
+      "copied_sha256": "543abb5db96306af350c2668487265b20bd7988ae124237b3d2999e158f09324",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a28376b191629dac3",
+      "experiment": "EXP-RVB-NC2",
+      "inventory_sha256": "91170a68cfa1f8c809a45235224bf82733de98c6a3cd03befba0cdf7fad0398f",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a28376b191629dac3.jsonl",
+      "copied_sha256": "91170a68cfa1f8c809a45235224bf82733de98c6a3cd03befba0cdf7fad0398f",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a1bbeaf1c75110fda",
+      "experiment": "EXP-RVB-NC2",
+      "inventory_sha256": "9b32def382c628bd17d7cf16789e5c14a6b43b9e1df531e18a39696771fc0e7e",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a1bbeaf1c75110fda.jsonl",
+      "copied_sha256": "9b32def382c628bd17d7cf16789e5c14a6b43b9e1df531e18a39696771fc0e7e",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a48cca78f6506d03d",
+      "experiment": "EXP-RVB-NC2",
+      "inventory_sha256": "6ac1c117259386e157593929685c96b2e9411f63aacf91498fac215882b77765",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a48cca78f6506d03d.jsonl",
+      "copied_sha256": "6ac1c117259386e157593929685c96b2e9411f63aacf91498fac215882b77765",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a9edbf7b9c09f93c0",
+      "experiment": "EXP-RVB-NC2",
+      "inventory_sha256": "9ff0fd3b94ae629c0ce6c16ed971deebebb354c21b66d5e0e9941078be5ea705",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a9edbf7b9c09f93c0.jsonl",
+      "copied_sha256": "9ff0fd3b94ae629c0ce6c16ed971deebebb354c21b66d5e0e9941078be5ea705",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a7d4498650448c634",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "e8c63808f75370b5cd749a1b19c5af14923215a2ca00232c4e09cf3d2c31800d",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a7d4498650448c634.jsonl",
+      "copied_sha256": "e8c63808f75370b5cd749a1b19c5af14923215a2ca00232c4e09cf3d2c31800d",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a2680a7a8749fb4e3",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "79028908e6625c9ad844b22049a46e1b5819f1eeb4761fe89fbe24ae68444bb5",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a2680a7a8749fb4e3.jsonl",
+      "copied_sha256": "79028908e6625c9ad844b22049a46e1b5819f1eeb4761fe89fbe24ae68444bb5",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a1153e2189d4006cc",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "7c002f72f9680e4d52ab01b3993d0b010958cb82405b37bb712d1f7a9ccc2c4a",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a1153e2189d4006cc.jsonl",
+      "copied_sha256": "7c002f72f9680e4d52ab01b3993d0b010958cb82405b37bb712d1f7a9ccc2c4a",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-aac209dc4cdcafae2",
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "inventory_sha256": "287d99a2c18600e5fc13397e869af71e1dba6c402d2c70fe67c253652a3ddd61",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-aac209dc4cdcafae2.jsonl",
+      "copied_sha256": "287d99a2c18600e5fc13397e869af71e1dba6c402d2c70fe67c253652a3ddd61",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a8b2b993190ea94ac",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "edd7f7309ea6905642ea4512764e17c2090355b2d9a93a92327e3ef437ecf7e6",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a8b2b993190ea94ac.jsonl",
+      "copied_sha256": "edd7f7309ea6905642ea4512764e17c2090355b2d9a93a92327e3ef437ecf7e6",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a3432dae9930a82b3",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "34dda1d7d101cc814f51431c728835bf2df74ac64183c5234bf045ef171d2576",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a3432dae9930a82b3.jsonl",
+      "copied_sha256": "34dda1d7d101cc814f51431c728835bf2df74ac64183c5234bf045ef171d2576",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a3335f28f814c8449",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "419ef6249482298be2aa4c12a2a2de69cd7d95c871f7711c9332b452817805f7",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a3335f28f814c8449.jsonl",
+      "copied_sha256": "419ef6249482298be2aa4c12a2a2de69cd7d95c871f7711c9332b452817805f7",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a77eab81418074853",
+      "experiment": "EXP-RVB-2",
+      "inventory_sha256": "c319fea58a92236f7ecbf4f6dce40552f1b30ba9fdd192e394f8e7038ce578fe",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a77eab81418074853.jsonl",
+      "copied_sha256": "c319fea58a92236f7ecbf4f6dce40552f1b30ba9fdd192e394f8e7038ce578fe",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-af5b13469813cc354",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "92a6670145aaa21de705b9d102d807cf1c23bc1e5fe72c8ab02bbbf6a582ffba",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-af5b13469813cc354.jsonl",
+      "copied_sha256": "92a6670145aaa21de705b9d102d807cf1c23bc1e5fe72c8ab02bbbf6a582ffba",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-aeda1ef76d4eb7480",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "1f482bafe4357765e09037fec0242f8f14c7e86c92e485e0d316566726a3b8a8",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-aeda1ef76d4eb7480.jsonl",
+      "copied_sha256": "1f482bafe4357765e09037fec0242f8f14c7e86c92e485e0d316566726a3b8a8",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-af8fb0e63bd277f4f",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "7c83bc27f99e2bc19d237006a5d0c1234398cd14b2099ba0d03388d57ebc21b8",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-af8fb0e63bd277f4f.jsonl",
+      "copied_sha256": "7c83bc27f99e2bc19d237006a5d0c1234398cd14b2099ba0d03388d57ebc21b8",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-afcea426cadfb5648",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "ff5619aa1ae12f8a37c164145908fc35e2460df942302db3d3e9617b303e4f10",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-afcea426cadfb5648.jsonl",
+      "copied_sha256": "ff5619aa1ae12f8a37c164145908fc35e2460df942302db3d3e9617b303e4f10",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a036052d8b2a96e4f",
+      "experiment": "EXP-RVB-NC2",
+      "inventory_sha256": "3883ddb9793bf7c3244679c26edd5189a2848d57176e2c70941902a3a2b3f586",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a036052d8b2a96e4f.jsonl",
+      "copied_sha256": "3883ddb9793bf7c3244679c26edd5189a2848d57176e2c70941902a3a2b3f586",
+      "status": "VERIFIED"
+    },
+    {
+      "agent": "agent-a087efcbab74a1312",
+      "experiment": "UNCLASSIFIED",
+      "inventory_sha256": "7bc6eefd5faa794b0bf62f180baf84efec792041c78e39d399bedabe35a04e62",
+      "source_path": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/agent-a087efcbab74a1312.jsonl",
+      "copied_sha256": "7bc6eefd5faa794b0bf62f180baf84efec792041c78e39d399bedabe35a04e62",
+      "status": "VERIFIED"
+    }
+  ]
+}
