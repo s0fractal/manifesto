@@ -1,0 +1,13 @@
+{
+  "schema": "manifesto.corpus.trust-root.v0",
+  "note": "External, reviewed trust root. Empty authorities + pinned_manifests = the honest pre-governance state: no completeness/publication authority is admitted and no required-unit manifest is pinned, so every claim view is REFUSED. Establishing authorities and pinning manifests is a separate, reviewed governance act.",
+  "report_id": "erpt:8c75976037006f862410d3d2aa57c4702dd26a3da36c7814a58153ceb8bbf811",
+  "corpus_commitment": "d5fe0d7a24e0075e43d2931228f8e92467f7bbba207729eed806ee7828d86429",
+  "extraction_closure": "clo:extract:90e210ffb527cab50dbac09d732edf4f2dbeedc9e77e27c141b993f0e4795cbf",
+  "authorities": {
+    "completeness": [],
+    "publication": [],
+    "mapping": []
+  },
+  "pinned_manifests": {}
+}

@@ -65,6 +65,31 @@ A COMPLETE view now emits an `evaluation_id` binding `manifest_id`, `l2_bundle_i
 and the sorted `record_id`s — so credit is content-addressed to the exact obligation set, corpus, and
 records, not a bare status word.
 
+## Governance fixtures added after the 4th review (f532023) — addressing ≠ authority
+
+The 3rd repair made L2 source-*addressed*; this one binds it to an EXTERNAL, reviewed **trust root**
+(`CORPUS-TRUST-ROOT.json`) that pins the report and names who may issue credit. All executable in
+`test_corpus.py`:
+
+| id | fixture | required outcome |
+|---|---|---|
+| **J1** | coherent invented report + commitment against the pinned trust root | `REPORT_NOT_PINNED` (the report id is recomputed and compared to the pin, not taken from the caller) |
+| **J2** | extraction report with `set_status=FAIL` | `REPORT_NOT_CLEAN` — a non-clean report can never mint creditable L2 |
+| **J3** | implicit event subset of the committed manifest | `SET_MISMATCH` — the full L2 bundle must equal the committed event set (a projection is a separate, declared contract) |
+| **J4** | index address / removed-entry mutation | `BUNDLE_ID_MISMATCH` — the bundle id binds status+faults+ordered event records; the runtime index is *reconstructed* from the committed body, not a second mutable copy |
+| **J5** | `L2_REFUSED → CLEAN` status flip | `BUNDLE_ID_MISMATCH` — status is inside the hashed body |
+| **J6** | self-issued completeness/publication/mapping authority | `AUTHORITY_NOT_ADMITTED` — decisions must come from an authority in the pinned trust root |
+| **J7** | replacement / one-unit required-unit manifest | `MANIFEST_NOT_PINNED` — the manifest id must equal the pinned id for the claim; a different obligation set is refused, not merely re-addressed |
+| **J8** | graph `EXACT → CONFLICTED` | the final `record_id` is minted **after** graph resolution and binds the final status/faults |
+| **J9** | serialized private L3 only | `build_l3` returns a self-contained `private_l3 = {l3_bundle_id, records:[{record_id, body}]}` with full bodies, so L4 can replay without the candidate table |
+| **J10** | mapper/profile byte change | the `evaluation_id` and `record_id` bind `mapper_closure_id`, so a validator change rotates them |
+
+**Honest current state:** the committed `CORPUS-TRUST-ROOT.json` pins the real 1239-event report but
+declares **no admitted authorities and no pinned manifests**. Therefore every real claim view is
+`REFUSED` (`AUTHORITY_NOT_ADMITTED` / `MANIFEST_NOT_PINNED`). Establishing authorities and pinning a
+required-unit manifest is a separate, reviewed **governance act** — not something the pipeline may grant
+itself.
+
 ## Notes binding the oracle to the pipeline
 
 - Only `EXACT` (adjudicated + fully value-evidenced + fault-free + `COMPLETE` + `CLEARED_FOR_PUBLICATION`)

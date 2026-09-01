@@ -232,10 +232,19 @@ def extract_from_quarantine(quarantine_dir, receipt: dict, inventory: dict):
              ("BLOB_DRIFT", "INVENTORY_MISMATCH", "SET_DRIFT", "BAD_DIGEST_FORMAT")]
     skipped = [r for r in rows if r["status"] in ("BLOB_MISSING", "SKIPPED_NOT_VERIFIED")]
     set_clean = not faults and not drift and not skipped and not refused
+    inventory_commitment = ids.json_digest(inv_commit)
+    set_status = "CLEAN" if set_clean else "FAIL"
+    # canonical report identity binds set state + all commitments (P0-1 trust root).
+    report_id = "erpt:" + ids.json_digest({
+        "set_status": set_status, "set_faults": faults, "extraction_closure": closure,
+        "corpus_commitment": corpus_commitment, "event_manifest": event_manifest,
+        "inventory_commitment": inventory_commitment})
     report = {
         "schema": "manifesto.corpus.extraction-report.v0",
+        "report_id": report_id,
         "extraction_closure": closure,
         "corpus_commitment": corpus_commitment,
+        "inventory_commitment": inventory_commitment,
         "event_manifest": event_manifest,
         "layer": "L1->L2 (mechanical; occurrence index + private canonical body)",
         "set_status": "CLEAN" if set_clean else "FAIL",
