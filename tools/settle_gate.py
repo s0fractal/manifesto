@@ -143,6 +143,7 @@ def settle(cls, payload, env=None):
         actual = {"+": va + vb, "*": va * vb, "-": va - vb}[op]
         ok = actual == vc
         return {"verdict": "PASS" if ok else "REFUTED", "layer": "bind",
+                "observed_value": {"kind": "integer-equation", "actual": actual, "expected": vc},
                 "detail": f"measured {na}={va} {op} {nb}={vb} = {actual}"
                           + ("" if ok else f" ≠ {nc}={vc}")}
     if cls == "arith":
@@ -150,36 +151,40 @@ def settle(cls, payload, env=None):
         if not m:
             return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed arith"}
         a, op, b, c = int(m[1]), m[2], int(m[3]), int(m[4])
+        actual = {"+": a + b, "*": a * b, "-": a - b}[op]
+        obs = {"kind": "integer-equation", "actual": actual, "expected": c}
         mach = _machine_arith(a, op, b, c)
         if mach and mach[0] in ("PASS", "VIOLATION"):
             v, spent, meta = mach
             return {"verdict": "PASS" if v == "PASS" else "REFUTED",
-                    "layer": "sigma-glyph", "atp": spent,
+                    "layer": "sigma-glyph", "atp": spent, "observed_value": obs,
                     "ski_checks": [dict(meta["lhs"], means=f"NF of {a}{op}{b} at a generic point"),
                                    dict(meta["rhs"], means=f"NF of {c} at a generic point")],
                     "detail": f"{a}{op}{b}={c}"}
-        actual = {"+": a + b, "*": a * b, "-": a - b}[op]
         return {"verdict": "PASS" if actual == c else "REFUTED",
-                "layer": "integer", "detail": f"actual {a}{op}{b}={actual}"}
+                "layer": "integer", "observed_value": obs,
+                "detail": f"actual {a}{op}{b}={actual}"}
     if cls == "cmp":
         m = CMP.match(payload)
         if not m:
             return {"verdict": "UNSETTLED", "layer": None, "detail": "malformed cmp"}
         a, rel, b = int(m[1]), m[2], int(m[3])
+        ok = {"<=": a <= b, ">=": a >= b, "=": a == b, "<": a < b, ">": a > b}[rel]
+        obs = {"kind": "comparison", "lhs": a, "relation": rel, "rhs": b, "value": ok}
         mach = _machine_cmp(a, rel, b)
         if mach and mach[0] in ("PASS", "VIOLATION"):
             v, spent, ev = mach
             entry = {"verdict": "PASS" if v == "PASS" else "REFUTED",
-                     "layer": "sigma-glyph", "atp": spent, "detail": payload}
+                     "layer": "sigma-glyph", "atp": spent, "observed_value": obs,
+                     "detail": payload}
             if isinstance(ev, dict) and "lhs" in ev:  # settle_nat_eq meta
                 entry["ski_checks"] = [dict(ev["lhs"], means=f"NF of {a}"),
                                        dict(ev["rhs"], means=f"NF of {b}")]
             else:  # settle_bool term hash
                 entry["evidence"] = str(ev)[:16]
             return entry
-        ok = {"<=": a <= b, ">=": a >= b, "=": a == b, "<": a < b, ">": a > b}[rel]
         return {"verdict": "PASS" if ok else "REFUTED", "layer": "integer",
-                "detail": payload}
+                "observed_value": obs, "detail": payload}
     if cls == "count":
         m = COUNT.match(payload)
         if not m:
@@ -200,6 +205,7 @@ def settle(cls, payload, env=None):
             env[name] = actual
         det = f"actual count = {actual}" + (f" (bound {name}={actual})" if name else "")
         return {"verdict": "PASS" if actual == n else "REFUTED", "layer": "repo",
+                "observed_value": {"kind": "count", "actual": actual},
                 "detail": det, "dep": _dep(path, content)}
     if cls == "sha256":
         m = SHA.match(payload)
@@ -218,8 +224,8 @@ def settle(cls, payload, env=None):
             return {"verdict": "UNSETTLED", "layer": "repo", "detail": str(e)}
         actual = hashlib.sha256(content.encode("utf-8", "replace")).hexdigest()
         return {"verdict": "PASS" if actual.startswith(prefix) else "REFUTED",
-                "layer": "repo", "detail": f"actual {actual[:16]}...",
-                "dep": _dep(path, content)}
+                "layer": "repo", "observed_value": {"kind": "sha256", "actual": actual},
+                "detail": f"actual {actual[:16]}...", "dep": _dep(path, content)}
     if cls in ("cite", "citei"):
         m = CITE.match(payload)
         if not m:
@@ -242,6 +248,7 @@ def settle(cls, payload, env=None):
             found = quote in content
             kind = "verbatim"
         return {"verdict": "PASS" if found else "REFUTED", "layer": "repo",
+                "observed_value": {"kind": "citation", "found": found},
                 "detail": f"{kind} quote found" if found else f"{kind} quote NOT in file",
                 "dep": _dep(path, content)}
     if cls == "mono":
@@ -261,9 +268,12 @@ def settle(cls, payload, env=None):
         for i in range(len(confs) - 1):
             if confs[i + 1] > confs[i] and (i + 1) not in evs:
                 return {"verdict": "REFUTED", "layer": "integer",
+                        "observed_value": {"kind": "monotonicity", "valid": False,
+                                           "violation": i + 1},
                         "detail": f"confidence laundering at step {i + 1} "
                                   f"({confs[i]} -> {confs[i + 1]}, no evidence)"}
         return {"verdict": "PASS", "layer": "integer",
+                "observed_value": {"kind": "monotonicity", "valid": True, "violation": None},
                 "detail": f"monotone ({len(confs)} entries, evidence at {sorted(evs) or '—'})"}
     return {"verdict": "UNSETTLED", "layer": None, "detail": f"unknown class {cls}"}
 

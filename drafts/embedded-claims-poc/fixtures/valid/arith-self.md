@@ -9,8 +9,8 @@ author bets on.
 
 ```json capsule
 {
-  "verifier": "glyph://sha256:017d215b3af2c8f1f4475c7030a5a0559fa6d6cdafe3a77e1c0b1d73452b4acd",
-  "evaluation_id": "47fde598e45d1b0b5aad75dd24207b06236c65c99c8dcb387531751e8ed4bbfa"
+  "verifier": "glyph://sha256:45395bf77f4d731565b47a5845853928a4625f20bea439e489863c152817eaa4",
+  "evaluation_id": "ba68bf2096a58694dd8064c321cd56441574d8efdf58d3e478b8099bb7417ce0"
 }
 ```
 

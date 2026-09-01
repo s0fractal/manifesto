@@ -162,22 +162,16 @@ def _settle_one(rec):
             if obs and obs.get("sha256") and db.get("sha256") != obs.get("sha256"):
                 facts.append("DEPENDENCY_STALE")
 
-    # result value — a stable body only when there is one (no invented id for UNSETTLED)
-    result_value, normal_forms = None, None
+    # result value: the settlement engine's TYPED observed_value for every settled class
+    # (a structured output contract, not the human-facing `detail` string). None for
+    # UNSETTLED — no invented id. normal_forms stays as extra provenance where the machine
+    # produced them (arith / cmp-equality on Σ-GLYPH).
+    ov = res.get("observed_value")
+    result_value = ({"id": compiler._did(RESULT_VALUE_DOMAIN, ov), "body": ov}
+                    if ov is not None else None)
     checks = res.get("ski_checks")
-    if verdict in ("PASS", "REFUTED") and checks and len(checks) >= 2:
-        lhs, rhs = checks[0]["expect"], checks[1]["expect"]
-        normal_forms = {"lhs": lhs, "rhs": rhs}
-        rv = {"kind": "normal-forms", "lhs": lhs, "rhs": rhs}
-        result_value = {"id": compiler._did(RESULT_VALUE_DOMAIN, rv), "body": rv}
-    elif cls == "effect" and res.get("state_digest"):
-        rv = {"kind": "post-state", "state": res["state_digest"],
-              "stdout": res.get("stdout_digest")}
-        result_value = {"id": compiler._did(RESULT_VALUE_DOMAIN, rv), "body": rv}
-    elif verdict in ("PASS", "REFUTED") and cls in sc.WORLD_CLASSES and observed_dependency:
-        rv = {"kind": "world", "observed_dependency": observed_dependency["id"],
-              "detail": res.get("detail")}
-        result_value = {"id": compiler._did(RESULT_VALUE_DOMAIN, rv), "body": rv}
+    normal_forms = ({"lhs": checks[0]["expect"], "rhs": checks[1]["expect"]}
+                    if checks and len(checks) >= 2 else None)
 
     eval_body = {
         "claim": rec["claim"]["id"], "plan": rec["plan"]["id"],

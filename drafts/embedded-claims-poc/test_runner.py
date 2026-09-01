@@ -160,13 +160,35 @@ def main():
         and str(r0["capsule_id"]).startswith("sha256:"),
         "REPORT preserves parser/compiler/runner/verifier ids + operand ids")
 
-    # 3d.1: a REPLAYED result addresses its actual output (result_value + normal_forms +
-    # a claim-bound evaluation that references the result_value)
-    inv(r0["result_value"] and r0["result_value"]["body"]["kind"] == "normal-forms"
+    # 3d.1/3d.2: a REPLAYED result addresses its actual output — a TYPED result_value
+    # (structured observed_value, not the detail string), normal_forms provenance, and a
+    # claim-bound evaluation that references the result_value.
+    ov = r0["result_value"]["body"]
+    inv(r0["result_value"] and ov["kind"] == "integer-equation"
+        and ov["actual"] == 75 and ov["expected"] == 75
         and r0["normal_forms"] and r0["normal_forms"]["lhs"] == r0["normal_forms"]["rhs"]
         and r0["evaluation"]["body"]["result_value"] == r0["result_value"]["id"]
         and r0["evaluation"]["body"]["verdict"] == "PASS",
-        "REPLAYED result carries result_value + normal_forms + claim-bound evaluation")
+        "REPLAYED result carries typed result_value + normal_forms + claim-bound evaluation")
+
+    # 3d.2: EVERY settled class addresses a typed result_value — the branches that used to
+    # return REPLAYED with result_value=None (integer arith, cmp sigma/integer, mono).
+    class_cases = [
+        (cap("K", "arith", "500 + 1 = 501", verifier=SETTLE), "integer-equation"),
+        (cap("K", "cmp", "5 < 6", verifier=GLYPH), "comparison"),
+        (cap("K", "cmp", "20 < 21", verifier=SETTLE), "comparison"),
+        (cap("K", "mono", "900000,850000", verifier=SETTLE), "monotonicity"),
+        (cap("K", "count", payload, verifier=SETTLE,
+             dep={"path": "README.md", "sha256": README_SHA}), "count"),
+    ]
+    addressed = True
+    for capsule, kind in class_cases:
+        rr = R.run(compiled(capsule))["results"][0]
+        if not (rr["execution"] == "REPLAYED" and rr["result_value"]
+                and rr["result_value"]["body"]["kind"] == kind):
+            addressed = False
+            print("       class", kind, "→", rr["execution"], rr.get("result_value"))
+    inv(addressed, "every settled class addresses a typed result_value (arith/cmp/mono/count)")
 
     # 3d.1: STALE addresses the OBSERVED dependency (bytes actually read), not just the pin
     stale = R.run(compiled(cap("A", "count", payload, verifier=SETTLE,

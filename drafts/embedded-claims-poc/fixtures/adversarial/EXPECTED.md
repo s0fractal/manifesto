@@ -100,7 +100,11 @@ an unknown field with a recomputed capsule id, a malformed claim — is refused 
 evaluator invocations rather than run (or crash). Each result also addresses the ACTUAL
 operands and output: `declared_dependency` vs `observed_dependency` (the bytes the evaluator
 really read — a STALE result names both), a `result_value {id, body}`, and a claim-bound
-`evaluation {id, body}`; `UNSETTLED` invents no result_value.
+`evaluation {id, body}`; `UNSETTLED` invents no result_value. 3d.2: the result_value is the
+settlement engine's TYPED `observed_value` for EVERY settled class (integer-equation /
+comparison / count / sha256 / citation / monotonicity / post-state) — a structured output
+contract, never derived from the human-facing `detail` string, so no settled class returns
+REPLAYED with an unaddressed result.
 
 **Honest limit.** Content-addressing catches an *incoherent* mutation. A *fully recomputed,
 schema-valid* bundle is a NEW bundle, not a detectable tamper — telling it from the

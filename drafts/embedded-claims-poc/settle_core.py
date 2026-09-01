@@ -140,6 +140,8 @@ def settle_effect(payload):
         note = (" — NOTE: stdout-only digest WOULD have matched; caught because "
                 "we settle on observed post-state, not stdout (D6)")
     return {"verdict": "PASS" if ok else "REFUTED", "layer": "effect-sandbox",
+            "observed_value": {"kind": "post-state", "state": state_digest,
+                               "stdout": stdout_digest},
             "detail": f"state={state_digest[:16]} stdout={stdout_digest[:16]}{note}",
             "stdout_digest": stdout_digest, "state_digest": state_digest}
 
