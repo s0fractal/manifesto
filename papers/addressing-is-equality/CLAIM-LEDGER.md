@@ -56,7 +56,11 @@ the motivating case. It is **not** a claim that the method is realized on an adm
 - portable settlement across implementations (profile_commitment holds within one Python module,
   CPython 3.12/3.14 only; **no second implementation exists**);
 - any asymptotic complexity claim outside the measured family;
-- **novelty over prior art** (hash-consing / Merkle / NbE) — OPEN pending external review; a search
-  log is required (DEPOSIT §B);
+- **novelty over prior art** — OPEN pending external review; a search log is required (DEPOSIT §B)
+  and must cover, at minimum: hash-consing (Ershov/Filliâtre); NbE freshness/readback side-conditions
+  (the §3.1 marker collision is that condition, de Bruijn levels/gensym); and **content-addressed
+  identity in deployed systems — Dhall (semantic-integrity hash = hash of the normal form), Unison
+  (content hash = definition identity), Nix derivation hashes, IPLD.** After that prior art the
+  surviving candidate is only *priced settlement with a receipt*, not "addressing is identity";
 - the correctness proof of the λ→SKI compilation that B4/B5 inherit;
 - proofs (as opposed to selftests/arguments) of reflection and preservation for the admitted family.

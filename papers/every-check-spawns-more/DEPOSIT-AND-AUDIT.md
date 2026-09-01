@@ -143,3 +143,33 @@ status_note: >
 - one-paragraph "what would weaken the central claim" — **yes** (§8 falsifiers F1–F6);
 - license scope and missing external validation visible — **yes** (§9, §E);
 - no document-level green inferred from local green — **N/A to this paper; asserted for the pipeline it cites**.
+
+## H. Zenodo mechanics (cross-paper; from Fable review 2026-09-01 §3) — operator decisions, not executed here
+
+These correct a wrong implicit assumption in §E: **Zenodo binds one `license` field per record; it
+has no path-scoped dual license.** The GitHub integration archives the whole repo under a single
+field. Therefore, at deposit (operator's call — nothing here reserves a DOI or creates a record):
+
+1. **Two linked records, not one.** A *publication* record under CC BY-SA 4.0 (paper PDF + md +
+   ledger + documentary evidence) and a *software* record under AGPL-3.0-only (tools, checkers),
+   linked by `isSupplementedBy` / `isSupplementTo` — or a single manual curated upload of the §E
+   manifest. Option one matches the repository's own path-scoped `LICENSE`.
+2. **Versions.** Deposit **v0.2 as the first version** of the record (concept DOI + version DOI). Do
+   **not** deposit v0.1 — it lives in git history; the record links the commit. Promotion order:
+   `paper-v0.2-draft.md → paper.md`, and `paper.md → paper-v0.1-superseded.md`.
+3. **Author = the accountable human.** Serhii Glova is the sole author (add ORCID
+   `0009-0001-8010-420X`). The AI-provenance paragraph stays in the text and is mirrored in the
+   record `description`. **Do not** add a model as a contributor — there is no accountability behind
+   it, and the field would fake one.
+4. **`CITATION.cff`.** Keep `type: software` for the repo; add a `preferred-citation` block
+   (`type: article`/`report`) carrying the DOI once minted.
+5. **Ship `reviews/` in the record.** Codex, Qwen, and this Fable review, plus responses. This is
+   what makes "not peer-reviewed" both honest and informative, and is the record's real distinction
+   from an ordinary preprint.
+6. **Stale build artifacts.** The `.html` in the paper dirs is built from v0.1 and must be removed or
+   regenerated from the promoted draft before deposit; `build.sh` must target the v0.2 surface.
+
+**Review-provenance caveat.** The Fable 2026-09-01 review is **same-lineage** with the drafts (both
+Claude-family), so by the papers' own §3.5 logic it is within-lineage replication, **not** the
+out-of-lineage adversarial pass. Codex remains the only out-of-lineage review; the planned Kimi/Qwen
+pass is still owed before "externally reviewed" may be claimed.

@@ -217,9 +217,16 @@ break the v0.1 closed forms for other schedulers:
   the v0.1 formula can go negative.
 
 These counterexamples suffice to retire the theorem; they do **not** validate any replacement. The
-replacement is left as an open probability/queueing problem for a reviewer with that expertise; a
-minimal executable simulation of the two counterexamples ships with the artifact so the retired
-theorem cannot return (`DEPOSIT-AND-AUDIT.md`).
+replacement is left to a reviewer with the relevant expertise, and "open" here means *open to us*,
+**not** claimed novel: under one natural set of assumptions — a work-conserving FIFO server, no
+abandonment, and each root closing as a Galton–Watson tree with mean total progeny 1/(1−μ) — this is
+a queue with branching-type service, and a stability result of the form "closes iff λ_G < (1−μ)λ_V"
+is likely already **standard** in the branching-process / general-branching literature
+(Crump–Mode–Jagers, Bellman–Harris). The honest framing is therefore "reduces to a known form under
+assumptions A, and the counterexamples above show it fails under B", not "a new open problem". We do
+not assert which citation settles it — that is exactly the one-hour check for a queueing-theory
+reviewer. A minimal executable simulation of the two counterexamples ships with the artifact so the
+retired theorem cannot return (`DEPOSIT-AND-AUDIT.md`).
 
 ## 8. Historical settlement episode (legacy inline gate)
 

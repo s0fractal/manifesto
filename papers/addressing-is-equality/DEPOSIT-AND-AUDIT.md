@@ -54,12 +54,21 @@ resolves anything. Each source is scoped to the *exact adjacent relation* it act
 | `warrant` | the conformance use case | conformance only, never validation of the semantic claim, never strict pack replay | keep, scoped |
 | `luu2015demystifying`, `cacm-verification-debt`, `garrabrant2016`, `irving2018debate`, `christiano2018amplification`, `barendregt2005challenge` | — not cited in this paper's body | — | **drop** unless a sentence cites them (inherited from the companion paper) |
 
-**Novelty search log (required, Codex P1-B5).** Novelty is **OPEN** until external prior-art review.
-Deposit must include a dated search log covering hash-consing, content-addressed evaluation/result
-identity, NbE observation probes, and budgeted/receipted equality settlement, recording queries,
-sources examined, and the exact relation each does/does not pre-empt. The two-sided composition whose
-novelty is asked for must be vendored (the ADR-011 impl @196c45a) or the novelty narrowed to a
-specification pattern not yet demonstrated end-to-end.
+**Novelty search log (required, Codex P1-B5; systems from Fable 2026-09-01 §2.7).** Novelty is
+**OPEN** until external prior-art review. Deposit must include a dated search log covering, at
+minimum, and recording for each the exact relation it does/does not pre-empt:
+
+- hash-consing / structural sharing (Ershov, Filliâtre–Conchon);
+- **NbE freshness / readback side-conditions** — the §3.1 marker collision *is* this condition (de
+  Bruijn levels, gensym), so it is prior art on the counterexample, not on the idiom;
+- **content-addressed identity in deployed systems** — **Dhall** semantic-integrity hash (hash of the
+  normalized expression — the idiom at the language level), **Unison** (content hash = definition
+  identity), **Nix** derivation hashes, **IPLD**;
+- budgeted/priced/receipted equality settlement (the only place the surviving sliver can live).
+
+After that prior art the candidate is **"priced settlement with a receipt"**, not "addressing is
+identity". The two-sided composition whose novelty is asked for must be vendored (the ADR-011 impl
+@196c45a) or the novelty narrowed to a specification pattern not yet demonstrated end-to-end.
 
 ## C. Sentences depending on transcript-only / external-live / unverified evidence
 
@@ -167,3 +176,16 @@ status_note: >
 - no document-level green inferred from local green — **N/A** (single settlement method, not a
   document verdict), and the checker is being rebuilt so its local green no longer borrows the
   broader "re-executes / released-profile" claim (§A).
+
+## H. Zenodo mechanics & record genre (operator decisions; from Fable review 2026-09-01 §2.8/§3)
+
+Cross-paper Zenodo mechanics (one `license` field per record, two linked records, v0.2 as first
+version, author = accountable human + ORCID, ship `reviews/`, stale `.html`) are recorded once in the
+**flagship** `every-check-spawns-more/DEPOSIT-AND-AUDIT.md §H`; they apply here identically.
+
+**Record genre for this paper.** Because no deposited implementation both admits the motivating case
+and emits the two-sided receipt (the paper's own central finding), this belongs as
+`upload_type: publication / technicalnote` — an **incident-and-repair note** — or as an appendix to
+Paper A, **not** as a "paper" that would lead a reader to expect a realized method. **Review
+provenance:** the Fable review is same-lineage with the draft, so it is within-lineage replication,
+not the out-of-lineage adversarial pass; Codex remains the only out-of-lineage review to date.

@@ -217,22 +217,33 @@ The components are classical, and each source supports only the exact adjacent r
   [@filliatre2006] supports type-safe hash-consing and structural equality, the *narrow* relation
   "identical structure ⇒ shared address". It is the right authority for the address-sharing
   mechanism, not for semantic equality of computed values.
-- **Normalization by evaluation** — Berger–Schwichtenberg 1991 [@berger1991] supports NbE
-  (evaluation followed by readback) for the typed λ-calculus. It does **not** by itself establish
-  that this exact *untyped Church-numeral* `O(n)=nFX` probe is "the" NbE observation trick; that
-  connection is our analogy, flagged as such.
-- **Content-addressing** — Merkle 1987 [@merkle1987] is a hash-based *digital-signature*
+- **Normalization by evaluation, and its freshness side-condition** — Berger–Schwichtenberg 1991
+  [@berger1991] supports NbE (evaluation followed by readback) for the typed λ-calculus. It does
+  **not** by itself establish that this exact *untyped Church-numeral* `O(n)=nFX` probe is "the" NbE
+  observation trick; that connection is our analogy, flagged as such. **Moreover the §3.1 marker
+  collision is, structurally, the classical NbE/readback freshness condition** — residual markers
+  must be fresh / unnameable (de Bruijn levels, gensym). "An admitted domain that refuses terms
+  naming the marker" is that same side-condition under another name; recognising this *narrows* the
+  contribution rather than voiding it.
+- **Content-addressed identity in real systems** — the idiom "the hash of the normal form *is* the
+  identity" already exists in deployed tools: **Dhall's** semantic-integrity hash is literally the
+  hash of a normalized expression; **Unison** makes the content hash the definition's identity;
+  **Nix** derivation hashes and **IPLD** content-address structured data. These are the nearest
+  living prior art and **must be examined in the search log before any novelty is asserted.**
+- **Content-addressing lineage** — Merkle 1987 [@merkle1987] is a hash-based *digital-signature*
   construction; it is **not** a direct authority for content-addressed result-identity as phrased,
   and is cited only for the hash-tree lineage.
 
-**Novelty candidate (narrow, treated as OPEN).** The candidate is the **budgeted, receipted
-composition** — an equality settlement carrying both normal-form addresses, both exit kinds, the
-ATP spends, and the machine/profile identity as the verdict. But the deposit does **not** currently
-contain that composition end-to-end: the included Warrant pack is one-sided and `LEGACY_UNPINNED`,
-and the two-sided implementation lives only in the external DRAFT proposal, which the manifest does
-not yet vendor or pin by full content closure. **Novelty is therefore OPEN pending external
-prior-art review**; a search log is required in `DEPOSIT-AND-AUDIT.md`. Falsifier F1: if the
-composition reduces to an existing published technique, the novelty claim is withdrawn.
+**Novelty candidate (narrow, treated as OPEN).** After the NbE-freshness and content-addressed-system
+prior art above, the candidate is not "addressing is identity" (Dhall/Unison already do that) but the
+much thinner **priced settlement with a receipt** — an equality settlement that carries *both*
+normal-form addresses, both exit kinds, the **ATP budget spends**, and the machine/profile identity
+as the verdict. Even that thin sliver is not yet in the deposit end-to-end: the included Warrant pack
+is one-sided and `LEGACY_UNPINNED`, and the two-sided implementation lives only in the external DRAFT
+proposal, which the manifest does not yet vendor or pin by full content closure. **Novelty is
+therefore OPEN pending external prior-art review** (search log required in `DEPOSIT-AND-AUDIT.md`).
+Falsifier F1: if the composition reduces to an existing published technique, the novelty claim is
+withdrawn.
 
 ## 7. Downstream execution (conformance, not adoption)
 
