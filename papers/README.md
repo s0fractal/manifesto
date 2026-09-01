@@ -10,8 +10,8 @@ everything.
 
 | | subject |
 |---|---|
-| [`every-check-spawns-more/`](every-check-spawns-more/) | the reflexive verification bound ($\lambda_G < (1-\mu)\lambda_V$, phase transition at $\mu = 1$, delegation-invariant anchor); $\mu$ measured for LLM verifiers ($\approx$ 2–3 on informal claims at every depth to 4, $\approx$ 0.14 on well-founded controls, 0 compiled); the settlement gate, the correction loop, the sealed evidence pack; addressing-is-equality with its measured $10^5$ asymmetry |
-| [`addressing-is-equality/`](addressing-is-equality/) | the AIE principle as a standalone note: precise soundness/completeness semantics, the full measured cost curve (601 vs >59M ATP at $7+5$), prior art (hash-consing, Merkle, NbE) and the claimed sliver (priced, receipted settlement), executed inside Warrant without format change (2,108 ATP non-boolean check), ADR-011 status |
+| [`every-check-spawns-more/`](every-check-spawns-more/) | a **verifier-reported** verification-load measurement (ô) on a **single** LLM monologue corpus ($\approx$ 2–3 over sampled paths to depth 4, $\approx$ 0.14 on termination controls) — the v0.1 branching-queue **theorem is retired** (scheduler counterexamples); a compiled check's terminal **zero-obligation** sub-act on a *separate axis* (not "$\mu=0$ compiled"); the settlement gate, the correction loop, the sealed evidence pack. **v0.2 draft; canonical `paper.md` still v0.1 (retirement pending).** |
+| [`addressing-is-equality/`](addressing-is-equality/) | an **incident-and-repair note**: the measured cost gap (601 ATP on a permissive harness vs >59M at $7+5$), an executable soundness counterexample, and the discovery that the DRAFT `church@v0` profile **refuses** the motivating case; prior art (hash-consing, Merkle, NbE freshness, and content-addressed systems — Dhall/Unison/Nix) with novelty **OPEN**, sliver narrowed to *priced, receipted settlement*; executed inside Warrant without format change (2,108 ATP non-boolean check). **v0.2 draft.** |
 
 None is deposited yet. Deposit target is **Zenodo** (as with sigma-glyph and
 warrant; no arXiv endorsement is sought): a DOI buys a permanent address and

@@ -32,21 +32,28 @@ the motivating case. It is **not** a claim that the method is realized on an adm
 | B7 | One **stored** SKI check re-executes under the local Warrant: `warrant check 0597575d…` re-runs `(PLUS 74 1) F X → F⁷⁵(X)` to **PASS at 2,108 ATP**, and `warrant verify --settlement` reports 4 records, 0/0. The pack **as a whole** is `LEGACY_UNPINNED` (no dependency closure; not strict-replayable). | CONFORMANCE (per-check) + LEGACY-SEALED (pack) | `warrant check`/`verify`; `replay_pack.py replay → LEGACY_UNPINNED` (exit 1) | permissive/downstream | command | `integrity_break` (the stored check fails to re-execute to the stated ATP) | a **one-sided** check against a constant, **not** a two-sided equality receipt, adoption, or strict pack replay; the current checker only *reads* `manifest.json` — it must execute the check |
 | B8 | The one unconditional statement is narrow and renamed **hash-relative observation identity** (a kernel representation invariant under named assumptions): two `normal_form` exits with the same result hash returned one canonically-addressed result, **modulo SHA-256 and evaluator correctness**, under a fixed canonicalization/encoding regime. It says nothing about the terms evaluated. | REPRESENTATION INVARIANT (named assumptions) | paper §4 | either | — | `integrity_break` (a `normal_form` exit returns a wrong result hash) | it is about *what came back*, not input equality, correct-normal-form-ness, cross-implementation agreement, or collision-freedom; not "unconditional" in any tautological sense |
 
-## Claims explicitly NOT made (forbidden)
+## Forbidden claim TYPES (not verbatim strings — resurrection-channel control, §13.11)
 
-- unqualified "addressing is equality"; "nothing else needs to be believed";
-- **`church@v0` as a "released profile"** (it is DRAFT @196c45a, unreleased, not in the 0.6.7 wheel);
-- "unbounded advantage" / "linear thereafter" as a general complexity result (church@v0 ≈37
-  ATP/unit on admitted numerals, permissive harness ≈50; the admitted family excludes `7+5`);
-- treating **601 ATP as a released-profile fact** (it is the permissive harness);
-- address equality as a proof of input extensional equality; completeness for functions;
+Listed as *types*: the retired v0.1 catch-phrases are deliberately not reproduced here (a typed
+tombstone must suffice; quoting them would re-index them).
+
+- the equality slogan stated **unconditionally** (for functions or beyond the admitted domain);
+- any **"nothing else needs to be believed"**-style totality claim;
+- **`church@v0` as a released profile** (it is DRAFT @196c45a, unreleased, not in the 0.6.7 wheel);
+- any **general complexity law** ("unbounded advantage" / "linear thereafter") from finite points
+  (church@v0 ≈37 ATP/unit on admitted numerals, permissive harness ≈50; the admitted family
+  excludes `7+5`);
+- treating the **601-ATP figure as a released-profile fact** (it is the permissive harness);
+- address equality as a **proof of input extensional equality**; completeness for functions;
 - soundness/completeness as **proved** (they are argued profile obligations, B4/B5);
-- ADR-011 as accepted, deployed, or standardized (DRAFT, non-normative, not gated, BLOCKED on the
-  motivating case);
-- a Warrant pass — or a strict pack replay — as a proof of the semantic theorem; the pack is
-  `LEGACY_UNPINNED`;
-- "the Σ-lemma is unconditional" (it is a hash-relative representation invariant under assumptions);
-- novelty as established (it is OPEN pending external prior-art review).
+- **ADR-011 as accepted, deployed, or standardized** (DRAFT, non-gated, BLOCKED on the motivating
+  case);
+- a **Warrant pass or a strict pack replay as a proof** of the semantic claim (the pack is
+  `LEGACY_UNPINNED`);
+- the observation-identity statement called **"unconditional"** (it is a hash-relative
+  representation invariant under named assumptions);
+- **`EQN = ISZERO∘SUB`** (the executed term is `AND(LEQ,LEQ)`);
+- **novelty stated as established** (it is OPEN pending external prior-art review).
 
 ## Open (named, not established)
 

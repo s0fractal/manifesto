@@ -32,13 +32,24 @@ none of: queue state, arrival process, offspring-join timing, service/work-conse
 observability/tie-breaking, offspring dependence, the stability proposition, or the μ≥1 interpretation
 under infinite-expectation closures. "Branching–queue model" is removed from the title and abstract.
 
-## Forbidden (must not appear as claims)
+## Forbidden claim TYPES (not verbatim strings — resurrection-channel control, §13.11)
 
-RVB theorem / bound / phase transition; "at μ≥1 no finite budget suffices" (any qualifier); "AI
-checking AI cannot converge"; "the plateau is a property of the claims, not the model"; "the gap is
-crossed"; "verification = byte-identical replay" as a general definition; "the experiment proves the
-model"; any implication that a Warrant pass, a green checker, or a settlement REPORT validates the
-interpretation; a clean "Fable-vs-Sonnet factor effect"; "100 acts in round 2".
+Listed as *types*, deliberately not as the retired catch-phrases: quoting the old sentences here
+would re-index them (the CONTROLLED-FORGETTING tombstone test — a typed blocklist must suffice).
+
+- a reflexive-verification **theorem / bound / phase-transition asserted as a claim** (the
+  branching-queue model is retired, not held);
+- any **unconditional budget-insufficiency** statement at μ≥1, under any qualifier;
+- any **universal "AI cannot verify/converge on AI"**;
+- attributing the plateau to the **claims** rather than to the **instrument** (ô is verifier-reported);
+- any **"the verification gap is crossed / closed"** claim;
+- **"verification = byte-identical replay"** as a general definition;
+- **"the experiment proves the model"**;
+- any implication that a **Warrant pass, a green checker, or a settlement REPORT validates the
+  interpretation**;
+- a **clean single-factor verifier effect** (the 2×2 confounds verifier with root assignment);
+- any **round-2 act count other than 40**, or a per-depth mean presented as **unbiased**;
+- any **generalization beyond the single Monday corpus** stated as established.
 
 ## Open (named, not established)
 
