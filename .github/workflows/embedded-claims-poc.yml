@@ -69,3 +69,15 @@ jobs:
           set -euo pipefail
           python3 drafts/embedded-claims-poc/test_compiler.py | tee compile.log
           grep -q "ALL PASS (14 COMPILE specimens + 9 invariants)" compile.log
+
+      # The RUN layer (phase 2 step 3d) crosses the epistemic membrane: a COMPILED
+      # bundle → EXECUTE → vector REPORT. It reads no Markdown, re-verifies every id/link
+      # before any evaluator call (a mutation ⇒ 0 evaluator invocations), gives one
+      # result per record with NO document-level MATCH, and never raises binding above
+      # ASSERTED. Needs both the pinned parser deps and the pinned evaluator.
+      - name: Runner boundary (COMPILED bundle → vector REPORT)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 drafts/embedded-claims-poc/test_runner.py | tee run.log
+          grep -q "ALL PASS (14 runner-boundary checks)" run.log

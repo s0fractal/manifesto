@@ -190,7 +190,9 @@ def compile_report(parse_report, source_bytes):
 
         records.append({
             "local_id": lid,
-            "capsule_id": _did(CAPSULE_DOMAIN, body),
+            # capsule.body is the single source of truth: the runner re-derives every
+            # id/link from it, so a mutation of any field is caught before execution.
+            "capsule": {"id": _did(CAPSULE_DOMAIN, body), "body": body},
             "occurrence_id": _did(OCCURRENCE_DOMAIN, occurrence),
             "occurrence": occurrence,
             "claim": {"id": claim_id, "body": claim_body},

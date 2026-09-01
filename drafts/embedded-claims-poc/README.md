@@ -173,6 +173,8 @@ requirements-parser.lock   hash-locked markdown-it-py==4.2.0 + mdurl==0.1.2
 test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
 test_parser.py  13 PARSE specimens + 4 invariants (capsule-only: status, count, local_id, span, CRLF)
 compiler.py     COMPILE layer (3c/3c.1): VALID ParseReport → self-contained bundle of canonical records (id+body), claim-bound binding, occurrence w/ doc digest
+runner.py       RUN layer (3d): COMPILED bundle → re-verify every id/link → settle → vector REPORT (no Markdown; no document-level MATCH; binding never raised)
+test_runner.py  14 runner-boundary checks (tamper→0 evaluator calls, vector, serialized bundle)
 test_compiler.py 14 COMPILE specimens + 9 invariants (bundle, claim-bound binding, plan-inputs, source-occurrence)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,

@@ -78,9 +78,25 @@ source **document digest** plus the byte span (a span alone is not a source addr
 | `23-duplicate-local-id.md` | INVALID, `DUPLICATE_LOCAL_ID`. |
 | `24-binding-same-target.md` | COMPILED, two records; their `binding.id` DIFFER despite identical relation/target/status (claim-bound binding). |
 
+## Run layer (3d — `runner.py`, `test_runner.py`)
+
+Crosses the epistemic membrane:
+
+```
+document → PARSE → COMPILE  ──membrane──  EXECUTE → vector REPORT
+```
+
+The runner consumes a COMPILED bundle and nothing else (no Markdown). It re-derives every
+id/link from `capsule.body` and refuses the whole bundle on any mismatch BEFORE the
+evaluator is invoked (a mutation ⇒ 0 evaluator invocations). Then it settles each claim
+and returns one result per record — the document gets NO global `MATCH`, the REPORT is a
+vector. Execution never raises `binding` above `ASSERTED`. The REPORT preserves parser_id,
+compiler_id, runner id, the per-record verifier identity, and every operand id. This
+closes the chain technically; it does not "close the truth of the document".
+
 ## Status
 
-PARSE (`parser.py`, pinned markdown-it-py==4.2.0) and COMPILE (`compiler.py`, structural)
-are implemented and green. **Settlement of the contained claim + the two-axis REPORT is
-3d** — not yet built; `COMPILED` is not `REPLAYED`. The old inline `settle_gate` form and
-the SSD demos remain legacy authoring, not auto-migrated.
+All four layers implemented and green: PARSE (`parser.py`), COMPILE (`compiler.py`,
+structural), RUN (`runner.py`). `COMPILED` is not `REPLAYED`; replay happens only in the
+runner, per record, and only after the bundle verifies. The old inline `settle_gate` form
+and the SSD demos remain legacy authoring, not auto-migrated.
