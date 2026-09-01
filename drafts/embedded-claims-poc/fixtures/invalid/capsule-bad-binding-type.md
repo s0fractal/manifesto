@@ -8,7 +8,7 @@ and report a typed error, ending in CAPSULE_INVALID → UNVERIFIED.
 
 ```json capsule
 {
-  "verifier": "glyph://sha256:605a1e8a147501ba16e3fe9033bd00a26b6dd8bb0750aab5a798e51b4112d7f7",
+  "verifier": "glyph://sha256:59786891d9840de5712c50f63edea774aeff1e81e4105b67cfc81b36c3df084e",
   "binding": {"relation": [], "target": "x"}
 }
 ```

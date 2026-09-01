@@ -12,8 +12,14 @@ does not decide binding review status (that clamp lives in verify.py).
 """
 import re
 
+# Target capsule schema version. Bumped v0→v1 to add `claim_ref` (phase-2 step-3
+# oracle: a capsule names the claim it binds by explicit local_id, not adjacency).
+SCHEMA_VERSION = "manifesto.capsule.v1"
+
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 VERIFIER = re.compile(r"^(glyph|settle-gate|effect-sandbox)://sha256:[0-9a-f]{64}$")
+# Frozen local_id syntax: inline `⟦…⟧{#<id>}`; capsule `claim_ref` carries `<id>`.
+LOCAL_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 BINDING_RELATIONS = {"supports", "refutes", "defines", "instantiates", "measures"}
 BINDING_STATUS = {"ASSERTED", "REVIEWED", "CONTESTED"}   # vocabulary; verify.py clamps raw→ASSERTED
 
@@ -38,9 +44,13 @@ def validate_capsule(cap):
     under the closed schema. Missing capsule ({}) is valid — assertions are optional."""
     errors = []
     if not _closed(errors, cap, "capsule",
-                   allowed={"verifier", "evaluation_id", "dep", "binding"},
+                   allowed={"claim_ref", "verifier", "evaluation_id", "dep", "binding"},
                    required=()):
         return errors
+
+    if "claim_ref" in cap and not (isinstance(cap["claim_ref"], str)
+                                   and LOCAL_ID.match(cap["claim_ref"])):
+        errors.append("capsule.claim_ref must match local_id [A-Za-z0-9_-]{1,64}")
 
     if "verifier" in cap and not (isinstance(cap["verifier"], str)
                                   and VERIFIER.match(cap["verifier"])):

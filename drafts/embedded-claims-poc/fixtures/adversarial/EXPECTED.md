@@ -22,6 +22,8 @@ mistakes them for claims. Live specimens carry explicit `manifesto-claims` regio
 | `11-unknown-profile.md` | PARSE | `UNKNOWN_PROFILE` typed failure; no fallback profile. |
 | `12-unbalanced-region.md` | PARSE | `NESTED_OR_DUP_BEGIN` / `MISSING_END`; nothing inside settled. |
 | `13-marker-in-fence.md` | PARSE | Markers inside a fence/blockquote are inert ⇒ `NO_LIVE_REGION`. |
+| `14-unexpected-end.md` | PARSE | `UNEXPECTED_END` — an `end` with no open region; fail closed. |
+| `17-fake-end-in-fence.md` | PARSE | A fenced `end` is inert; the region spans both claims ⇒ TWO live claims. Region state is over CommonMark block state, not raw text. |
 
 ## Claim / capsule sub-parsing (assumed inside a live region)
 
@@ -35,7 +37,9 @@ mistakes them for claims. Live specimens carry explicit `manifesto-claims` regio
 | `06-glyph-in-code-fence.md` | T5 | PARSE | Prose glyph live; identical glyph inside ```` ```text ```` inert. |
 | `07-delimiter-injection.md` | T7 | PARSE | No truncation at an embedded `⟧`; a capsule string's ```` ``` ```` does not close the fence. Absent an escaping rule, a typed error — never silent truncation. |
 | `08-unicode-normalization.md` | T6 | PARSE→ID | Default EXACT scalars; normalize a field only under its verifier profile; commit raw source occurrence separately; accept only U+27E6/U+27E7 delimiters. Global NFC is forbidden (it would alias distinct predicates). |
-| `09-claim-capsule-association.md` | T8 | COMPILE | Capsules bind by `claim_ref` (out-of-order on purpose), not adjacency; bodies are schema-valid so association is actually reached; a dangling `claim_ref` or two capsules for one local_id is a typed error. |
+| `09-claim-capsule-association.md` | T8 | COMPILE | Capsules bind by `claim_ref` (out-of-order on purpose), not adjacency; bodies are schema-valid (`manifesto.capsule.v1`) so association is actually reached; both capsules validate and carry claim_ref A/B (this is now an executable suite invariant). |
+| `15-dangling-claim-ref.md` | T8 | COMPILE | Capsule is schema-valid, then `DANGLING_CLAIM_REF` — `claim_ref` names no existing claim. |
+| `16-duplicate-local-id.md` | T8 | COMPILE | Two schema-valid capsules bind one local_id ⇒ `DUPLICATE_CLAIM_REF`; a claim owns at most one capsule. |
 
 ## Invariants across the whole corpus
 

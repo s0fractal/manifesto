@@ -91,16 +91,16 @@ Then:
 
 ```sh
 cd drafts/embedded-claims-poc
-../../.venv/bin/python test_poc.py                       # 22 fixtures + 5 invariants
+../../.venv/bin/python test_poc.py                       # 22 fixtures + 6 invariants
 ../../.venv/bin/python verify.py fixtures/valid/arith-self.md   # one fixture, human report
 ```
 
 `test_poc.py` exits 0 iff every fixture lands on its exact `(execution, binding)`
-and required facts, AND five invariants hold: identity does not alias
+and required facts, AND six invariants hold: identity does not alias
 (world-same-input), the report is byte-deterministic across runs, the body
 commitment detects field mutation, the effect path is Sigma-independent (runs under
-`python -S`), and canonicalization is deterministic + domain-separated + rejects
-floats/duplicate-keys.
+`python -S`), canonicalization rejects floats/dup-keys/surrogates/big-ints, and the
+adversarial `09` capsules are schema-valid under `manifesto.capsule.v1` (`claim_ref`).
 
 ## What actually stood up (verified)
 
@@ -154,7 +154,7 @@ settle_core.py  the verdict core: parse/schema/dispatch/identities/facts (IN clo
                 + freshness + binding clamp + D6 effect (observed post-state)
 canonical.py    closed JSON canonicalization + domain-separated record IDs (§17 #1/#2)
 schema.py       closed capsule schema (additionalProperties:false), stdlib-only
-test_poc.py     22 fixtures + 5 invariants (aliasing, determinism, mutation, -S, canonical)
+test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,

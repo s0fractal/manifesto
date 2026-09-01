@@ -189,14 +189,22 @@ claims in one file remain individually addressable.
 6. **Association (T8)** — explicit `local_id` on the claim + `claim_ref` on the capsule;
    never adjacency. Capsule binds a `(claim_id, source-occurrence)` pair.
 
-**STILL OPEN (operator / next reviewer):**
-2. **Info string (T4):** confirm the exact frozen token `json capsule`, enforced by the
-   protocol profile over raw spans (CommonMark cannot, as it trims whitespace).
-3. **Fence engine (T4/T5):** which pinned CommonMark implementation, and dependency
-   posture (external lib vs hardened bespoke scanner) — the CI gate currently needs no
-   package beyond the evaluator, so a stdlib-only choice keeps that property.
-5. **Escaping (T7):** how a payload carries a literal `⟧` or a fence — an escape rule or
-   a structural/length-prefixed parse; until decided, such payloads are a typed error.
+2. **Info string (T4)** — DECIDED: the exact raw opener is ` ```json capsule` (case
+   sensitive, no leading space, no trailing tokens), enforced by the protocol profile
+   over raw spans (CommonMark can't — it trims whitespace).
+3. **Fence engine (T4/T5)** — DECIDED: `markdown-it-py==4.2.0`, preset `commonmark`,
+   no plugins, for block/nesting/inertness and token line-maps; the raw opener/closer
+   is enforced by our protocol layer over the source spans. The version and its
+   artifact/closure must be PINNED (as the evaluator is), and the CI gate installs it
+   explicitly. This ends the stdlib-only property — a deliberate, pinned trade.
+5. **Escaping (T7)** — DECIDED v0: an inline claim containing a literal `⟧` is a typed
+   `UNSUPPORTED_INLINE_DELIMITER`; text that needs the character is carried in a JSON
+   capsule instead. No escape language is invented now.
+
+**Local_id syntax — FROZEN:** inline `⟦<class>: <payload>⟧{#<id>}` — the `{#id}` suffix
+follows the closing `⟧`, so the payload handed to the evaluator stays clean; `<id>` ∈
+`[A-Za-z0-9_-]{1,64}`; the capsule's `claim_ref` carries the bare `<id>`. Added to the
+closed schema as `manifesto.capsule.v1`.
 
 ## 9. The adversarial corpus (this step's deliverable)
 

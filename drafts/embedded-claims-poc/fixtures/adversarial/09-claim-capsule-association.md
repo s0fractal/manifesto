@@ -7,7 +7,7 @@ instead of rejecting on schema first (Codex P1: separate parse from compile).
 
 <!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
-First claim ⟦arith: 74 + 1 = 75 #A⟧ and second claim ⟦count: /Теза/ in README.md = 8 #B⟧.
+First claim ⟦arith: 74 + 1 = 75⟧{#A} and second claim ⟦count: /Теза/ in README.md = 8⟧{#B}.
 
 ```json capsule
 {"claim_ref": "B", "verifier": "settle-gate://sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "dep": {"path": "README.md", "sha256": "2222222222222222222222222222222222222222222222222222222222222222"}}
@@ -23,5 +23,7 @@ Expected — PARSE: two claims (local_id A, B) and two capsules found in the reg
 Expected — COMPILE: capsule 1 binds claim B, capsule 2 binds claim A, by `claim_ref` —
 NOT by document order/adjacency (the capsules are deliberately out of order). A
 `claim_ref` matching no claim, or two capsules referencing one local_id, is a typed
-error. `#A`/`#B` here sketch a local_id syntax; the exact spelling is an open decision,
-but the mechanism (explicit reference) is decided.
+error. Local_id syntax is FROZEN: inline `⟦…⟧{#<id>}` (the `{#A}` suffix after the
+closing `⟧`, so the payload handed to the evaluator stays clean — `74 + 1 = 75`, not
+`74 + 1 = 75 #A`); the capsule's `claim_ref` carries the bare id. Both capsules are now
+schema-valid under `manifesto.capsule.v1` (which adds `claim_ref`).
