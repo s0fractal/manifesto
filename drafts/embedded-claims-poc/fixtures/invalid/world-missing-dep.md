@@ -9,7 +9,7 @@ Fail-closed.
 
 ```json capsule
 {
-  "verifier": "settle-gate://sha256:7a678c25452c23f91f6193b68e78cca09faea917b0b2b433cd36ea0878a95c90"
+  "verifier": "settle-gate://sha256:605a1e8a147501ba16e3fe9033bd00a26b6dd8bb0750aab5a798e51b4112d7f7"
 }
 ```
 

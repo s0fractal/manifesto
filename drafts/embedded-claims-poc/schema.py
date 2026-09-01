@@ -65,14 +65,17 @@ def validate_capsule(cap):
         if _closed(errors, b, "capsule.binding",
                 allowed={"relation", "target", "status"},
                 required=("relation", "target")):
-            if b.get("relation") not in BINDING_RELATIONS:
+            rel = b.get("relation")
+            if not isinstance(rel, str) or rel not in BINDING_RELATIONS:
                 errors.append(f"capsule.binding.relation must be one of "
                               f"{sorted(BINDING_RELATIONS)}")
             if not isinstance(b.get("target"), str) or not b["target"]:
                 errors.append("capsule.binding.target must be a non-empty string")
-            if "status" in b and b["status"] not in BINDING_STATUS:
-                errors.append(f"capsule.binding.status must be one of "
-                              f"{sorted(BINDING_STATUS)}")
+            if "status" in b:
+                st = b["status"]
+                if not isinstance(st, str) or st not in BINDING_STATUS:
+                    errors.append(f"capsule.binding.status must be one of "
+                                  f"{sorted(BINDING_STATUS)}")
     return errors
 
 

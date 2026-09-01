@@ -37,6 +37,9 @@ CASES = {
     "fixtures/invalid/effect-short-digest.md":          ("UNVERIFIED", "UNTIED",   ["RESULT_UNSETTLED"], "malformed effect"),
     "fixtures/invalid/capsule-unknown-field.md":        ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], "unknown field capsule.surprise"),
     "fixtures/invalid/capsule-dup-key.md":              ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], "duplicate object key"),
+    "fixtures/invalid/capsule-malformed-json.md":       ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], None),
+    "fixtures/invalid/capsule-bad-binding-type.md":     ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], "binding.relation"),
+    "fixtures/invalid/capsule-lone-surrogate.md":       ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], "lone surrogate"),
     "fixtures/limits/effect-invisible-effect.md":       ("REPLAYED",   "UNTIED",   ["RESULT_MATCH"], None),
 }
 
@@ -121,14 +124,16 @@ def main():
     b = {"a": 1, "b": [2, 3], "t": True}
     canon_ok = (C.record_id("claim", b) == C.record_id("claim", b)
                 and C.record_id("claim", b) != C.record_id("plan", b))
-    for bad in (lambda: C.canonicalize({"x": 1.0}),
-                lambda: C.loads_strict('{"a":1,"a":2}')):
+    for bad in (lambda: C.canonicalize({"x": 1.0}),          # float
+                lambda: C.loads_strict('{"a":1,"a":2}'),     # duplicate key
+                lambda: C.loads_strict(r'{"s":"\ud800"}'),   # lone surrogate
+                lambda: C.canonicalize({"big": 2 ** 63})):   # out of i64 range
         try:
             bad(); canon_ok = False
         except C.CanonicalError:
             pass
     print(("ok   " if canon_ok else "FAIL ")
-          + "canonical: deterministic + domain-separated + rejects float/dup-key")
+          + "canonical: deterministic + domain-separated + rejects float/dup/surrogate/bigint")
     failures += 0 if canon_ok else 1
 
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "

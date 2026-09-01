@@ -41,13 +41,29 @@ class CanonicalError(ValueError):
     """A body that cannot be canonicalized under this closed profile."""
 
 
+# Integer range fixed so "two implementations agree" is defined for large numbers:
+# signed 64-bit. JSON itself is unbounded; this profile is not.
+MAX_I64 = 2 ** 63 - 1
+MIN_I64 = -(2 ** 63)
+
+
 def _reject(o, path="body"):
     """Refuse anything the identity profile does not admit, by name."""
     if isinstance(o, bool):
         return                      # bool is fine (and is an int subclass, check first)
     if isinstance(o, float):
         raise CanonicalError(f"float forbidden at {path} (identity bodies are exact)")
-    if isinstance(o, (str, int)) or o is None:
+    if isinstance(o, int):
+        if not (MIN_I64 <= o <= MAX_I64):
+            raise CanonicalError(f"integer out of range at {path} (signed 64-bit profile)")
+        return
+    if isinstance(o, str):
+        # Unicode SCALAR values only: a lone surrogate is not encodable to UTF-8
+        # and must fail here, under the declared profile, not later at encode time.
+        if any(0xD800 <= ord(c) <= 0xDFFF for c in o):
+            raise CanonicalError(f"lone surrogate at {path} (Unicode scalar values only)")
+        return
+    if o is None:
         return
     if isinstance(o, dict):
         for k, v in o.items():
@@ -79,9 +95,13 @@ def _no_dup_keys(pairs):
 
 
 def loads_strict(text):
-    """Parse JSON, rejecting duplicate keys (json.loads silently keeps the last —
-    which would let two different source texts map to one canonical body)."""
-    return json.loads(text, object_pairs_hook=_no_dup_keys)
+    """Parse JSON under the closed profile: reject duplicate keys (json.loads
+    silently keeps the last — which would let two source texts map to one canonical
+    body) AND reject any value outside the scalar profile (floats, lone surrogates,
+    out-of-range integers) at the boundary rather than later."""
+    obj = json.loads(text, object_pairs_hook=_no_dup_keys)
+    _reject(obj)
+    return obj
 
 
 def record_id(kind, body):
