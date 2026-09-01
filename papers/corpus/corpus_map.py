@@ -136,13 +136,21 @@ def _content_subject(record_body):
     return ids.json_digest({k: v for k, v in record_body.items() if k not in _PRE_DECISION_OMIT})
 
 
+MAPPING_BODY_FIELDS = {"status", "act_id", "evidence_commitment", "adjudication"}
+MAPPING_PROFILE = "manifesto.corpus.mapping.v0.2"
+
+
 def _mapping_subject(record_body):
-    """The exact mapping proposition: the act + four components + evidence commitment."""
+    """The exact PRE-DECISION mapping proposition: the act id + proposed status + four components
+    + exact evidence commitment + mapping profile (P0-4). A change to any of these rotates it."""
+    m = record_body.get("mapping") or {}
     return ids.json_digest({
         "content": _content_subject(record_body),
+        "act_id": m.get("act_id"), "mapping_status": m.get("status"),
+        "profile": MAPPING_PROFILE,
         "components": [record_body.get("experiment_id"), record_body.get("root_digest"),
                        record_body.get("verifier_identity"), record_body.get("agent_run_occurrence")],
-        "evidence_commitment": (record_body.get("mapping") or {}).get("evidence_commitment")})
+        "evidence_commitment": m.get("evidence_commitment")})
 
 
 def record_publishable(body, trust_root):
@@ -152,8 +160,13 @@ def record_publishable(body, trust_root):
     decision-record ids (kind-specific subjects) pinned in the register."""
     if body.get("final_status") != "EXACT" or body.get("final_faults"):
         return False
+    m = body.get("mapping")
+    if not isinstance(m, dict) or set(m) != MAPPING_BODY_FIELDS:   # closed mapping schema
+        return False
+    if m.get("status") != "EXACT":                                # internal consistency (P0-4)
+        return False
     comp = body.get("completeness_decision"); pub = body.get("publication_decision")
-    adj = (body.get("mapping") or {}).get("adjudication")
+    adj = m.get("adjudication")
     if not (_decides(comp, "COMPLETE") and _decides(pub, "CLEARED_FOR_PUBLICATION")
             and isinstance(adj, dict)):
         return False
@@ -162,8 +175,8 @@ def record_publishable(body, trust_root):
             or pub.get("authority") not in set(A.get("publication", [])) \
             or adj.get("authority") not in set(A.get("mapping", [])):
         return False
-    if trust_root.get("mapper_closure") and body.get("mapper_closure") != trust_root["mapper_closure"]:
-        return False
+    if not trust_root.get("mapper_closure") or body.get("mapper_closure") != trust_root["mapper_closure"]:
+        return False                                  # a pinned+matching mapper is MANDATORY for credit
     reg = set(trust_root.get("decision_register", []))
     cs, ms = _content_subject(body), _mapping_subject(body)
     return (decision_record_id("completeness", cs, comp) in reg
@@ -467,8 +480,8 @@ def build_l3(bundle, table, manifests=None, trust_root=None):
     l3_bundle_id = "l3:" + ids.json_digest({"mapper_closure": mclo, "l2_bundle_id": bundle["bundle_id"],
                                             "local_ref_index": local_ref_index,
                                             "records": sorted(r["record_id"] for r in records)})
-    views = {c: _view(c, acts, (manifests or {}).get(c), bundle, trust_root, mclo)
-             for c in ("C1", "C3", "C2", "C4", "C7")}
+    claims = ("C1", "C3", "C2", "C4", "C7", *sorted(set(manifests or {}) - {"C1", "C3", "C2", "C4", "C7"}))
+    views = {c: _view(c, acts, (manifests or {}).get(c), bundle, trust_root, mclo) for c in claims}
     meta = {"schema": "manifesto.corpus.act-graph-report.v0", "bundle_ok": True,
             "l2_bundle_id": bundle["bundle_id"], "l3_bundle_id": l3_bundle_id, "mapper_closure": mclo,
             "act_count": len(acts), "fault_count": sum(len(a["faults"]) for a in acts),
@@ -530,13 +543,14 @@ def _view(claim, acts, manifest, bundle, trust_root, mclo):
     mid = manifest_id(manifest)
     if mid != (trust_root.get("pinned_manifests") or {}).get(claim):
         return {"status": "REFUSED", "reason": "MANIFEST_NOT_PINNED", "manifest_id": mid}
-    exps = set(manifest["experiment_ids"]); key = manifest["unit_key"]
+    key = manifest["unit_key"]
     required = {tuple(u) for u in manifest["required_units"]}
     allowed_extra = {tuple(u) for u in manifest.get("allowed_exclusions", [])}
-    rel = [a for a in acts if a["experiment_id"] in exps]
 
     def unit(a):
         return tuple(a.get(k) for k in key)
+    # select by the GOVERNED unit cohort, not by an (unevidenced) experiment_id label (P1-6):
+    rel = [a for a in acts if unit(a) in required]
     present_any = {unit(a) for a in rel}
     ok_acts = [a for a in rel if _publishable(a, trust_root)]
     present_ok = {unit(a) for a in ok_acts}

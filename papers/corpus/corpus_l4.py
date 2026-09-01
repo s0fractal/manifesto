@@ -75,9 +75,22 @@ def l4_evaluate(private_l3, manifests, trust_root):
     if not ok:
         return {"l3_ok": False, "reason": reason,
                 "views": {c: {"status": "REFUSED", "reason": reason} for c in ("C1", "C3", "C2", "C4", "C7")}}
+    # P0-5: bind the serialized top-level provenance to the trust root and to every record,
+    # otherwise a coherent re-forge of l2_bundle_id/mapper_closure could return positive credit.
+    def _refuse(rs):
+        return {"l3_ok": False, "reason": rs,
+                "views": {c: {"status": "REFUSED", "reason": rs} for c in ("C1", "C3", "C2", "C4", "C7")}}
+    mclo = private_l3.get("mapper_closure")
+    if private_l3.get("l2_bundle_id") != trust_root.get("l2_bundle_id"):
+        return _refuse("L2_NOT_PINNED")
+    if trust_root.get("mapper_closure"):             # credit-capable root: bind the mapper exactly
+        if mclo != trust_root["mapper_closure"]:
+            return _refuse("MAPPER_NOT_PINNED")
+        if any(r["body"].get("mapper_closure") != mclo for r in private_l3["records"]):
+            return _refuse("MAPPER_MISMATCH")
     acts = [_act_from_body(r["body"], r["record_id"]) for r in private_l3["records"]]
     stub_bundle = {"bundle_id": private_l3["l2_bundle_id"]}
-    mclo = private_l3["mapper_closure"]
-    views = {c: cm._view(c, acts, (manifests or {}).get(c), stub_bundle, trust_root, mclo)
-             for c in ("C1", "C3", "C2", "C4", "C7")}
+    claims = ("C1", "C3", "C2", "C4", "C7",
+              *sorted(set(manifests or {}) - {"C1", "C3", "C2", "C4", "C7"}))
+    views = {c: cm._view(c, acts, (manifests or {}).get(c), stub_bundle, trust_root, mclo) for c in claims}
     return {"l3_ok": True, "l3_bundle_id": private_l3["l3_bundle_id"], "views": views}

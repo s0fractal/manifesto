@@ -220,6 +220,29 @@ expect("mapper-closure mutation -> C2 REFUSED",
        build_l3(bundle, tbl, {"C2": C2_MAN}, trust(report, register=reg_all, mapper="clo:map:FORK")
                 )["metadata_report"]["views"]["C2"]["status"] == "REFUSED")
 
+
+def _reseal(pl3):
+    pl3["local_ref_index"] = {r["body"]["local_ref"]: r["record_id"] for r in pl3["records"]}
+    pl3["l3_bundle_id"] = "l3:" + ids.json_digest({"mapper_closure": pl3["mapper_closure"],
+        "l2_bundle_id": pl3["l2_bundle_id"], "local_ref_index": pl3["local_ref_index"],
+        "records": sorted(r["record_id"] for r in pl3["records"])})
+    return pl3
+
+
+# P0-4: swap mapping.act_id/status, coherently re-seal -> old decision no longer applies
+f4 = copy.deepcopy(out["private_l3"]); b4 = f4["records"][0]["body"]
+b4["mapping"]["act_id"] = "act:FORGED"; b4["mapping"]["status"] = "DERIVED"
+f4["records"][0]["record_id"] = "rec:" + ids.json_digest(b4)
+expect("P0-4: forged mapping.act_id/status -> L4 not COMPLETE",
+       l4_evaluate(_reseal(f4), {"C2": C2_MAN}, tr_gov)["views"]["C2"]["status"] != "COMPLETE")
+# P0-5: coherent re-forge of top-level mapper_closure / l2_bundle_id -> REFUSED
+fm = _reseal({**copy.deepcopy(out["private_l3"]), "mapper_closure": "clo:map:FORGED"})
+expect("P0-5: forged mapper_closure -> L4 REFUSED",
+       l4_evaluate(fm, {"C2": C2_MAN}, tr_gov)["views"]["C2"]["status"] == "REFUSED")
+fl = _reseal({**copy.deepcopy(out["private_l3"]), "l2_bundle_id": "bnd:FORGED"})
+expect("P0-5: forged l2_bundle_id -> L4 REFUSED",
+       l4_evaluate(fl, {"C2": C2_MAN}, tr_gov)["views"]["C2"]["status"] == "REFUSED")
+
 # L4 without pinned decisions reproduces REFUSED (same vector as build_l3)
 l4r = l4_evaluate(build_l3(bundle, tbl, {"C2": C2_MAN}, tr0)["private_l3"], {"C2": C2_MAN}, tr0)
 expect("L4 reproduces REFUSED vector", l4r["views"]["C2"]["status"] == "REFUSED")
@@ -359,6 +382,44 @@ try:
     expect("malformed table typed no crash", r["metadata_report"]["fault_count"] >= 1)
 except Exception as ex:  # noqa
     expect(f"malformed crashed: {ex!r}", False)
+
+# ===================== production-operand gate (P0-2) ===================== #
+# The committed 0.2 operand + its activation proposal are bound to an executable check, so
+# deleting or one-byte-mutating either file fails CI (closes the stale-green hole). Structural
+# only (no quarantine); raw-span revalidation stays machine-local.
+import hashlib  # noqa: E402
+PAPER = Path(__file__).resolve().parents[1] / "every-check-spawns-more"
+try:
+    opf = PAPER / "CORPUS-C2-MAPPING-0.2.json"
+    prf = PAPER / "CORPUS-C2-MAP-ACTIVATION-0.1.json"
+    op = json.loads(opf.read_text()); pr = json.loads(prf.read_text())
+    rows_ = op["rows"]
+    expect("prod operand has 8 rows", len(rows_) == 8)
+    expect("prod operand: 24 evidence records (3/row)",
+           sum(len(r["mapping_evidence"]) for r in rows_) == 24
+           and all(len(r["mapping_evidence"]) == 3 for r in rows_))
+    expect("prod operand: all rows DERIVED", all(r["mapping_status"] == "DERIVED" for r in rows_))
+    expect("prod operand: exact 4x2 observed-model bijection",
+           len({(r["root_digest"], r["verifier_identity"]) for r in rows_}) == 8
+           and len({r["root_digest"] for r in rows_}) == 4
+           and {r["verifier_identity"] for r in rows_} == {"claude-opus-5", "claude-sonnet-5"})
+    expect("prod operand: evidence kinds are the 3 narrowed components",
+           all({e["kind"] for e in r["mapping_evidence"]}
+               == {"root_digest", "verifier_identity", "agent_run_occurrence"} for r in rows_))
+    expect("activation proposal binds the exact operand digest",
+           pr["operand_digest"] == "sha256:" + hashlib.sha256(opf.read_bytes()).hexdigest())
+    expect("activation proposal_id recomputes",
+           pr["proposal_id"] == "prop:" + ids.json_digest(
+               {k: pr[k] for k in ("operand_digest", "manifest", "overlay_rows", "trust_root_diff")}))
+    expect("proposal overlay is 8 EXACT rows over the same units",
+           len(pr["overlay_rows"]) == 8
+           and all(o["mapping_status"] == "EXACT" for o in pr["overlay_rows"])
+           and {(o["root_digest"], o["verifier_identity"]) for o in pr["overlay_rows"]}
+               == {(r["root_digest"], r["verifier_identity"]) for r in rows_})
+    expect("proposal is for C2-MAP only (C2-MEAS not claimed)",
+           pr["for"] == "C2-MAP" and pr["manifest"]["claim"] == "C2-MAP")
+except FileNotFoundError as e:
+    expect(f"production operand/proposal present: {e}", False)
 
 print()
 if fails:
