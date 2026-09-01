@@ -47,7 +47,7 @@ CANDIDATE_FIELDS = set(ACTRECORD_REQUIRED) | {
 MANIFEST_FIELDS = {"claim", "paper_pin", "experiment_ids", "unit_key", "required_units", "allowed_exclusions"}
 BLOCKING = {"NO_RAW_PROVENANCE", "SCHEMA_INVALID", "NO_EVENTS", "BAD_OCCURRENCE",
             "BAD_SAMPLING", "UNKNOWN_FIELD", "SILENT_DEFAULT", "BAD_LOCAL_REF",
-            "AUTHORITY_NOT_ADMITTED"}
+            "AUTHORITY_NOT_ADMITTED", "DECISION_NOT_PINNED"}
 
 
 def _schema_bytes():
@@ -81,7 +81,7 @@ def recompute_report_id(report):
 
 
 TRUST_FIELDS = {"schema", "note", "report_id", "corpus_commitment", "extraction_closure",
-                "l2_bundle_id", "authorities", "pinned_manifests"}
+                "l2_bundle_id", "authorities", "pinned_manifests", "decision_register"}
 
 
 def validate_trust_root(tr):
@@ -100,7 +100,19 @@ def validate_trust_root(tr):
     pin = tr.get("pinned_manifests")
     if not isinstance(pin, dict) or not all(isinstance(x, str) for x in pin.values()):
         return "TRUST_ROOT_INVALID"
+    reg = tr.get("decision_register", [])          # pinned exact decision-record ids (P0-3)
+    if not isinstance(reg, list) or len(reg) != len(set(reg)) or not all(isinstance(x, str) for x in reg):
+        return "TRUST_ROOT_INVALID"
     return None
+
+
+def decision_record_id(kind, subject_act_id, dec):
+    """Content id of a decision, bound to its subject act — the thing the register pins."""
+    d = dec if isinstance(dec, dict) else {}
+    return "dec:" + ids.json_digest({"kind": kind, "subject": subject_act_id,
+                                     "decision": d.get("decision"),
+                                     "adjudicator_identity": d.get("adjudicator_identity"),
+                                     "authority": d.get("authority")})
 
 
 def verify_report(report, trust_root):
@@ -237,15 +249,19 @@ def _check_evidence(cand, index):
     return validated, committed, faults
 
 
-def _admitted(dec, kind, trust_root, positive):
+def _admitted(dec, kind, trust_root, positive, subject):
+    """A decision grants credit only if its exact decision-record id is pinned in the
+    register (P0-3) — an admitted authority *label* is necessary but not sufficient."""
     if not (isinstance(dec, dict) and dec.get("adjudicator_identity") and dec.get("authority")):
         return False
     if dec.get("decision") != positive:
         return False
-    return dec["authority"] in set((trust_root.get("authorities") or {}).get(kind, []))
+    if dec["authority"] not in set((trust_root.get("authorities") or {}).get(kind, [])):
+        return False
+    return decision_record_id(kind, subject, dec) in set(trust_root.get("decision_register", []))
 
 
-def _adjudication_ok(adj, committed_ev, trust_root):
+def _adjudication_ok(adj, committed_ev, trust_root, subject):
     if not isinstance(adj, dict):
         return False, "EXACT_WITHOUT_ADJUDICATION"
     for k in ("adjudicator_identity", "authority", "decision", "evidence_commitments"):
@@ -257,6 +273,8 @@ def _adjudication_ok(adj, committed_ev, trust_root):
         return False, "AUTHORITY_NOT_ADMITTED"
     if set(adj["evidence_commitments"]) != set(committed_ev):
         return False, "ADJUDICATION_MISMATCH"
+    if decision_record_id("mapping", subject, adj) not in set(trust_root.get("decision_register", [])):
+        return False, "DECISION_NOT_PINNED"           # authority label admitted, but record not pinned
     return True, None
 
 
@@ -293,16 +311,18 @@ def _validate(cand, index, trust_root):
     for k in ACTRECORD_REQUIRED:
         if k not in cand or cand[k] is None:
             f.append("SCHEMA_INVALID"); break
-    if not _admitted(cand.get("completeness_decision"), "completeness", trust_root, "COMPLETE") \
-            and _decides(cand.get("completeness_decision"), "COMPLETE"):
-        f.append("AUTHORITY_NOT_ADMITTED")
-    if not _admitted(cand.get("publication_decision"), "publication", trust_root, "CLEARED_FOR_PUBLICATION") \
-            and _decides(cand.get("publication_decision"), "CLEARED_FOR_PUBLICATION"):
-        f.append("AUTHORITY_NOT_ADMITTED")
 
     ordered, bodies, of = _validate_occurrences(cand, index); f += of
     closure = index[ordered[0][0]]["extraction_closure"] if ordered and ordered[0][0] in index else "unknown"
     aid = ids.act_id(closure, cand.get("blob_id", ""), ordered, ids.content_digest(bodies)) if ordered else "act:INVALID"
+    # a positive completeness/publication decision must have its exact decision-record id pinned
+    # in the register (P0-3): an admitted authority label is necessary but not sufficient.
+    if _decides(cand.get("completeness_decision"), "COMPLETE") \
+            and not _admitted(cand.get("completeness_decision"), "completeness", trust_root, "COMPLETE", aid):
+        f.append("DECISION_NOT_PINNED")
+    if _decides(cand.get("publication_decision"), "CLEARED_FOR_PUBLICATION") \
+            and not _admitted(cand.get("publication_decision"), "publication", trust_root, "CLEARED_FOR_PUBLICATION", aid):
+        f.append("DECISION_NOT_PINNED")
     validated, committed_ev, ef = _check_evidence(cand, index); f += ef
     samp = cand.get("sampling", {})
     if not isinstance(samp, dict):
@@ -315,7 +335,7 @@ def _validate(cand, index, trust_root):
         f.append("BAD_STATUS"); status = "AMBIGUOUS"
     elif claimed == "EXACT":
         missing = [c for c in REQUIRED_COMPONENTS if c not in validated]
-        adj_ok, adj_fault = _adjudication_ok(cand.get("adjudication"), committed_ev, trust_root)
+        adj_ok, adj_fault = _adjudication_ok(cand.get("adjudication"), committed_ev, trust_root, aid)
         if not adj_ok:
             f.append(adj_fault); status = "AMBIGUOUS"
         elif missing or (BLOCKING & set(f)):
@@ -342,7 +362,8 @@ def _finalize_record(a, index, mclo):
     cand = a["cand"]
     ev_digest = ids.json_digest(sorted(a["committed_ev"]))
     body = {
-        "mapper_closure": mclo, "final_status": a["status"], "final_faults": sorted(a["faults"]),
+        "mapper_closure": mclo, "local_ref": a["local_ref"],
+        "final_status": a["status"], "final_faults": sorted(a["faults"]),
         "source": {"blob_id": cand.get("blob_id"),
                    "occurrences": [{"event_id": e, "byte_start": s, "byte_end": en,
                                     "body_digest": index.get(e, {}).get("body_digest")}
@@ -407,7 +428,9 @@ def build_l3(bundle, table, manifests=None, trust_root=None):
         rid, mid, body = _finalize_record(a, index, mclo)
         a["record_id"], a["mapping_id"], a["body"] = rid, mid, body
         records.append({"record_id": rid, "body": body})
+    local_ref_index = {a["local_ref"]: a["record_id"] for a in acts}   # closed topology index (P1-4)
     l3_bundle_id = "l3:" + ids.json_digest({"mapper_closure": mclo, "l2_bundle_id": bundle["bundle_id"],
+                                            "local_ref_index": local_ref_index,
                                             "records": sorted(r["record_id"] for r in records)})
     views = {c: _view(c, acts, (manifests or {}).get(c), bundle, trust_root, mclo)
              for c in ("C1", "C3", "C2", "C4", "C7")}
@@ -418,7 +441,10 @@ def build_l3(bundle, table, manifests=None, trust_root=None):
             "views": views,
             "acts": [{k: a[k] for k in ("local_ref", "act_id", "record_id", "mapping_id",
                       "experiment_id", "status", "faults")} for a in acts]}
-    return {"metadata_report": meta, "private_l3": {"l3_bundle_id": l3_bundle_id, "records": records}}
+    return {"metadata_report": meta,
+            "private_l3": {"l3_bundle_id": l3_bundle_id, "mapper_closure": mclo,
+                           "l2_bundle_id": bundle["bundle_id"], "local_ref_index": local_ref_index,
+                           "records": records}}
 
 
 def _by(acts, key):
@@ -456,8 +482,8 @@ def manifest_id(m):
 
 def _publishable(a, trust_root):
     return (not a["faults"] and a["status"] == "EXACT"
-            and _admitted(a["completeness"], "completeness", trust_root, "COMPLETE")
-            and _admitted(a["publication"], "publication", trust_root, "CLEARED_FOR_PUBLICATION"))
+            and _admitted(a["completeness"], "completeness", trust_root, "COMPLETE", a["act_id"])
+            and _admitted(a["publication"], "publication", trust_root, "CLEARED_FOR_PUBLICATION", a["act_id"]))
 
 
 def _view(claim, acts, manifest, bundle, trust_root, mclo):
@@ -490,6 +516,12 @@ def _view(claim, acts, manifest, bundle, trust_root, mclo):
                 "incomplete": sorted(map(list, (required & present_any) - present_ok)), **base}
     if present_ok - required - allowed_extra:
         return {"status": "REFUSED", "reason": "UNEXPECTED_UNITS", **base}
+    # one run occurrence must not satisfy more than one required unit (view-scoped
+    # run-uniqueness; residual #2 from the C2 rows review). A chain's multiple depth
+    # acts legitimately share a run, so this is per-unit, not a blanket act rule.
+    runs = [a["agent_run_occurrence"] for a in ok_acts if unit(a) in required]
+    if len(runs) != len(set(runs)):
+        return {"status": "REFUSED", "reason": "DUPLICATE_RUN_ACROSS_UNITS", **base}
     eval_id = "eval:" + ids.json_digest({"mapper_closure": mclo, "manifest_id": mid,
               "l2_bundle_id": bundle["bundle_id"], "corpus_commitment": trust_root.get("corpus_commitment"),
               "record_ids": sorted(a["record_id"] for a in ok_acts)})

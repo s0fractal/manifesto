@@ -125,34 +125,86 @@ C2_MAN = {"claim": "C2", "paper_pin": "paper@x", "experiment_ids": ["EXP-RVB-1c"
           "allowed_exclusions": []}
 
 
-def trust(report, admit=True, pin=True):
+from corpus_map import decision_record_id           # noqa: E402
+from corpus_l4 import validate_l3_bundle, l4_evaluate  # noqa: E402
+
+
+def trust(report, admit=True, pin=True, register=None):
     prov = {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
             "extraction_closure": report["extraction_closure"], "l2_bundle_id": "x",
-            "authorities": {"completeness": [], "publication": [], "mapping": []}, "pinned_manifests": {}}
+            "authorities": {"completeness": [], "publication": [], "mapping": []},
+            "pinned_manifests": {}, "decision_register": []}
     fid = mint_l2_bundle(report["_priv"], report, prov)["bundle_id"]     # pin the canonical full bundle
     return {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
             "extraction_closure": report["extraction_closure"], "l2_bundle_id": fid,
             "authorities": AUTH if admit else {"completeness": [], "publication": [], "mapping": []},
-            "pinned_manifests": {"C2": manifest_id(C2_MAN)} if pin else {}}
+            "pinned_manifests": {"C2": manifest_id(C2_MAN)} if pin else {},
+            "decision_register": register or []}
 
 
 def full(**kw):
     table, pairs = [], []
     for r in ROOTS:
         for v in VERIF:
-            c, pb = mk(f"{r}-{v}", r, v, **kw); table.append(c); pairs.append(pb)
+            c, pb = mk(f"{r}-{v}", r, v, run=f"run-{r}-{v}", **kw)   # distinct run per unit
+            table.append(c); pairs.append(pb)
     priv, report = corpus(pairs)
     return table, priv, report
 
 
-# valid governed path -> COMPLETE
+def pin_all_decisions(table, tr, bundle):
+    """Simulate the governance act: pin the exact decision-record ids for every act."""
+    out = build_l3(bundle, table, {"C2": C2_MAN}, tr)["metadata_report"]
+    reg = []
+    for a in out["acts"]:
+        c = next(x for x in table if x["local_ref"] == a["local_ref"])
+        reg += [decision_record_id("completeness", a["act_id"], c["completeness_decision"]),
+                decision_record_id("publication", a["act_id"], c["publication_decision"]),
+                decision_record_id("mapping", a["act_id"], c["adjudication"])]
+    return reg
+
+
+# valid EXACT rows, admitted authorities, pinned manifest — but EMPTY register -> REFUSED
 tbl, priv, report = full()
-tr = trust(report)
-bundle = mint_l2_bundle(priv, report, tr)
+tr0 = trust(report)
+bundle = mint_l2_bundle(priv, report, tr0)
 expect("real bundle CLEAN", bundle["status"] == "CLEAN")
-out = build_l3(bundle, tbl, {"C2": C2_MAN}, tr)
-expect("governed valid -> C2 COMPLETE", out["metadata_report"]["views"]["C2"]["status"] == "COMPLETE")
+out0 = build_l3(bundle, tbl, {"C2": C2_MAN}, tr0)
+expect("admitted authority + empty register -> C2 REFUSED",
+       out0["metadata_report"]["views"]["C2"]["status"] == "REFUSED")
+expect("empty register -> DECISION_NOT_PINNED fault",
+       any("DECISION_NOT_PINNED" in a["faults"] for a in out0["metadata_report"]["acts"]))
+
+# governance act: pin every decision-record id -> COMPLETE
+tr_gov = trust(report, register=pin_all_decisions(tbl, tr0, bundle))
+out = build_l3(bundle, tbl, {"C2": C2_MAN}, tr_gov)
+expect("fully governed (register pinned) -> C2 COMPLETE", out["metadata_report"]["views"]["C2"]["status"] == "COMPLETE")
 expect("COMPLETE emits evaluation_id", "evaluation_id" in out["metadata_report"]["views"]["C2"])
+
+# ---- L4: serialized-L3-only replay reproduces the exact vector ----
+ok, reason, _ = validate_l3_bundle(out["private_l3"])
+expect("L3 bundle validates", ok)
+l4 = l4_evaluate(out["private_l3"], {"C2": C2_MAN}, tr_gov)   # NO candidate table
+expect("L4 serialized-only reproduces COMPLETE", l4["views"]["C2"]["status"] == "COMPLETE"
+       and l4["views"]["C2"].get("evaluation_id") == out["metadata_report"]["views"]["C2"]["evaluation_id"])
+import copy  # noqa: E402
+rm = copy.deepcopy(out["private_l3"]); rm["records"] = rm["records"][:-1]
+expect("L3 record removal -> L3_BUNDLE_MISMATCH", validate_l3_bundle(rm)[1] == "L3_BUNDLE_MISMATCH")
+tp = copy.deepcopy(out["private_l3"]); tp["records"][0]["body"]["root_id"] = "TAMPERED"
+expect("L3 body tamper -> RECORD_ID_MISMATCH", validate_l3_bundle(tp)[1] == "RECORD_ID_MISMATCH")
+# L4 without pinned decisions reproduces REFUSED (same vector as build_l3)
+l4r = l4_evaluate(build_l3(bundle, tbl, {"C2": C2_MAN}, tr0)["private_l3"], {"C2": C2_MAN}, tr0)
+expect("L4 reproduces REFUSED vector", l4r["views"]["C2"]["status"] == "REFUSED")
+# duplicate run across units -> REFUSED (credit stays 0). Because agent_run_occurrence is
+# evidenced, changing it also breaks EVIDENCE_VALUE_MISMATCH first; the view-level
+# run-uniqueness check is the defense-in-depth for un-evidenced runs.
+tdup = copy.deepcopy(tbl); tdup[1]["agent_run_occurrence"] = tdup[0]["agent_run_occurrence"]
+odup = build_l3(bundle, tdup, {"C2": C2_MAN}, trust(report, register=pin_all_decisions(tdup, tr0, bundle)))["metadata_report"]
+expect("duplicate run across units -> REFUSED, credit 0",
+       odup["views"]["C2"]["status"] == "REFUSED"
+       and sum(a["status"] == "EXACT" for a in odup["acts"]) < 8)
+
+tr = tr_gov          # alias for the downstream mutation tests (valid pinned trust)
 
 # self-issued authority -> AUTHORITY_NOT_ADMITTED (empty authorities)
 tr_noauth = trust(report, admit=False)
