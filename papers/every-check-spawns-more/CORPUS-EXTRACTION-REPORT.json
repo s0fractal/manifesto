@@ -1,6 +1,6 @@
 {
   "schema": "manifesto.corpus.extraction-report.v0",
-  "extraction_closure": "clo:extract:9b1d62ba61ac5994d7d92b911b60cf2010e7067be976e4155af191380164d1b0",
+  "extraction_closure": "clo:extract:cf72c086fa2d9a3555e3b57c448438ed8e8bfb42ad915cd041f16ecfe97b64b9",
   "layer": "L1->L2 (mechanical; occurrence index + private canonical body)",
   "set_status": "CLEAN",
   "set_faults": [],

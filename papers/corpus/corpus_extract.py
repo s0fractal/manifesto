@@ -36,13 +36,19 @@ class BlobRefused(Exception):
         self.info = info
 
 
+def _schema_bytes():
+    p = (Path(__file__).resolve().parent.parent
+         / "every-check-spawns-more" / "CORPUS-SCHEMA-0.1.md")
+    return p.read_bytes() if p.exists() else b"MISSING_SCHEMA"
+
+
 def extraction_closure_id():
-    """Closure over ALL verdict-affecting extraction bytes (P0-6)."""
+    """Closure over ALL verdict-affecting extraction bytes incl. the normative schema (P0-6/P1-6)."""
     here = Path(__file__).resolve().parent
     return ids.closure_id("extract", [
         ("corpus_ids.py", (here / "corpus_ids.py").read_bytes()),
         ("corpus_extract.py", (here / "corpus_extract.py").read_bytes()),
-        ("schema_version", ids.SCHEMA_VERSION.encode()),
+        ("CORPUS-SCHEMA-0.1.md", _schema_bytes()),
     ])
 
 
@@ -123,9 +129,25 @@ def extract_from_quarantine(quarantine_dir, receipt: dict, inventory: dict):
     qdir = Path(quarantine_dir)
     closure = extraction_closure_id()
 
-    inv_list = inventory.get("transcripts", [])
-    rec_list = receipt.get("records", [])
+    # shape safety (P1-7): never crash on a malformed operand.
+    if not isinstance(inventory, dict) or not isinstance(inventory.get("transcripts"), list) \
+       or not isinstance(receipt, dict) or not isinstance(receipt.get("records"), list) \
+       or not all(isinstance(t, dict) and isinstance(t.get("agent"), str) for t in inventory["transcripts"]) \
+       or not all(isinstance(r, dict) and isinstance(r.get("agent"), str) for r in receipt["records"]):
+        return {}, {"schema": "manifesto.corpus.extraction-report.v0",
+                    "set_status": "FAIL", "set_faults": [{"code": "MALFORMED_OPERAND"}],
+                    "summary": {}, "blobs": []}
+    inv_list = inventory["transcripts"]
+    rec_list = receipt["records"]
     faults = []
+
+    # duplicate SOURCE DIGEST across agents (P1-8): closed equality, not subset.
+    dig_agents = {}
+    for t in inv_list:
+        dig_agents.setdefault(t.get("sha256"), []).append(t["agent"])
+    dup_digests = {d: a for d, a in dig_agents.items() if d and len(a) > 1}
+    if dup_digests:
+        faults.append({"code": "DUPLICATE_SOURCE_DIGEST", "digests": sorted(dup_digests)})
 
     def _dupes(names):
         seen, dup = set(), set()
@@ -181,6 +203,15 @@ def extract_from_quarantine(quarantine_dir, receipt: dict, inventory: dict):
         row.update({"status": "EXTRACTED", "blob_id": bid, "event_count": len(events),
                     "unknown_event_types": sum(e["unknown_event_type"] for e in events)})
         rows.append(row)
+
+    # extra blobs in the CAS beyond the inventory (P1-8 closed equality).
+    expected_names = {t["sha256"] + ".jsonl" for t in inv_list
+                      if isinstance(t.get("sha256"), str) and HEX64.match(t["sha256"])}
+    blobs_dir = qdir / "blobs"
+    actual_names = {p.name for p in blobs_dir.glob("*.jsonl")} if blobs_dir.exists() else set()
+    extra_blobs = sorted(actual_names - expected_names)
+    if extra_blobs:
+        faults.append({"code": "EXTRA_BLOBS_IN_CAS", "count": len(extra_blobs)})
 
     ok_states = {"EXTRACTED"}
     refused = [r for r in rows if str(r["status"]).startswith("BLOB_REFUSED")]

@@ -25,17 +25,35 @@ typed `UNKNOWN` → an L4 view whose `required_units` are all present, `COMPLETE
 | **F8** | redacted record keeps original id | a redacted artifact reusing the original `artifact_id`, or missing its loss report | L3/L4 | `FAIL: REDACTION_ID_REUSE` — redaction requires a new id + loss report (T11) |
 | **F9** | source digest drift | an L1 source whose current digest ≠ the inventory digest, presented for export | L1 | `FAIL: SOURCE_DRIFT` — recorded, never a silent inventory update (T4/T12) |
 
+## Authentication fixtures added after the exact-HEAD review (57d41e5)
+
+The `a690789`→`57d41e5` review showed the eight literal mutations were closed but the *boundary*
+(supplied L2 assertions → credit) was not. These fixtures close it and are all executable in
+`papers/corpus/test_corpus.py`:
+
+| id | fixture | required outcome |
+|---|---|---|
+| **G1** | mutated L2 body under a stale `event_id` | `authenticate_l2` recomputes the id → `L2_INTEGRITY_BREAK`; every view `REFUSED: L2_INTEGRITY_BREAK` **before** any mapping |
+| **G2** | forged `blob_id` or an occurrence span ≠ the authenticated event | act faulted `NO_RAW_PROVENANCE`; cannot be `EXACT` |
+| **G3** | empty / malformed required-unit manifest | `REFUSED: EMPTY_REQUIRED_SET` / `MALFORMED_MANIFEST` / `BAD_UNIT_KEY` — never `COMPLETE(0)` |
+| **G4** | adjudication whose `evidence_commitments` ≠ the value-validated evidence | `AMBIGUOUS` (`ADJUDICATION_MISMATCH`); `decision≠EXACT` → `ADJUDICATION_DECISION` |
+| **G5** | `EXACT` → `CONFLICTED` at graph finalization | `mapping_id` is minted **after** finalization, so it addresses `CONFLICTED`, not the pre-final `EXACT` |
+| **G6** | duplicate `local_ref` (or `act_id`) that a view needs | **all** members invalidated (not just the second) → the unit is missing → view `REFUSED` |
+| **G7** | malformed sampling / manifest / inventory / receipt | typed fault (`BAD_SAMPLING` / `MALFORMED_MANIFEST` / `MALFORMED_OPERAND`), never an uncaught exception |
+| **G8** | schema/id/code byte change | the relevant closure (`clo:extract` / `clo:map`) rotates; ids derive from it |
+
 ## Notes binding the oracle to the pipeline
 
-- Failure codes reuse the `deposit_check` vocabulary family so an L4 view's refusal surfaces as a
-  typed `REFUSED` reason in the gate (e.g. `INCOMPLETE_TREE`, `NO_RAW_PROVENANCE`) rather than a
-  generic error.
-- Every table row in the paper (§3 counts, §5 crossed, §6.1 windows) must be **recomputed from the L3
-  acts**; a validator that finds a paper literal by string search instead of recomputation is itself a
-  failure of F4 in spirit and must be treated as `NO_RAW_PROVENANCE`.
-- The C2 bijection (F5) is the acceptance gate for Paper A's highest-risk claim: until all eight
-  crossed acts map `EXACT`/`DERIVED` with blob+span evidence, C2 stays `REFUSED` regardless of how many
-  neighbouring chains pass.
+- Only `EXACT` (adjudicated + fully value-evidenced + fault-free + `COMPLETE` + `CLEARED_FOR_PUBLICATION`)
+  can satisfy a required unit. **`DERIVED` is a proposal and NEVER enters the C2 bijection or any credit**
+  (corrects the earlier note). A view is complete only on exact set-equality with a closed, non-vacuous
+  required-unit manifest.
+- Failure codes reuse the `deposit_check` vocabulary family so an L4 view's refusal surfaces as a typed
+  `REFUSED` reason in the gate.
+- Every paper table (§3 counts, §5 crossed, §6.1 windows) must be **recomputed from the L3 acts**;
+  finding a paper literal by string search is `NO_RAW_PROVENANCE` in spirit.
+- The C2 bijection is Paper A's highest-risk gate: until all eight crossed acts map **`EXACT`** with
+  authenticated blob+span evidence and an adjudication bound to that evidence, C2 stays `REFUSED`.
 
 ## Step-2 acceptance checklist
 

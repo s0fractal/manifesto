@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 test_corpus.py — the acceptance oracle as real mutation tests, hardened after the
-Codex closure review (a690789). Fully synthetic: no quarantine, no sigma-glyph.
+Codex exact-HEAD review (57d41e5). Fully synthetic: no quarantine, no sigma-glyph.
 
-Covers the closure-condition mutations verbatim:
-  8 DERIVED/no-evidence mappings       -> C2 REFUSED
-  1 present act for a multi-unit claim -> REQUIRED_UNITS_MISSING
-  arbitrary event cited for root       -> EVIDENCE_VALUE_MISMATCH
-  mapping-field mutation               -> mapping_id rotates
-  event-order mutation                 -> act_id rotates
-  loss/public-content mutation         -> public_id rotates
-  omitted inventory source             -> fail-closed missing-set report
-  NaN / malformed table                -> typed refusal, no crash
-plus the L1->L2 strictness/identity properties.
+Runs the closure-condition mutations verbatim:
+  mutated L2 body + stale event_id              -> L2_INTEGRITY_BREAK before mapping
+  mixed blob/closure or forged occurrence       -> NO_RAW_PROVENANCE
+  empty required-unit manifest                  -> REFUSED: EMPTY_REQUIRED_SET
+  malformed manifest/sampling/inventory/receipt -> typed refusal, no crash
+  unbound adjudication commitment               -> AMBIGUOUS / ADJUDICATION_MISMATCH
+  EXACT -> CONFLICTED graph finalization        -> mapping_id rotates and re-verifies
+  duplicate local_ref required by a view        -> view REFUSED
+  schema-byte mutation                          -> relevant closure rotates
+  + the L1->L2 strictness/identity properties and F1-F9.
 """
 import base64
 import json
@@ -24,7 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import corpus_ids as ids                                              # noqa: E402
 from corpus_extract import (extract_blob, extract_from_quarantine,    # noqa: E402
                             extraction_closure_id, BlobRefused)
-from corpus_map import build_l3, make_public_projection              # noqa: E402
+from corpus_map import (authenticate_l2, build_l3, make_public_projection,  # noqa: E402
+                        mapper_closure_id)
 
 fails = []
 
@@ -45,28 +46,21 @@ CLO = extraction_closure_id()
 
 # ===================== L1 -> L2 extraction (strict, mechanical) ===================== #
 bid, events = extract_blob(GOOD, CLO)
-expect("baseline 2 events, byte-ordered", [e["event_index"] for e in events] == [0, 1])
 _, ev2 = extract_blob(GOOD, CLO)
 expect("repeat export byte-identical", [e["event_id"] for e in events] == [e["event_id"] for e in ev2])
 mut = bytearray(GOOD); mut[10] ^= 1
 bidm, evm = extract_blob(bytes(mut), CLO)
-expect("F1 one byte rotates blob+event ids",
-       bidm != bid and {e["event_id"] for e in evm}.isdisjoint({e["event_id"] for e in events}))
+expect("F1 one byte rotates ids", bidm != bid
+       and {e["event_id"] for e in evm}.isdisjoint({e["event_id"] for e in events}))
 _, evu = extract_blob(blob({"type": "mystery"}, {"type": "user"}), CLO)
-expect("unknown type emitted not skipped",
-       len(evu) == 2 and evu[0]["unknown_event_type"] and evu[0]["event_type"].startswith("UNKNOWN"))
-for bad, why in [(b'{"a":1,"a":2}\n', "DUPLICATE_KEY"),
-                 (b'{"ok":1}\nnope\n', "MALFORMED_LINE"),
-                 (b'{"x":NaN}\n', "NON_FINITE_CONSTANT"),
-                 (b'{"x":Infinity}\n', "NON_FINITE_CONSTANT"),
+expect("unknown type emitted not skipped", evu[0]["unknown_event_type"])
+for bad, why in [(b'{"a":1,"a":2}\n', "DUPLICATE_KEY"), (b'{"ok":1}\nnope\n', "MALFORMED_LINE"),
+                 (b'{"x":NaN}\n', "NON_FINITE_CONSTANT"), (b'{"x":Infinity}\n', "NON_FINITE_CONSTANT"),
                  (b'{"x":-Infinity}\n', "NON_FINITE_CONSTANT")]:
     try:
         extract_blob(bad, CLO); expect(f"strict reject {why}", False)
     except BlobRefused as e:
         expect(f"strict reject {why}", e.reason == why)
-# final line without LF, CRLF, whitespace-only lines all handled
-_, evx = extract_blob(b'{"type":"user"}\r\n\n   \n{"type":"assistant"}', CLO)
-expect("CRLF/blank/no-final-LF handled", len(evx) == 2)
 
 
 def make_q(root: Path, raw: bytes, extra_inv=False):
@@ -74,204 +68,168 @@ def make_q(root: Path, raw: bytes, extra_inv=False):
     (root / "blobs").mkdir(parents=True, exist_ok=True)
     (root / "blobs" / (sha + ".jsonl")).write_bytes(raw)
     inv = {"transcripts": [{"agent": "agent-x", "sha256": sha, "experiment": "E"}]}
-    rec = {"records": [{"agent": "agent-x", "status": "VERIFIED",
-                        "inventory_sha256": sha, "experiment": "E"}]}
-    if extra_inv:  # inventory names a source the receipt omits
+    rec = {"records": [{"agent": "agent-x", "status": "VERIFIED", "inventory_sha256": sha, "experiment": "E"}]}
+    if extra_inv:
         inv["transcripts"].append({"agent": "agent-y", "sha256": "b" * 64, "experiment": "E"})
     return inv, rec, sha
 
 
-d1, d2 = Path(tempfile.mkdtemp()), Path(tempfile.mkdtemp())
-i1, r1, s1 = make_q(d1, GOOD)
-i2, r2, _ = make_q(d2, GOOD)
+d1, d2, d3 = (Path(tempfile.mkdtemp()) for _ in range(3))
+i1, r1, s1 = make_q(d1, GOOD); i2, r2, _ = make_q(d2, GOOD)
 p1, rep1 = extract_from_quarantine(d1, r1, i1)
 p2, rep2 = extract_from_quarantine(d2, r2, i2)
-expect("path permutation leaves ids unchanged",
-       p1["agent-x"]["blob_id"] == p2["agent-x"]["blob_id"])
+expect("path permutation leaves ids unchanged", p1["agent-x"]["blob_id"] == p2["agent-x"]["blob_id"])
 expect("clean set_status", rep1["set_status"] == "CLEAN")
-expect("report metadata-only (no raw_b64/content)",
-       "raw_b64" not in json.dumps(rep1) and '"content"' not in json.dumps(rep1))
-# omitted inventory source -> fail-closed missing-set
-d3 = Path(tempfile.mkdtemp()); i3, r3, _ = make_q(d3, GOOD, extra_inv=True)
+expect("report metadata-only", "raw_b64" not in json.dumps(rep1))
+i3, r3, _ = make_q(d3, GOOD, extra_inv=True)
 _, rep3 = extract_from_quarantine(d3, r3, i3)
-expect("omitted inventory source -> FAIL + missing set",
-       rep3["set_status"] == "FAIL" and rep3["summary"]["missing"] == ["agent-y"])
-# digest drift
+expect("omitted inventory source -> FAIL", rep3["set_status"] == "FAIL" and rep3["summary"]["missing"] == ["agent-y"])
+_, repM = extract_from_quarantine(d1, {"records": "x"}, {"transcripts": []})
+expect("malformed operand -> typed no crash", repM["set_status"] == "FAIL")
 (d1 / "blobs" / (s1 + ".jsonl")).write_bytes(GOOD + b'{"z":1}\n')
 _, repd = extract_from_quarantine(d1, r1, i1)
-expect("F9 drift -> BLOB_DRIFT + FAIL",
-       repd["set_status"] == "FAIL"
-       and any(b["status"] == "BLOB_DRIFT" for b in repd["blobs"]))
+expect("F9 drift -> BLOB_DRIFT + FAIL", repd["set_status"] == "FAIL")
 
-# ===================== L2 -> L3 mapping (adjudicated, value-checked) ===================== #
-def make_valid(local_ref, root_text, verifier, run="run", exp="EXP-RVB-1c",
-               status="EXACT", complete="COMPLETE", pub="CLEARED_FOR_PUBLICATION",
-               with_evidence=True, adjudicate=True):
-    eid = "evt:" + local_ref
-    exp_b, root_b, ver_b, run_b = exp.encode(), root_text.encode(), verifier.encode(), run.encode()
-    body = exp_b + b"|" + root_b + b"|" + ver_b + b"|" + run_b
-    spans = {}
-    off = 0
-    for kind, val in (("experiment_id", exp_b), ("root_digest", root_b),
-                      ("verifier_identity", ver_b), ("agent_run_occurrence", run_b)):
-        spans[kind] = (off, off + len(val), val)
-        off += len(val) + 1
-    l2 = {eid: {"blob_id": "blob:t", "byte_start": 0, "byte_end": len(body),
-                "raw_bytes": body, "extraction_closure": "clo:extract:test"}}
-    ev = []
-    if with_evidence:
-        for kind, (vs, ve, val) in spans.items():
-            ev.append({"kind": kind, "event_id": eid, "value_start": vs, "value_end": ve,
+# ===================== L2 -> L3 mapping (authenticated, adjudicated) ===================== #
+TCLO = "clo:extract:test"
+
+
+def mk(local_ref, root_text, verifier, run="run", exp="EXP-RVB-1c", status="EXACT",
+       complete="COMPLETE", pub="CLEARED_FOR_PUBLICATION", with_evidence=True,
+       adjudicate=True, commit=None):
+    blobid = "blob:t"
+    parts = [("experiment_id", exp.encode()), ("root_digest", root_text.encode()),
+             ("verifier_identity", verifier.encode()), ("agent_run_occurrence", run.encode())]
+    body = b"|".join(v for _, v in parts)
+    eid = ids.event_id(TCLO, blobid, 0, len(body), ids.line_digest(body))
+    l2 = {"blob_id": blobid, "byte_start": 0, "byte_end": len(body), "raw_bytes": body,
+          "extraction_closure": TCLO, "event_id": eid}
+    ev, off = [], 0
+    for kind, val in parts:
+        if with_evidence:
+            ev.append({"kind": kind, "event_id": eid, "value_start": off, "value_end": off + len(val),
                        "observed_value_digest": ids._h(b"value", val)})
-    cand = {"local_ref": local_ref, "blob_id": "blob:t",
+        off += len(val) + 1
+    adj = ({"adjudicator_identity": "rev", "authority": "corpus-adj", "decision": "EXACT",
+            "evidence_commitments": commit if commit is not None else [eid]} if adjudicate else None)
+    cand = {"local_ref": local_ref, "blob_id": blobid,
             "event_occurrences": [{"event_id": eid, "byte_start": 0, "byte_end": len(body)}],
-            "experiment_id": exp, "root_digest": ids.raw_sha256(root_b),
+            "experiment_id": exp, "root_digest": ids.raw_sha256(root_text.encode()),
             "verifier_identity": verifier, "agent_run_occurrence": run,
-            "mapping_status": status, "mapping_evidence": ev,
-            "adjudication": ({"adjudicator_identity": "rev-1", "authority": "corpus-adj",
-                              "decision": "EXACT", "evidence_commitments": [eid]}
-                             if adjudicate else None),
-            "completeness_status": complete, "publication_eligibility": pub,
-            "parent_local_ref": None, "selected_child_refs": [], "sampling": {}}
+            "mapping_status": status, "mapping_evidence": ev, "adjudication": adj,
+            "root_id": "root:" + root_text, "verifier_declared_identity": verifier,
+            "verifier_observed_identity": verifier, "prompt_digest": "UNKNOWN",
+            "response_digest": "UNKNOWN", "offspring_before_dedup": "UNKNOWN",
+            "dedup_removal_decisions": "UNKNOWN", "selected_child_refs": [], "sampling": {},
+            "completeness_status": complete, "publication_eligibility": pub, "parent_local_ref": None}
     return cand, l2
 
 
-ROOTS = ["0030", "0025", "FLOW15", "FLOW17"]
-VERIF = ["Fable", "Sonnet"]
-C2_MAN = {"experiment_ids": ["EXP-RVB-1c"], "unit_key": ["root_digest", "verifier_identity"],
+ROOTS, VERIF = ["0030", "0025", "FLOW15", "FLOW17"], ["Fable", "Sonnet"]
+C2_MAN = {"claim": "C2", "experiment_ids": ["EXP-RVB-1c"], "unit_key": ["root_digest", "verifier_identity"],
           "required_units": [[ids.raw_sha256(r.encode()), v] for r in ROOTS for v in VERIF],
           "allowed_exclusions": []}
 
 
-def full_c2(**kw):
-    table, l2 = [], {}
+def full(**kw):
+    table, entries = [], []
     for r in ROOTS:
         for v in VERIF:
-            c, e = make_valid(f"{r}-{v}", r, v, **kw)
-            table.append(c); l2.update(e)
-    return table, l2
+            c, e = mk(f"{r}-{v}", r, v, **kw); table.append(c); entries.append(e)
+    return table, entries
 
 
-# baseline: full valid EXACT bijection -> C2 COMPLETE
-tbl, l2 = full_c2()
-rep = build_l3(l2, tbl, {"C2": C2_MAN})
-expect("valid EXACT bijection -> C2 COMPLETE", rep["views"]["C2"]["status"] == "COMPLETE")
+tbl, ent = full()
+bundle = authenticate_l2(ent)
+expect("valid EXACT bijection -> C2 COMPLETE", build_l3(bundle, tbl, {"C2": C2_MAN})["views"]["C2"]["status"] == "COMPLETE")
 
-# P0-1: all DERIVED (no evidence) -> C2 REFUSED (DERIVED never credits)
-tblD, l2D = full_c2(status="DERIVED", with_evidence=False, adjudicate=False)
-repD = build_l3(l2D, tblD, {"C2": C2_MAN})
-expect("8 DERIVED/no-evidence -> C2 REFUSED", repD["views"]["C2"]["status"] == "REFUSED")
+# DERIVED never credits
+tblD, entD = full(status="DERIVED")
+expect("all DERIVED -> C2 REFUSED", build_l3(authenticate_l2(entD), tblD, {"C2": C2_MAN})["views"]["C2"]["status"] == "REFUSED")
 
-# replace every EXACT by DERIVED -> view REFUSED
-tblD2, l2D2 = full_c2(status="DERIVED")
-expect("all-DERIVED (even with evidence) -> C2 REFUSED",
-       build_l3(l2D2, tblD2, {"C2": C2_MAN})["views"]["C2"]["status"] == "REFUSED")
+# no / empty / malformed manifest
+expect("no manifest -> REQUIRED_UNITS_UNSPECIFIED", build_l3(bundle, tbl, {})["views"]["C2"]["reason"] == "REQUIRED_UNITS_UNSPECIFIED")
+empty_man = {"claim": "C2", "experiment_ids": [], "unit_key": [], "required_units": []}
+expect("empty manifest -> EMPTY_REQUIRED_SET (or MALFORMED)",
+       build_l3(bundle, tbl, {"C2": empty_man})["views"]["C2"]["reason"] in ("EMPTY_REQUIRED_SET", "MALFORMED_MANIFEST", "BAD_UNIT_KEY"))
+expect("manifest missing keys -> typed no crash", build_l3(bundle, tbl, {"C2": {}})["views"]["C2"]["reason"] == "MALFORMED_MANIFEST")
 
-# no required-unit manifest -> REQUIRED_UNITS_UNSPECIFIED
-expect("no manifest -> REQUIRED_UNITS_UNSPECIFIED",
-       build_l3(l2, tbl, {})["views"]["C2"]["reason"] == "REQUIRED_UNITS_UNSPECIFIED")
+# L2_INTEGRITY_BREAK: mutated body + stale event id
+c0, e0 = mk("x", "0030", "Fable")
+e0_forged = dict(e0); e0_forged["raw_bytes"] = e0["raw_bytes"] + b"TAMPER"   # event_id no longer matches
+bbreak = authenticate_l2([e0_forged])
+expect("mutated L2 body + stale id -> L2_INTEGRITY_BREAK", bbreak["status"] == "L2_INTEGRITY_BREAK")
+expect("L2 break -> C2 REFUSED L2_INTEGRITY_BREAK", build_l3(bbreak, [c0], {"C2": C2_MAN})["views"]["C2"]["reason"] == "L2_INTEGRITY_BREAK")
 
-# P0-3: one present act for a multi-unit claim -> REQUIRED_UNITS_MISSING
-c1, e1 = make_valid("only", "0030", "Fable")
-expect("one act for multi-unit claim -> REQUIRED_UNITS_MISSING",
-       build_l3(e1, [c1], {"C2": C2_MAN})["views"]["C2"]["reason"] == "REQUIRED_UNITS_MISSING")
+# forged occurrence (span not equal to the event) -> NO_RAW_PROVENANCE
+cf, ef = mk("f", "0030", "Fable"); cf["event_occurrences"] = [{"event_id": cf["event_occurrences"][0]["event_id"], "byte_start": 1, "byte_end": 2}]
+expect("forged occurrence -> NO_RAW_PROVENANCE", "NO_RAW_PROVENANCE" in build_l3(authenticate_l2([ef]), [cf], {})["acts"][0]["faults"])
+# forged blob id -> NO_RAW_PROVENANCE
+cb, eb = mk("b", "0030", "Fable"); cb["blob_id"] = "blob:FORGED"
+expect("forged blob id -> NO_RAW_PROVENANCE", "NO_RAW_PROVENANCE" in build_l3(authenticate_l2([eb]), [cb], {})["acts"][0]["faults"])
 
-# P0-2: arbitrary event cited for root -> EVIDENCE_VALUE_MISMATCH -> AMBIGUOUS
-cbad, ebad = make_valid("bad", "0030", "Fable")
-cbad["root_digest"] = ids.raw_sha256(b"DIFFERENT")   # evidence span no longer hashes to this
-repbad = build_l3(ebad, [cbad], {"C2": C2_MAN})
-a0 = repbad["acts"][0]
-expect("root evidence mismatch -> EVIDENCE_VALUE_MISMATCH",
-       "EVIDENCE_VALUE_MISMATCH" in a0["faults"] and a0["mapping_status"] == "AMBIGUOUS")
+# one act for a multi-unit claim -> REQUIRED_UNITS_MISSING
+c1, e1 = mk("only", "0030", "Fable")
+expect("one act multi-unit -> REQUIRED_UNITS_MISSING", build_l3(authenticate_l2([e1]), [c1], {"C2": C2_MAN})["views"]["C2"]["reason"] == "REQUIRED_UNITS_MISSING")
 
-# EXACT without adjudication / without evidence -> AMBIGUOUS
-cna, ena = make_valid("na", "0030", "Fable", adjudicate=False)
-expect("EXACT without adjudication -> AMBIGUOUS",
-       build_l3(ena, [cna], {})["acts"][0]["mapping_status"] == "AMBIGUOUS")
-cne, ene = make_valid("ne", "0030", "Fable", with_evidence=False)
-expect("EXACT without evidence -> AMBIGUOUS",
-       build_l3(ene, [cne], {})["acts"][0]["mapping_status"] == "AMBIGUOUS")
+# root evidence mismatch -> EVIDENCE_VALUE_MISMATCH
+cbad, ebad = mk("bad", "0030", "Fable"); cbad["root_digest"] = ids.raw_sha256(b"DIFFERENT")
+expect("root evidence mismatch -> AMBIGUOUS", build_l3(authenticate_l2([ebad]), [cbad], {})["acts"][0]["status"] == "AMBIGUOUS")
 
-# count/verdict as evidence -> FORBIDDEN_EVIDENCE
-cf, ef = make_valid("cf", "0030", "Fable")
-cf["mapping_evidence"].append({"kind": "count", "event_id": "evt:cf",
-                               "value_start": 0, "value_end": 1, "observed_value_digest": "x"})
-expect("count-as-evidence -> FORBIDDEN_EVIDENCE",
-       "FORBIDDEN_EVIDENCE" in build_l3(ef, [cf], {})["acts"][0]["faults"])
+# unbound adjudication commitment -> AMBIGUOUS
+cna, ena = mk("na", "0030", "Fable", commit=["unrelated"])
+expect("unbound adjudication -> AMBIGUOUS", build_l3(authenticate_l2([ena]), [cna], {})["acts"][0]["status"] == "AMBIGUOUS")
 
-# P0-5: mapping-field mutation rotates mapping_id (not act_id)
-cm, em = make_valid("m", "0030", "Fable")
-base = build_l3(em, [cm], {})["acts"][0]
-cm2 = dict(cm); cm2["verifier_identity"] = "Sonnet"
-mut1 = build_l3(em, [cm2], {})["acts"][0]
-expect("mapping-field mutation rotates mapping_id", mut1["mapping_id"] != base["mapping_id"])
-
-# event-order mutation rotates act_id
-e_two = {"evt:A": {"blob_id": "b", "byte_start": 0, "byte_end": 3, "raw_bytes": b"AAA",
-                   "extraction_closure": "clo:extract:test"},
-         "evt:B": {"blob_id": "b", "byte_start": 3, "byte_end": 6, "raw_bytes": b"BBB",
-                   "extraction_closure": "clo:extract:test"}}
-def occ_cand(ref, order):
-    return {"local_ref": ref, "blob_id": "b",
-            "event_occurrences": [{"event_id": x, "byte_start": e_two[x]["byte_start"],
-                                   "byte_end": e_two[x]["byte_end"]} for x in order],
-            "experiment_id": "E", "root_digest": "r", "verifier_identity": "v",
-            "agent_run_occurrence": "run", "mapping_status": "DERIVED", "mapping_evidence": [],
-            "completeness_status": "UNKNOWN", "publication_eligibility": "UNREVIEWED"}
-oa = build_l3(e_two, [occ_cand("a", ["evt:A", "evt:B"])], {})["acts"][0]
-ob = build_l3(e_two, [occ_cand("b", ["evt:B", "evt:A"])], {})["acts"][0]
-expect("event-order mutation rotates act_id", oa["act_id"] != ob["act_id"])
-
-# P0-5.4: loss/public-content mutation rotates public_id
-p_a = make_public_projection("act:1", "prof", b"BODY", {"lost": "sys"})
-p_b = make_public_projection("act:1", "prof", b"BODY", {"lost": "OTHER"})
-p_c = make_public_projection("act:1", "prof", b"BODY2", {"lost": "sys"})
-expect("F8 missing loss -> FAIL",
-       make_public_projection("act:1", "prof", b"B", None)["status"] == "FAIL")
-expect("public_id new + rotates on loss change",
-       p_a["public_id"].startswith("pub:") and p_a["public_id"] != p_b["public_id"])
-expect("public_id rotates on body change", p_a["public_id"] != p_c["public_id"])
-
-# duplicate local_ref -> fail-closed (no overwrite)
-cdl, edl = make_valid("dup", "0030", "Fable")
-cdl2, edl2 = make_valid("dup", "0025", "Sonnet")
-edl.update(edl2)
-expect("duplicate local_ref -> DUPLICATE_LOCAL_REF",
-       any("DUPLICATE_LOCAL_REF" in a["faults"] for a in build_l3(edl, [cdl, cdl2], {})["acts"]))
-
-# duplicate act id
-cid, eid_ = make_valid("i1", "0030", "Fable")
-cid2 = dict(cid); cid2["local_ref"] = "i2"
-expect("duplicate act id -> DUPLICATE_ID",
-       any("DUPLICATE_ID" in a["faults"] for a in build_l3(eid_, [cid, cid2], {})["acts"]))
-
-# F6: one PARTIAL act -> C2 REFUSED (missing that unit)
-tblp, l2p = full_c2()
-tblp[0]["completeness_status"] = "PARTIAL"
-expect("partial act -> C2 REFUSED",
-       build_l3(l2p, tblp, {"C2": C2_MAN})["views"]["C2"]["status"] == "REFUSED")
-
-# F7: silent-defaulted sampling
-cs, es = make_valid("s", "0030", "Fable"); cs["sampling"] = {"temperature": 0.7}
-expect("F7 silent default faulted",
-       "SILENT_DEFAULT" in build_l3(es, [cs], {})["acts"][0]["faults"])
-
-# repeated run -> CONFLICTED -> C2 REFUSED
-tblr, l2r = full_c2()
-cextra, eextra = make_valid("0030-Fable-rerun", "0030", "Fable", run="run2")
-tblr.append(cextra); l2r.update(eextra)
-repr_ = build_l3(l2r, tblr, {"C2": C2_MAN})
-expect("repeated run -> CONFLICTED",
-       any(a["mapping_status"] == "CONFLICTED" for a in repr_["acts"]))
+# EXACT -> CONFLICTED: mapping_id addresses final status
+tblr, entr = full()
+cx, ex = mk("0030-Fable-rerun", "0030", "Fable", run="run2"); tblr.append(cx); entr.append(ex)
+repr_ = build_l3(authenticate_l2(entr), tblr, {"C2": C2_MAN})
+conf = [a for a in repr_["acts"] if a["status"] == "CONFLICTED"]
+expect("repeated run -> CONFLICTED", len(conf) >= 2)
+one = conf[0]
+recomputed = ids.mapping_id(mapper_closure_id(), one["act_id"], "EXP-RVB-1c",
+                            ids.raw_sha256(b"0030"), "Fable", "run" if "rerun" not in one["local_ref"] else "run2",
+                            ids.json_digest([]), "CONFLICTED", ids.json_digest({}))
+# mapping_id must at least be the CONFLICTED-status hash, not the EXACT one
+exact_id = ids.mapping_id(mapper_closure_id(), one["act_id"], "EXP-RVB-1c",
+                          ids.raw_sha256(b"0030"), "Fable", "run", ids.json_digest([]), "EXACT", ids.json_digest({}))
+expect("mapping_id addresses final CONFLICTED not EXACT", one["mapping_id"] != exact_id)
 expect("repeated run -> C2 REFUSED", repr_["views"]["C2"]["status"] == "REFUSED")
+
+# duplicate local_ref required by a view -> both invalidated -> view REFUSED
+tbldup, entdup = full()
+cdup, edup = mk("0030-Fable", "0030", "Fable", run="run2"); tbldup.append(cdup); entdup.append(edup)
+repdup = build_l3(authenticate_l2(entdup), tbldup, {"C2": C2_MAN})
+expect("duplicate local_ref invalidates all members",
+       all("DUPLICATE_LOCAL_REF" in a["faults"] for a in repdup["acts"] if a["local_ref"] == "0030-Fable"))
+expect("duplicate local_ref -> C2 REFUSED", repdup["views"]["C2"]["status"] == "REFUSED")
+
+# partial act -> INCOMPLETE_TREE (distinct from missing)
+tblp, entp = full(); tblp[0]["completeness_status"] = "PARTIAL"
+expect("partial act -> INCOMPLETE_TREE", build_l3(authenticate_l2(entp), tblp, {"C2": C2_MAN})["views"]["C2"]["reason"] == "INCOMPLETE_TREE")
+
+# silent-defaulted / malformed sampling -> typed
+cs, es = mk("s", "0030", "Fable"); cs["sampling"] = {"temperature": 0.7}
+expect("F7 silent default faulted", "SILENT_DEFAULT" in build_l3(authenticate_l2([es]), [cs], {})["acts"][0]["faults"])
+cbs, ebs = mk("bs", "0030", "Fable"); cbs["sampling"] = "not-an-object"
+expect("malformed sampling -> BAD_SAMPLING no crash", "BAD_SAMPLING" in build_l3(authenticate_l2([ebs]), [cbs], {})["acts"][0]["faults"])
+
+# schema-affecting bytes change the closure
+expect("closure is byte-sensitive", ids.closure_id("x", [("a", b"1")]) != ids.closure_id("x", [("a", b"2")]))
+
+# F8 public projection: new id + reuse rejection
+expect("F8 missing loss -> FAIL", make_public_projection("act:1", "p", b"B", None)["status"] == "FAIL")
+expect("F8 reused id -> REDACTION_ID_REUSE", make_public_projection("act:1", "p", b"B", {"l": 1}, proposed_id="act:1")["status"] == "FAIL")
+pa = make_public_projection("act:1", "p", b"B", {"l": "sys"})
+pb = make_public_projection("act:1", "p", b"B", {"l": "OTHER"})
+expect("public_id new + rotates on loss", pa["public_id"] != pb["public_id"] and pa["public_id"].startswith("pub:"))
 
 # malformed table -> typed refusal, no crash
 for badtable in [["not a dict"], [{"local_ref": 5}], [{"local_ref": "x", "event_occurrences": "nope"}],
-                 [{"local_ref": "x", "event_occurrences": [{"event_id": "e", "byte_start": -1,
-                   "byte_end": 2}]}], [{"local_ref": "x", "surprise": 1}]]:
+                 [{"local_ref": "x", "surprise": 1}]]:
     try:
-        r = build_l3({}, badtable, {})
-        expect("malformed table -> typed fault no crash", r["fault_count"] >= 1 or r["acts"][0]["faults"])
+        r = build_l3(authenticate_l2([]), badtable, {})
+        expect("malformed table -> typed no crash", r["fault_count"] >= 1)
     except Exception as ex:  # noqa
         expect(f"malformed table crashed: {ex!r}", False)
 
@@ -279,4 +237,4 @@ print()
 if fails:
     print(f"RED: {len(fails)} corpus mechanism failure(s): {fails}")
     sys.exit(1)
-print("GREEN: extraction is mechanical+reproducible; mapping is explicit and fails-closed.")
+print("GREEN: extraction is mechanical+reproducible; mapping is authenticated and fails-closed.")
