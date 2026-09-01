@@ -1,0 +1,48 @@
+# Claim ledger — verifier-reported verification load (paper A, v0.2 draft, rev after Codex review)
+
+Every abstract claim is a row. Status: **MEASUREMENT** (a number from stated protocol P),
+**NEGATIVE RESULT** (a bounding counterexample), **OPEN** (named, not established). The measured
+quantity is **ô** — the *verifier-reported* offspring count per act; the same verifier that produces
+offspring also judges load-bearingness, applies the removal test, and deduplicates. Self-adjudication
+is part of the construct.
+
+Reproducibility: `checker` (re-derived locally), `replay` (byte-identical evaluator replay),
+`command` (external command), `transcript` (LLM measurement, re-runnable in kind only), `manual`.
+
+**Falsifier is typed** (Codex S3): only `integrity_break` (a number fails to re-derive from the frozen
+act corpus) and `within-sample_counterexample` (a chain in the *frozen sample* reaches 0 at depth ≤4)
+falsify the claim as stated. `replication_failure`, `scope_boundary`, `competitive_result`,
+`misuse_warning`, and `open_obligation` do not.
+
+| # | claim | status | evidence | repro | falsifier (typed) | known loss |
+|---|---|---|---|---|---|---|
+| C1 | Under protocol P the verifier reported ô₀/ô₁/ô₂ = 5.42/3.38/2.50 (round 1, Fable, 12 roots, 60 acts) and 3.50/2.75/2.50/2.13/2.25 at depths 0–4 (round 2, **8 chains × 5 = 40 acts**). | MEASUREMENT | EXP-RVB-1-RESULTS.md §1–§2 | transcript | `integrity_break` | **frozen act corpus not yet exported** (§10); self-adjudicated; single lineage; depth-1 selection is first+middle (selected-path means) |
+| C2 | ô sat near 2–3 on informal claims and much lower on termination controls. The Fable≈3.15 / Sonnet≈2.10 split is **confounded** (2×2 assigns roots to verifiers); the only paired verifier contrast is the four crossed roots (n=2/direction). | MEASUREMENT | EXP-RVB-1b; §5 crossed table | transcript | `integrity_break` | not a clean factor effect; small n |
+| C3 | ô stayed non-zero through the finite depths sampled (to depth 4); across the 40 round-2 acts no act reported zero. Finite-depth, not asymptotic. | MEASUREMENT | EXP-RVB-1b | transcript | `within-sample_counterexample` | μ_∞ NOT observed; round-1 geometric extrapolation disconfirmed |
+| C4 | Termination controls reported ô ≈ 0.14 (pooled) and terminated unaided; a style control ≈1.25. This bounds one alternative (the prompt *always* produces a list), NOT construct validity. | MEASUREMENT | EXP-RVB-1-NC (T1–T6); EXP-RVB-NC2 (S1–S4) | transcript | `within-sample_counterexample` (a control reads ≥2 in-sample) | controls differ in length/domain/familiarity/complexity; Pythagorean control did not terminate |
+| C5 | The compiled 0030 check has a **terminal execution sub-act with zero emitted prose obligations** (settlement 4,151,277 / 554,678 / 25 ATP). This is on a **separate axis** from ô, not "compilation lowers μ". | MEASUREMENT (distinct axis) | COMPILE-0030; `conf_mono_settle.py` | replay + checker | `integrity_break` (ATP/verdict mismatch) | weaker stipulation; `return true` also terminates; semantic binding OPEN; the surrounding review's closure/binding/dependency obligations are excluded operands |
+| C6 | An external reviewer's counterexamples break the v0.1 closed forms: μ=0.5 short-closure-first closes 75% (vs a ≥37.5%-unclosed bound); μ=1.2 closes 40% on the first act (so "throughput→0" fails); the anchor needs well-foundedness, not acyclicity. | NEGATIVE RESULT | paper §7; reviewer (Codex 2026-08) | executable (scheduler counterexample to ship) | — (it *is* the falsifier of the theorem) | retires the theorem; does **not** validate any replacement |
+| C7 | A glossary closing defect families cut ô from **3.13 → 2.11** over an exact window (47/15 pre → 19/9 post) and produced the first unaided terminations on corpus material across the **120** prior corpus acts; the reduction is non-monotone (6→3→3→7→4→8). | MEASUREMENT (intervention) | EXP-RVB-2; G4/G5/G6 | transcript | `integrity_break` | debt migrates to the glossary; adequacy OPEN |
+| C8 | The **legacy inline gate** caught 4 of 11 world-fact claims (all `count`-class) in one generated summary, reached 11/11 on correction, yet badges a *false* marked operand (`3+6=9` over 8+8) and drifts to 10/1 on re-run. | MEASUREMENT (legacy tool) + NEGATIVE RESULT | SSD-DEMO-0.1/0.2; SSD-INDEX-AUDIT; check_claims | checker | `integrity_break` | legacy inline gate, **not** the capsule pipeline; per-claim gate blind to inheritance |
+
+## No queue model is claimed (Codex P0-A3)
+
+§7 is an **open probability/queueing problem**, not a conditional model-hypothesis. The paper defines
+none of: queue state, arrival process, offspring-join timing, service/work-conservation, scheduler
+observability/tie-breaking, offspring dependence, the stability proposition, or the μ≥1 interpretation
+under infinite-expectation closures. "Branching–queue model" is removed from the title and abstract.
+
+## Forbidden (must not appear as claims)
+
+RVB theorem / bound / phase transition; "at μ≥1 no finite budget suffices" (any qualifier); "AI
+checking AI cannot converge"; "the plateau is a property of the claims, not the model"; "the gap is
+crossed"; "verification = byte-identical replay" as a general definition; "the experiment proves the
+model"; any implication that a Warrant pass, a green checker, or a settlement REPORT validates the
+interpretation; a clean "Fable-vs-Sonnet factor effect"; "100 acts in round 2".
+
+## Open (named, not established)
+
+- the frozen act corpus and independent (out-of-lineage) re-derivation of ô;
+- any asymptotic value; any *specified* queue model;
+- construct validity separating groundedness from complexity/familiarity/domain;
+- semantic adequacy of any compiled artifact.
