@@ -1,0 +1,772 @@
+{
+  "schema": "manifesto.corpus-source-inventory.v0",
+  "generated": "2026-09-01",
+  "phase": "Phase 0 — source inventory. Locate + status ONLY. No act data is copied, exported, reconstructed, or derived here.",
+  "purpose": "Honestly catalogue, before any exporter is written, whether the primary verification acts behind Paper A (every-check-spawns-more) physically exist as raw material, and where. Feeds the deposit_check FROZEN_CORPUS_NOT_DEPOSITED refusals: each source row later flips a specific claim REFUSED->CHECKED only when its exact acts are exported byte-preserving and validated.",
+  "headline_finding": "The raw acts LARGELY EXIST — as 53 machine-local Aug-30 subagent transcripts (one agent per verification chain/tree) under the session store — NOT as a reconstruction from the summary counts. They are NOT in git and NOT portable; the sha256 digests below are their portable identity. Two honest gaps remain: (1) the results file carries per-depth COUNTS only, never offspring texts (its own line 27 says the full JSON trees live in session transcripts); (2) the crossed-design acts (C2/X1-X4) share the 1b chain prompt template, so they are inside the chain transcripts but must be DISAMBIGUATED, not assumed.",
+  "portability_warning": "Locators point into ~/.claude on THIS machine. They are session state, outside the repo and git. Export (cadence step 3) must copy the exact bytes into the repo under the frozen schema; until then every act is AVAILABLE-but-UNEXPORTED, which the deposit gate correctly treats as FROZEN_CORPUS_NOT_DEPOSITED.",
+  "session_store": "~/.claude/projects/-Users-s0fractal-Projects-manifesto/b6c46c10-b8d3-4dda-984b-a2a7c9b89abe/subagents/",
+  "status_vocabulary": {
+    "AVAILABLE_EXACT": "primary raw transcript located; carries verdicts + offspring texts for its unit",
+    "AVAILABLE_PARTIAL": "raw transcripts located but require mapping/disambiguation to named acts",
+    "SUMMARY_ONLY": "only derived counts exist (no raw offspring); MUST NOT receive raw-evidence credit",
+    "MISSING": "no primary material located",
+    "WITHHELD": "located but not for publication (secrets/system-prompts/private); export a reason, not the bytes"
+  },
+  "roots": {
+    "status": "AVAILABLE_EXACT",
+    "location": "quotes/Monday/chat-0001/ (in repo, in git)",
+    "count": 76,
+    "note": "Monday-corpus root source occurrences (the author's own CC BY-SA notes). These are the ROOTS the acts were run over, not the acts."
+  },
+  "summary_source": {
+    "path": "drafts/EXP-RVB-1-RESULTS.md",
+    "sha256": "32dc7ef9dbcd60428798ce4819f8ae46a21c8c6c0bd5ccdff32c656ff4dd7f7b",
+    "status": "SUMMARY_ONLY",
+    "note": "Per-depth COUNTS and prose findings for EXP-RVB-1/1b/1c/NC/NC2/2. Line 27 states explicitly the full JSON trees (verdicts + all offspring texts) live in session transcripts. Counts here MUST NOT be promoted to raw acts (hard boundary)."
+  },
+  "expected_sources": [
+    {
+      "claims": [
+        "C1"
+      ],
+      "experiment": "EXP-RVB-1 (round 1, depth 0-2)",
+      "designed": "12 trees (F1-F4 formal, E1-E4 empirical, C1-C4 conceptual), 60 acts",
+      "verifier": "Claude Fable 5 (one agent per tree)",
+      "sampling_settings": "UNKNOWN (not recorded)",
+      "summary_status": "SUMMARY_ONLY (results §1-2)",
+      "raw_status": "AVAILABLE_PARTIAL",
+      "raw_note": "The 12 depth-0-2 tree agents are among the UNCLASSIFIED transcripts (root_hint mostly 0001-file references); must be mapped to F1-F4/E1-E4/C1-C4 before credit.",
+      "raw_locators": [
+        {
+          "note": "plus tree agents inside 'UNCLASSIFIED' — see transcripts[]"
+        }
+      ]
+    },
+    {
+      "claims": [
+        "C1",
+        "C3"
+      ],
+      "experiment": "EXP-RVB-1b (round 2, depth 0-4)",
+      "designed": "8 chains V1-V8 x 5 depths = 40 acts; 2x2 {Fable,Sonnet}x{std,anti-quantum}",
+      "verifier": "Claude Fable 5 + Claude Sonnet",
+      "sampling_settings": "UNKNOWN",
+      "summary_status": "SUMMARY_ONLY (results §1b)",
+      "raw_status": "AVAILABLE_PARTIAL",
+      "raw_note": "11 depth-0-4 chain transcripts located (8 designed V1-V8 + extras/reruns AND the 4 crossed X1-X4 share this template). Must be mapped to V1-V8 and separated from X1-X4.",
+      "raw_locators": [
+        {
+          "agent": "agent-a74180eb9478d385a",
+          "sha256": "aeea60ca0bf5f009d712f0a361be0668896347ace5caeb7024e7fcf2f2c2c8f3",
+          "bytes": 203680,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-ada51025225f88c87",
+          "sha256": "c7ba35d3df35cef6827a6b13a075b4128cd9959795eeaaa102d57a43e9abc0b5",
+          "bytes": 192622,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-a700944565f64aed3",
+          "sha256": "08694626479b92c884360dad0486c2be97bdedab62300872b325c573d47e80bc",
+          "bytes": 185711,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-ab8454e235e42cc73",
+          "sha256": "0d1ed0ab940513c3f7c8d0742c4eecc7ef6aa1c9496cf2c3c86c8b899a3a0366",
+          "bytes": 176542,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-af3442e0a70a4ca45",
+          "sha256": "8e7c6de8337016a3445c163390162a6b15e7a584bfd564792f880e4583072525",
+          "bytes": 153411,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a1153e2189d4006cc",
+          "sha256": "7c002f72f9680e4d52ab01b3993d0b010958cb82405b37bb712d1f7a9ccc2c4a",
+          "bytes": 144174,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-aac209dc4cdcafae2",
+          "sha256": "287d99a2c18600e5fc13397e869af71e1dba6c402d2c70fe67c253652a3ddd61",
+          "bytes": 141106,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-a0eda1deea730b879",
+          "sha256": "99a2c169415b598c305d1ec60df7a6d187c51394fd5dfeeb7969a4e37a6c65f8",
+          "bytes": 140785,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a38287b9dd6a49461",
+          "sha256": "5784ffa1be7bc451c7a98ea64b602fcb81357bef6bf8de2dbc7357d08b3a4c8d",
+          "bytes": 92892,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-aa5a32fe8a85c1809",
+          "sha256": "7eb4b73b36b41cf0d241a0ecbc5a9eade5eb8e93f7a5429c7aee87bc985b1608",
+          "bytes": 91575,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-a433b97cf7929198f",
+          "sha256": "1062d88cc6fbefe08fb6e8f33b9889abc3d5297b02f108a8f346005843d5bb0f",
+          "bytes": 66080,
+          "root_hint": "0030"
+        }
+      ]
+    },
+    {
+      "claims": [
+        "C2"
+      ],
+      "experiment": "EXP-RVB-1c (crossed design)",
+      "designed": "4 crossed acts X1-X4 (same roots swapped across verifiers); needs BOTH verifiers' offspring on 0030, 0025, FLOW§15, FLOW§17",
+      "verifier": "Claude Fable 5 + Claude Sonnet",
+      "sampling_settings": "UNKNOWN",
+      "summary_status": "SUMMARY_ONLY (results §1c: counts + verdict flips X1-X4)",
+      "raw_status": "AVAILABLE_PARTIAL (DISAMBIGUATION RISK)",
+      "raw_note": "X1-X4 were run with the SAME chain prompt template as 1b, so they sit inside the 11 chain transcripts and are NOT separately labelled. C2's offspring-overlap test needs the exact offspring of BOTH verifiers on the SAME root; until each transcript is disambiguated to (root, verifier), C2 stays REFUSED even if V/X neighbours are CHECKED.",
+      "raw_locators": [
+        {
+          "note": "no dedicated crossed transcripts; located within EXP-RVB-1b-or-1c-chain set above"
+        }
+      ]
+    },
+    {
+      "claims": [
+        "C4"
+      ],
+      "experiment": "EXP-RVB-1-NC (termination / negative control)",
+      "designed": "6 controls T1-T6 (well-founded claims that should self-terminate)",
+      "verifier": "Claude (per transcript)",
+      "sampling_settings": "UNKNOWN",
+      "summary_status": "SUMMARY_ONLY (results §NC)",
+      "raw_status": "AVAILABLE_EXACT",
+      "raw_note": "6 negative-control transcripts located — matches the 6 designed controls.",
+      "raw_locators": [
+        {
+          "agent": "agent-a9d61a30ad3402aa1",
+          "sha256": "5bf8c041facfa0f437288bb74b9ea5523aceddab30e653f30f4629c25c8d1148",
+          "bytes": 31921,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-ac3a672a64e4cf841",
+          "sha256": "11fb6bb1cd9f18a5564d51c629e4b98921602bfd331eaa382e3605d281f159e2",
+          "bytes": 25887,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a53bda7aed2063547",
+          "sha256": "eac23cc77c2d3b5488e68c1612a2db8262d1f69dd8dcf71a5ab7ff170e84b2a5",
+          "bytes": 25398,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-abe596c9087f03b50",
+          "sha256": "73469e86b23c0073f8834f8c40280e35bd996f57e3cfa94120ca59dcb173494e",
+          "bytes": 25289,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-ad4440f7e4c4a1065",
+          "sha256": "52587c83e72890bf9e59bd993751281b76e78d19a9578d9643e1bba77ebcb1a4",
+          "bytes": 24163,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-ac8a908ab52b4019a",
+          "sha256": "b9dc1342deb8d3842dc4d024945aec15d30c29f869ab2cde2d5b8738bc8281c6",
+          "bytes": 22771,
+          "root_hint": "?"
+        }
+      ]
+    },
+    {
+      "claims": [
+        "C4"
+      ],
+      "experiment": "EXP-RVB-NC2 (style control)",
+      "designed": "4 style controls S1-S4",
+      "verifier": "Claude",
+      "sampling_settings": "UNKNOWN",
+      "summary_status": "SUMMARY_ONLY (results §NC2)",
+      "raw_status": "AVAILABLE_PARTIAL",
+      "raw_note": "6 style-control transcripts located vs 4 designed S1-S4; 2 extras/reruns to reconcile.",
+      "raw_locators": [
+        {
+          "agent": "agent-a036052d8b2a96e4f",
+          "sha256": "3883ddb9793bf7c3244679c26edd5189a2848d57176e2c70941902a3a2b3f586",
+          "bytes": 265640,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-ac8d5baa8e6d2ccb5",
+          "sha256": "543abb5db96306af350c2668487265b20bd7988ae124237b3d2999e158f09324",
+          "bytes": 53892,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a48cca78f6506d03d",
+          "sha256": "6ac1c117259386e157593929685c96b2e9411f63aacf91498fac215882b77765",
+          "bytes": 50273,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a9edbf7b9c09f93c0",
+          "sha256": "9ff0fd3b94ae629c0ce6c16ed971deebebb354c21b66d5e0e9941078be5ea705",
+          "bytes": 48029,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a1bbeaf1c75110fda",
+          "sha256": "9b32def382c628bd17d7cf16789e5c14a6b43b9e1df531e18a39696771fc0e7e",
+          "bytes": 35447,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a28376b191629dac3",
+          "sha256": "91170a68cfa1f8c809a45235224bf82733de98c6a3cd03befba0cdf7fad0398f",
+          "bytes": 28902,
+          "root_hint": "?"
+        }
+      ]
+    },
+    {
+      "claims": [
+        "C7"
+      ],
+      "experiment": "EXP-RVB-2 (glossary amortization intervention)",
+      "designed": "glossary intervention; pre/post windows G4/G5/G6; ô 3.13->2.11 (47/15 -> 19/9)",
+      "verifier": "Claude",
+      "sampling_settings": "UNKNOWN",
+      "summary_status": "SUMMARY_ONLY (results §2)",
+      "raw_status": "AVAILABLE_PARTIAL",
+      "raw_note": "8 glossary-experiment transcripts located; must be mapped to the exact pre/post windows and the intervention boundary before C7 gets credit.",
+      "raw_locators": [
+        {
+          "agent": "agent-a77eab81418074853",
+          "sha256": "c319fea58a92236f7ecbf4f6dce40552f1b30ba9fdd192e394f8e7038ce578fe",
+          "bytes": 225905,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a3335f28f814c8449",
+          "sha256": "419ef6249482298be2aa4c12a2a2de69cd7d95c871f7711c9332b452817805f7",
+          "bytes": 180220,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a13122b303a9fc77d",
+          "sha256": "8b6c4c6fdd28502208f3c380b037713ed896cc943137eb98f6a8ffb35ed0d04e",
+          "bytes": 151379,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a3432dae9930a82b3",
+          "sha256": "34dda1d7d101cc814f51431c728835bf2df74ac64183c5234bf045ef171d2576",
+          "bytes": 148407,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-a2604aa329acf15e5",
+          "sha256": "1a528b31a8dc04346909efe34e22bb759836ec57927743772fa49810e4aaf339",
+          "bytes": 138704,
+          "root_hint": "0072"
+        },
+        {
+          "agent": "agent-a3a36c7d6b122a13e",
+          "sha256": "57a6bec35c9f009811afad147b5445b148c3a1900a71f8900bd3834fca852e9d",
+          "bytes": 128096,
+          "root_hint": "0001"
+        },
+        {
+          "agent": "agent-a8b2b993190ea94ac",
+          "sha256": "edd7f7309ea6905642ea4512764e17c2090355b2d9a93a92327e3ef437ecf7e6",
+          "bytes": 121678,
+          "root_hint": "?"
+        },
+        {
+          "agent": "agent-abd4a40657f92cad1",
+          "sha256": "d74ea89ae2119f25361c2f4fd34aaf5da0865a3cb4a42cfda013fd1757189b4c",
+          "bytes": 107261,
+          "root_hint": "?"
+        }
+      ]
+    }
+  ],
+  "out_of_corpus_scope": {
+    "C5": "COMPILE-0030 — CHECKED by evaluator replay, needs no act corpus.",
+    "C6": "scheduler counterexamples — owed as an EXECUTABLE SIMULATION artifact, not an act corpus.",
+    "C8": "legacy SSD gate — receipt-backed; separate from the act corpus (its own SOURCE_MISMATCH)."
+  },
+  "gaps_and_uncertainties": [
+    "No dedicated EXP-RVB-1c transcripts: crossed X1-X4 must be disambiguated from 1b V1-V8 (shared template). C2 is the highest-risk claim.",
+    "Transcript->named-act mapping is NOT yet done: counts of transcripts (11 chains, 8 glossary, 6+6 controls) exceed or differ from designed unit counts (8 V, 4 X, 4 S...), implying reruns/extras that must be reconciled before any complete-table credit.",
+    "Sampling settings (temperature/top-p/model build ids) are UNKNOWN for every act — record honest UNKNOWN, do not invent.",
+    "All raw transcripts are machine-local; if this machine's session store is lost, raw_status collapses to MISSING and the affected claims stay REFUSED permanently — an argument for prompt export soon."
+  ],
+  "hard_boundaries": [
+    "Do NOT regenerate any missing response with a model.",
+    "Summary counts (this file's summary_source) can NEVER be promoted to a raw act.",
+    "A historical dedup/removal decision is a RECORDED decision; any new semantic audit is a SEPARATE layer.",
+    "Redaction creates a NEW artifact id + loss report; it never edits raw bytes in place.",
+    "Do NOT export secrets, subagent system prompts, hidden reasoning not part of the act, or private fragments; use WITHHELD + reason."
+  ],
+  "privacy_licensing": {
+    "roots": "author's own Monday notes, CC BY-SA 4.0 (repo license).",
+    "transcripts": "internal Claude subagent sessions over the author's own corpus; no third-party secrets located. At EXPORT: subagent system prompts and any non-act scaffolding must be WITHHELD; only the act (prompt-to-verifier, verdict, offspring, removal/dedup decisions) is in scope.",
+    "portability": "digest = portable identity; bytes are not yet in git."
+  },
+  "transcripts": [
+    {
+      "agent": "agent-a2ecdc850157aa9ca",
+      "sha256": "5b4122c96363a7ff69189beb23b97174df4d1413bd4e72cbc039a8f143261809",
+      "bytes": 1269712,
+      "experiment": "audit/root-selection",
+      "claim": "-",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a16835edfbb158e15",
+      "sha256": "2ca23cf2a1bfb7ebb754f9d34192c7460df7bc2670aefd965429a33e8eb20668",
+      "bytes": 644820,
+      "experiment": "audit/root-selection",
+      "claim": "-",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-af44c956e1c653d62",
+      "sha256": "12550b2aa79c2c939aee2e8707dc2781c008290c213448e6cd174d9298d27760",
+      "bytes": 787102,
+      "experiment": "audit/root-selection",
+      "claim": "-",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a280b456ba5d18004",
+      "sha256": "0915b524e1a344262d87fe6f1a0b8f87b3e362c8bfce907c992bfc5b17e76484",
+      "bytes": 64705,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a61988c45724884fc",
+      "sha256": "a7f70711dddd7b6dc42ba738cef23423e8c47bdadedcf05e71b98d72d2a4b8d8",
+      "bytes": 56852,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a7130f94a63743fd5",
+      "sha256": "81206a732230c82060b8bd001e5fbf276c4edbc23296781629afa6dbd578fa93",
+      "bytes": 64113,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-ace5f65fb07ea4929",
+      "sha256": "0c2052a8cc87ff6683fb20b540aaa3c2bff130fbfd9e73d362ef1c41bed4ac64",
+      "bytes": 71805,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a1c0cb31f55fafac2",
+      "sha256": "650da1628c0d95e7eff50709e9d27e201974a0e64db4fb662c66f6c5c318bf04",
+      "bytes": 101556,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "INVARIANT-RECIPES"
+    },
+    {
+      "agent": "agent-ae8734303330c359d",
+      "sha256": "99a85e6357c6dc8e91c235b08586ee4c212ed100d696f69bd8b3a3c8833268d6",
+      "bytes": 65556,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a7925c63d8250444c",
+      "sha256": "44d2d3edf77b31d1974db993a6707adf83b82242a59aef22d511655d65f25a27",
+      "bytes": 82440,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a5e6bbc8c5493de29",
+      "sha256": "036520746265586f68f5d1188ea10160c99c44490624e013c03c3d7ddd844152",
+      "bytes": 80062,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a96b5db16658ad032",
+      "sha256": "fd1e504ced751239f15fb2161b9f7c62582d2c1d0dd904c8e9c4ca8d0f15a592",
+      "bytes": 86930,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-ab8274bcd688dceef",
+      "sha256": "ace4fec3027ddf6591dcf9b0e0a9dcad12a328b363c60f6556b1df3a21091e85",
+      "bytes": 70246,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a6682f6ceea7569e2",
+      "sha256": "ab8ef1359a5040843753397c18a53c59ab56c036f4c34af65ee2c816998e971e",
+      "bytes": 72282,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a59da734bb752f123",
+      "sha256": "e5091b746f7024b61aa6a810c5be26d23dcf14cfbc2c1ad68f85c1e40214e355",
+      "bytes": 83821,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a74180eb9478d385a",
+      "sha256": "aeea60ca0bf5f009d712f0a361be0668896347ace5caeb7024e7fcf2f2c2c8f3",
+      "bytes": 203680,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a0eda1deea730b879",
+      "sha256": "99a2c169415b598c305d1ec60df7a6d187c51394fd5dfeeb7969a4e37a6c65f8",
+      "bytes": 140785,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a38287b9dd6a49461",
+      "sha256": "5784ffa1be7bc451c7a98ea64b602fcb81357bef6bf8de2dbc7357d08b3a4c8d",
+      "bytes": 92892,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-aa5a32fe8a85c1809",
+      "sha256": "7eb4b73b36b41cf0d241a0ecbc5a9eade5eb8e93f7a5429c7aee87bc985b1608",
+      "bytes": 91575,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-ada51025225f88c87",
+      "sha256": "c7ba35d3df35cef6827a6b13a075b4128cd9959795eeaaa102d57a43e9abc0b5",
+      "bytes": 192622,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a700944565f64aed3",
+      "sha256": "08694626479b92c884360dad0486c2be97bdedab62300872b325c573d47e80bc",
+      "bytes": 185711,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-af3442e0a70a4ca45",
+      "sha256": "8e7c6de8337016a3445c163390162a6b15e7a584bfd564792f880e4583072525",
+      "bytes": 153411,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-ab8454e235e42cc73",
+      "sha256": "0d1ed0ab940513c3f7c8d0742c4eecc7ef6aa1c9496cf2c3c86c8b899a3a0366",
+      "bytes": 176542,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-ad4440f7e4c4a1065",
+      "sha256": "52587c83e72890bf9e59bd993751281b76e78d19a9578d9643e1bba77ebcb1a4",
+      "bytes": 24163,
+      "experiment": "EXP-RVB-1-NC",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a53bda7aed2063547",
+      "sha256": "eac23cc77c2d3b5488e68c1612a2db8262d1f69dd8dcf71a5ab7ff170e84b2a5",
+      "bytes": 25398,
+      "experiment": "EXP-RVB-1-NC",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-ac3a672a64e4cf841",
+      "sha256": "11fb6bb1cd9f18a5564d51c629e4b98921602bfd331eaa382e3605d281f159e2",
+      "bytes": 25887,
+      "experiment": "EXP-RVB-1-NC",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-ac8a908ab52b4019a",
+      "sha256": "b9dc1342deb8d3842dc4d024945aec15d30c29f869ab2cde2d5b8738bc8281c6",
+      "bytes": 22771,
+      "experiment": "EXP-RVB-1-NC",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-abe596c9087f03b50",
+      "sha256": "73469e86b23c0073f8834f8c40280e35bd996f57e3cfa94120ca59dcb173494e",
+      "bytes": 25289,
+      "experiment": "EXP-RVB-1-NC",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a9d61a30ad3402aa1",
+      "sha256": "5bf8c041facfa0f437288bb74b9ea5523aceddab30e653f30f4629c25c8d1148",
+      "bytes": 31921,
+      "experiment": "EXP-RVB-1-NC",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a433b97cf7929198f",
+      "sha256": "1062d88cc6fbefe08fb6e8f33b9889abc3d5297b02f108a8f346005843d5bb0f",
+      "bytes": 66080,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0030"
+    },
+    {
+      "agent": "agent-a3a36c7d6b122a13e",
+      "sha256": "57a6bec35c9f009811afad147b5445b148c3a1900a71f8900bd3834fca852e9d",
+      "bytes": 128096,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-abd4a40657f92cad1",
+      "sha256": "d74ea89ae2119f25361c2f4fd34aaf5da0865a3cb4a42cfda013fd1757189b4c",
+      "bytes": 107261,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a13122b303a9fc77d",
+      "sha256": "8b6c4c6fdd28502208f3c380b037713ed896cc943137eb98f6a8ffb35ed0d04e",
+      "bytes": 151379,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a2604aa329acf15e5",
+      "sha256": "1a528b31a8dc04346909efe34e22bb759836ec57927743772fa49810e4aaf339",
+      "bytes": 138704,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "0072"
+    },
+    {
+      "agent": "agent-a02df3125721aa995",
+      "sha256": "a078a6bac1e52c843cbb6a5990c8891310d26b0d04a2171221b319d11663f946",
+      "bytes": 48114,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a65cc0675bf277951",
+      "sha256": "48c9ecb83497d6ec1e403f34f60872b51341aae0c7a55ce3407b7cd5655dcbde",
+      "bytes": 84868,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-ac8d5baa8e6d2ccb5",
+      "sha256": "543abb5db96306af350c2668487265b20bd7988ae124237b3d2999e158f09324",
+      "bytes": 53892,
+      "experiment": "EXP-RVB-NC2",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a28376b191629dac3",
+      "sha256": "91170a68cfa1f8c809a45235224bf82733de98c6a3cd03befba0cdf7fad0398f",
+      "bytes": 28902,
+      "experiment": "EXP-RVB-NC2",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a1bbeaf1c75110fda",
+      "sha256": "9b32def382c628bd17d7cf16789e5c14a6b43b9e1df531e18a39696771fc0e7e",
+      "bytes": 35447,
+      "experiment": "EXP-RVB-NC2",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a48cca78f6506d03d",
+      "sha256": "6ac1c117259386e157593929685c96b2e9411f63aacf91498fac215882b77765",
+      "bytes": 50273,
+      "experiment": "EXP-RVB-NC2",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a9edbf7b9c09f93c0",
+      "sha256": "9ff0fd3b94ae629c0ce6c16ed971deebebb354c21b66d5e0e9941078be5ea705",
+      "bytes": 48029,
+      "experiment": "EXP-RVB-NC2",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a7d4498650448c634",
+      "sha256": "e8c63808f75370b5cd749a1b19c5af14923215a2ca00232c4e09cf3d2c31800d",
+      "bytes": 41846,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a2680a7a8749fb4e3",
+      "sha256": "79028908e6625c9ad844b22049a46e1b5819f1eeb4761fe89fbe24ae68444bb5",
+      "bytes": 85992,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a1153e2189d4006cc",
+      "sha256": "7c002f72f9680e4d52ab01b3993d0b010958cb82405b37bb712d1f7a9ccc2c4a",
+      "bytes": 144174,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-aac209dc4cdcafae2",
+      "sha256": "287d99a2c18600e5fc13397e869af71e1dba6c402d2c70fe67c253652a3ddd61",
+      "bytes": 141106,
+      "experiment": "EXP-RVB-1b-or-1c-chain",
+      "claim": "C1/C3/C2",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a8b2b993190ea94ac",
+      "sha256": "edd7f7309ea6905642ea4512764e17c2090355b2d9a93a92327e3ef437ecf7e6",
+      "bytes": 121678,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a3432dae9930a82b3",
+      "sha256": "34dda1d7d101cc814f51431c728835bf2df74ac64183c5234bf045ef171d2576",
+      "bytes": 148407,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a3335f28f814c8449",
+      "sha256": "419ef6249482298be2aa4c12a2a2de69cd7d95c871f7711c9332b452817805f7",
+      "bytes": 180220,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a77eab81418074853",
+      "sha256": "c319fea58a92236f7ecbf4f6dce40552f1b30ba9fdd192e394f8e7038ce578fe",
+      "bytes": 225905,
+      "experiment": "EXP-RVB-2",
+      "claim": "C7",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-af5b13469813cc354",
+      "sha256": "92a6670145aaa21de705b9d102d807cf1c23bc1e5fe72c8ab02bbbf6a582ffba",
+      "bytes": 32778,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-aeda1ef76d4eb7480",
+      "sha256": "1f482bafe4357765e09037fec0242f8f14c7e86c92e485e0d316566726a3b8a8",
+      "bytes": 941212,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-af8fb0e63bd277f4f",
+      "sha256": "7c83bc27f99e2bc19d237006a5d0c1234398cd14b2099ba0d03388d57ebc21b8",
+      "bytes": 2099547,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-afcea426cadfb5648",
+      "sha256": "ff5619aa1ae12f8a37c164145908fc35e2460df942302db3d3e9617b303e4f10",
+      "bytes": 1411807,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "0001"
+    },
+    {
+      "agent": "agent-a036052d8b2a96e4f",
+      "sha256": "3883ddb9793bf7c3244679c26edd5189a2848d57176e2c70941902a3a2b3f586",
+      "bytes": 265640,
+      "experiment": "EXP-RVB-NC2",
+      "claim": "C4",
+      "root_hint": "?"
+    },
+    {
+      "agent": "agent-a087efcbab74a1312",
+      "sha256": "7bc6eefd5faa794b0bf62f180baf84efec792041c78e39d399bedabe35a04e62",
+      "bytes": 220063,
+      "experiment": "UNCLASSIFIED",
+      "claim": "?",
+      "root_hint": "?"
+    }
+  ]
+}
