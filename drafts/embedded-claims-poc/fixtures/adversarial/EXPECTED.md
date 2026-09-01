@@ -61,6 +61,14 @@ no settlement is run (that is 3d; `COMPILED` ≠ `REPLAYED`). The precondition i
 if it diagnostically carried a candidate capsule. An INVALID compile emits no records
 either — records are handed forward only from a `COMPILED` report.
 
+Each COMPILED record is a **self-contained bundle** (3c.1): every entity is `{id, body}`
+(claim, plan, dependency, binding), so the 3d runner drives settlement from the serialized
+records alone — no source reparse. A **binding is bound to its claim** (`binding.body`
+includes `claim_id`), so an identical relation/target/status on a different claim gets a
+different `binding_id` (composition laundering, §13.11). The **occurrence** carries the
+source **document digest** plus the byte span (a span alone is not a source address);
+`capsule_id`/`occurrence_id` are domain-separated.
+
 | Specimen | Compile expected |
 |---|---|
 | `01`, `02`, `09`, `03`, `17` | COMPILED — records with content-addressed `claim_id`/`plan_id`/`dependency_id`/`capsule_id` + source occurrence span (0 records for the empty regions 03/17). |
@@ -68,6 +76,7 @@ either — records are handed forward only from a `COMPILED` report.
 | `21-capsule-bad-json.md` | INVALID, `CAPSULE_NOT_STRICT_JSON`. |
 | `22-capsule-schema-invalid.md` | INVALID, `CAPSULE_SCHEMA_INVALID` (unknown claim.class). |
 | `23-duplicate-local-id.md` | INVALID, `DUPLICATE_LOCAL_ID`. |
+| `24-binding-same-target.md` | COMPILED, two records; their `binding.id` DIFFER despite identical relation/target/status (claim-bound binding). |
 
 ## Status
 

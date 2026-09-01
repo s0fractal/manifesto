@@ -68,4 +68,4 @@ jobs:
         run: |
           set -euo pipefail
           python3 drafts/embedded-claims-poc/test_compiler.py | tee compile.log
-          grep -q "ALL PASS (13 COMPILE specimens + 3 invariants)" compile.log
+          grep -q "ALL PASS (14 COMPILE specimens + 6 invariants)" compile.log

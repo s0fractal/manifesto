@@ -111,12 +111,23 @@ def validate_v2(cap):
     return errors
 
 
-def _capsule_id(body):
-    return "sha256:" + hashlib.sha256(canonical.canonicalize(body)).hexdigest()
+def _did(domain, body):
+    """Domain-separated content id for compiler-owned aggregate records (capsule,
+    occurrence), matching canonical.record_id's HASH(domain || 0x00 || canonical)."""
+    return "sha256:" + hashlib.sha256(
+        domain.encode() + b"\x00" + canonical.canonicalize(body)).hexdigest()
 
 
-def compile_report(parse_report, source_bytes=None):
-    """Compile a ParseReport into canonical records. STRUCTURAL only — no settlement."""
+CAPSULE_DOMAIN = "manifesto.capsule.v2"
+OCCURRENCE_DOMAIN = "manifesto.occurrence.v0"
+
+
+def compile_report(parse_report, source_bytes):
+    """Compile a VALID ParseReport into a SELF-CONTAINED bundle of canonical records —
+    each entity as `{id, body}`, so the 3d runner can select the verifier, resolve the
+    dependency, and form the binding axis WITHOUT reparsing the source Markdown.
+    STRUCTURAL only — no settlement. `source_bytes` anchors every occurrence to a
+    document digest (a byte span alone is not a source address)."""
     if parse_report.get("status") != "VALID":
         return {"compiler": compiler_id(), "status": "REFUSED",
                 "parser_status": parse_report.get("status"), "records": [],
@@ -124,6 +135,7 @@ def compile_report(parse_report, source_bytes=None):
                             "detail": f"parser status {parse_report.get('status')!r} "
                                       f"!= VALID; whole report refused"}]}
 
+    document = "sha256:" + hashlib.sha256(source_bytes).hexdigest()
     records, errors, seen = [], [], set()
     for cap in parse_report.get("capsules", []):
         line = cap.get("line")
@@ -142,24 +154,36 @@ def compile_report(parse_report, source_bytes=None):
             errors.append({"code": "DUPLICATE_LOCAL_ID", "line": line, "detail": lid})
             continue
         seen.add(lid)
-        claim_id = canonical.record_id("claim", {"class": claim["class"],
-                                                 "payload": claim["payload"]})
-        plan_id = canonical.record_id("plan", {"claim": claim_id,
-                                               "verifier": body.get("verifier")})
-        dep_id = (canonical.record_id("dependency", body["dep"]) if "dep" in body else None)
-        binding_id = (canonical.record_id("binding", body["binding"])
-                      if "binding" in body else None)
+
+        claim_body = {"class": claim["class"], "payload": claim["payload"]}
+        claim_id = canonical.record_id("claim", claim_body)
+        plan_body = {"claim": claim_id, "verifier": body.get("verifier")}
+        plan_id = canonical.record_id("plan", plan_body)
+        dep_body = body.get("dep")
+        dep_rec = ({"id": canonical.record_id("dependency", dep_body), "body": dep_body}
+                   if dep_body is not None else None)
+        binding_rec = None
+        if "binding" in body:
+            # P0: bind the binding to its claim, so an identical relation/target/status
+            # on a DIFFERENT claim cannot share a binding_id (composition laundering).
+            binding_body = {"claim": claim_id, **body["binding"]}
+            binding_rec = {"id": canonical.record_id("binding", binding_body),
+                           "body": binding_body}
+        occurrence = {"document": document, "span": cap.get("span"),
+                      "region": cap.get("region")}
+
         records.append({
-            "local_id": lid, "class": claim["class"], "payload": claim["payload"],
-            "capsule_id": _capsule_id(body),
-            "claim_id": claim_id, "plan_id": plan_id,
-            "dependency_id": dep_id, "binding_id": binding_id,
-            "occurrence": {"span": cap.get("span"), "region": cap.get("region")},
+            "local_id": lid,
+            "capsule_id": _did(CAPSULE_DOMAIN, body),
+            "occurrence_id": _did(OCCURRENCE_DOMAIN, occurrence),
+            "occurrence": occurrence,
+            "claim": {"id": claim_id, "body": claim_body},
+            "plan": {"id": plan_id, "body": plan_body},
+            "dependency": dep_rec,
+            "binding": binding_rec,
         })
 
     # Fail-closed as a whole: records are handed forward ONLY from a COMPILED report.
-    # If any capsule failed, the document is INVALID and emits no records (the errors
-    # remain for diagnostics). The 3d runner consumes records only when status==COMPILED.
     status = "COMPILED" if not errors else "INVALID"
     return {"compiler": compiler_id(), "status": status, "parser_status": "VALID",
             "records": records if status == "COMPILED" else [], "errors": errors}
@@ -173,8 +197,9 @@ if __name__ == "__main__":
         print("usage: compiler.py <file.md>", file=sys.stderr)
         sys.exit(2)
     with open(sys.argv[1], "rb") as f:
-        pr = P.parse(f.read().decode("utf-8"))
-    rep = compile_report(pr, None)
+        src = f.read()
+    pr = P.parse(src.decode("utf-8"))
+    rep = compile_report(pr, src)
     print(f"parser={pr['status']} compile={rep['status']} "
           f"records={len(rep['records'])} "
           f"errors={sorted({e['code'] for e in rep['errors']})}")

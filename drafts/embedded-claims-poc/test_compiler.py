@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
-test_compiler.py — COMPILE-layer oracle (phase 2 step 3c).
+test_compiler.py — COMPILE-layer oracle (phase 2 step 3c / 3c.1).
 
-parse → compile, then assert: the compile `status`, the emitted record `local_id`s (in
-order), and the error-code set. STRUCTURAL only — no settlement is run here (that is 3d;
-COMPILED must not mean REPLAYED).
+parse → compile, then assert the compile `status`, the emitted record `local_id`s (in
+order), and the error-code set. STRUCTURAL only — no settlement (that is 3d; COMPILED
+must not mean REPLAYED).
 
-The mandatory negative (Codex): a ParseReport with status != VALID — INVALID or INERT,
-even if it diagnostically carried a candidate capsule — must be REFUSED as a whole, with
-zero records.
+3c.1 invariants (Codex):
+  - a binding is bound to its claim (same relation/target/status on different claims ⇒
+    different binding_id — no composition laundering, §13.11);
+  - the compiled bundle is SELF-CONTAINED: a 3d runner can drive settlement from the
+    serialized records (id + canonical body) with the source Markdown deleted;
+  - the same byte span in different documents ⇒ different occurrence identity;
+  - the same canonical bytes in different record domains ⇒ different IDs.
 
 Run:  ../../.venv/bin/python test_compiler.py   (needs the pinned parser deps)
 """
+import json
 import os
 import sys
 
@@ -19,21 +24,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import parser as P      # noqa: E402
 import compiler as C    # noqa: E402
+import canonical        # noqa: E402
 
-# name -> (compile_status, local_ids | None, error codes)
 GOLDEN = {
     "01-illustration-vs-live.md": ("COMPILED", ["T"], []),
     "02-multiple-claims.md": ("COMPILED", ["A", "B"], []),
     "03-nested-fences.md": ("COMPILED", [], []),
     "09-claim-inside-capsule.md": ("COMPILED", ["README-THESIS-COUNT"], []),
     "17-fake-end-in-fence.md": ("COMPILED", [], []),
-    # mandatory negative: parser status != VALID => whole report refused
+    "24-binding-same-target.md": ("COMPILED", ["C1", "C2"], []),
     "05-unclosed-fence.md": ("REFUSED", None, ["PRECONDITION_NOT_VALID"]),
     "10-no-live-region.md": ("REFUSED", None, ["PRECONDITION_NOT_VALID"]),
     "11-unknown-profile.md": ("REFUSED", None, ["PRECONDITION_NOT_VALID"]),
     "13-marker-in-fence.md": ("REFUSED", None, ["PRECONDITION_NOT_VALID"]),
     "14-unexpected-end.md": ("REFUSED", None, ["PRECONDITION_NOT_VALID"]),
-    # compile-layer negatives
     "21-capsule-bad-json.md": ("INVALID", None, ["CAPSULE_NOT_STRICT_JSON"]),
     "22-capsule-schema-invalid.md": ("INVALID", None, ["CAPSULE_SCHEMA_INVALID"]),
     "23-duplicate-local-id.md": ("INVALID", None, ["DUPLICATE_LOCAL_ID"]),
@@ -42,8 +46,8 @@ GOLDEN = {
 
 def compile_file(name):
     with open(os.path.join(HERE, "fixtures/adversarial", name), "rb") as f:
-        pr = P.parse(f.read().decode("utf-8"))
-    return C.compile_report(pr)
+        src = f.read()
+    return C.compile_report(P.parse(src.decode("utf-8")), src)
 
 
 def main():
@@ -53,20 +57,18 @@ def main():
         problems = []
         if rep["status"] != status:
             problems.append(f"status={rep['status']} want {status}")
-        got_codes = sorted({e["code"] for e in rep["errors"]})
-        if got_codes != codes:
-            problems.append(f"codes={got_codes} want {codes}")
+        if sorted({e["code"] for e in rep["errors"]}) != codes:
+            problems.append(f"codes={sorted({e['code'] for e in rep['errors']})} want {codes}")
         if status == "COMPILED":
-            got_ids = [r["local_id"] for r in rep["records"]]
-            if got_ids != ids:
-                problems.append(f"local_ids={got_ids} want {ids}")
+            got = [r["local_id"] for r in rep["records"]]
+            if got != ids:
+                problems.append(f"local_ids={got} want {ids}")
             for r in rep["records"]:
-                if not (str(r["claim_id"]).startswith("sha256:")
-                        and str(r["plan_id"]).startswith("sha256:")):
+                if not (str(r["claim"]["id"]).startswith("sha256:")
+                        and str(r["plan"]["id"]).startswith("sha256:")):
                     problems.append(f"record {r['local_id']} missing content-addressed ids")
-        else:
-            if rep["records"]:
-                problems.append(f"non-COMPILED report emitted {len(rep['records'])} records")
+        elif rep["records"]:
+            problems.append(f"non-COMPILED report emitted {len(rep['records'])} records")
         print(("ok   " if not problems else "FAIL ") + name)
         for p in problems:
             print("       " + p)
@@ -74,29 +76,51 @@ def main():
 
     print("\n-- invariants --")
 
-    # claim_id is deterministic and distinct for distinct predicates
-    r1 = compile_file("02-multiple-claims.md")
+    def inv(ok, label):
+        nonlocal failures
+        print(("ok   " if ok else "FAIL ") + label)
+        failures += 0 if ok else 1
+
+    # claim_id deterministic + distinct for distinct predicates
+    r = compile_file("02-multiple-claims.md")
     r2 = compile_file("02-multiple-claims.md")
-    a, b = r1["records"][0], r1["records"][1]
-    det_ok = ([x["claim_id"] for x in r1["records"]] == [x["claim_id"] for x in r2["records"]]
-              and a["claim_id"] != b["claim_id"])
-    print(("ok   " if det_ok else "FAIL ")
-          + "claim_id deterministic + distinct for distinct predicates")
-    failures += 0 if det_ok else 1
+    inv([x["claim"]["id"] for x in r["records"]] == [x["claim"]["id"] for x in r2["records"]]
+        and r["records"][0]["claim"]["id"] != r["records"][1]["claim"]["id"],
+        "claim_id deterministic + distinct for distinct predicates")
 
-    # a REFUSED report carries zero records even though the parser had a candidate
-    ref = compile_file("11-unknown-profile.md")
-    refuse_ok = ref["status"] == "REFUSED" and ref["records"] == []
-    print(("ok   " if refuse_ok else "FAIL ")
-          + "INVALID parse report is REFUSED whole, zero records (mandatory negative)")
-    failures += 0 if refuse_ok else 1
+    # P0: binding bound to its claim — same target, different claims ⇒ different binding_id
+    rb = compile_file("24-binding-same-target.md")
+    inv(rb["records"][0]["binding"]["id"] != rb["records"][1]["binding"]["id"],
+        "binding_id differs for same target on different claims (no laundering)")
 
-    cid_ok = C.compiler_id().startswith("compiler://sha256:") and C.compiler_id() == C.compiler_id()
-    print(("ok   " if cid_ok else "FAIL ") + "compiler_id binds compiler+canonical closure")
-    failures += 0 if cid_ok else 1
+    # self-contained bundle: a runner can drive settlement from serialized records alone
+    r09 = json.loads(json.dumps(compile_file("09-claim-inside-capsule.md")))  # round-trip
+    rec = r09["records"][0]
+    inv(rec["claim"]["body"]["class"] == "count"
+        and rec["plan"]["body"]["verifier"].startswith("settle-gate://")
+        and rec["dependency"]["body"]["sha256"]
+        and "document" in rec["occurrence"],
+        "compiled bundle is self-contained (verifier + dep body present; no source needed)")
+
+    # same span, different documents ⇒ different occurrence identity
+    cap = ('{"schema_version":"manifesto.capsule.v2",'
+           '"claim":{"local_id":"X","class":"arith","payload":"1 + 1 = 2"}}')
+    pr = {"status": "VALID", "regions": [], "errors": [],
+          "capsules": [{"line": 0, "span": [10, 50], "region": 0, "body_raw": cap}]}
+    oa = C.compile_report(pr, b"A" * 100)["records"][0]["occurrence_id"]
+    ob = C.compile_report(pr, b"B" * 100)["records"][0]["occurrence_id"]
+    inv(oa != ob, "same span in different documents ⇒ different occurrence identity")
+
+    # domain separation: identical canonical bytes in different domains ⇒ different IDs
+    body = {"x": 1, "y": [2, 3]}
+    inv(canonical.record_id("claim", body) != canonical.record_id("plan", body),
+        "same canonical bytes in different record domains ⇒ different IDs")
+
+    inv(C.compiler_id().startswith("compiler://sha256:") and C.compiler_id() == C.compiler_id(),
+        "compiler_id binds compiler+canonical closure")
 
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "
-          f"({len(GOLDEN)} COMPILE specimens + 3 invariants) — structural; settlement is 3d")
+          f"({len(GOLDEN)} COMPILE specimens + 6 invariants) — structural; settlement is 3d")
     return 0 if failures == 0 else 1
 
 
