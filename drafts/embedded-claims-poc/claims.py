@@ -33,9 +33,14 @@ def run_document(path, strict):
     print(json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2))
     if not strict:
         return 0
+    results = report.get("results")
     if report.get("status") != "RUN":
         return 1
-    return 0 if all(r["execution"] == "REPLAYED" for r in report["results"]) else 1
+    # a RUN with zero records is not a pass: all([]) is vacuously true, which would let a
+    # regression that stops extracting capsules leave a --strict gate green (Codex P0).
+    if not isinstance(results, list) or not results:
+        return 1
+    return 0 if all(r["execution"] == "REPLAYED" for r in results) else 1
 
 
 def main():

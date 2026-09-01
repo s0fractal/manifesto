@@ -82,12 +82,16 @@ jobs:
           python3 drafts/embedded-claims-poc/test_runner.py | tee run.log
           grep -qE "^ALL PASS \([0-9]+ runner-boundary checks\)" run.log
 
-      # End-to-end on a REAL document: the orchestration CLI runs the whole chain
-      # (parse → compile → run) over drafts/EMBEDDED-CLAIMS-E2E-0.1.md, whose one world
-      # capsule counts README's thesis headings against a pinned README snapshot. --strict
-      # is a policy projection (exit 0 iff every record REPLAYED), NOT a document badge. A
-      # README or engine change rotates the pin and this fails until re-pinned — the
-      # closure/freshness discipline, on the real specimen too.
-      - name: End-to-end — claims run --strict on the real specimen
+      # Orchestration CLI + end-to-end on a REAL document. test_cli invokes the public
+      # `claims run` command as a subprocess: --strict must NOT be vacuously green on an
+      # empty vector (a RUN with zero records fails under --strict, so an extraction
+      # regression can't leave this green), and the specimen must run a NON-EMPTY EXACT
+      # scope — one record, README-THESIS-HEADING-COUNT, REPLAYED — against a pinned README
+      # snapshot. A README or engine change rotates the pin and this fails until re-pinned
+      # (closure/freshness discipline on the real specimen too).
+      - name: Orchestration CLI + E2E exact scope (public command, real document)
         shell: bash
-        run: python3 drafts/embedded-claims-poc/claims.py run --strict drafts/EMBEDDED-CLAIMS-E2E-0.1.md
+        run: |
+          set -euo pipefail
+          python3 drafts/embedded-claims-poc/test_cli.py | tee cli.log
+          grep -q "ALL PASS (CLI checks)" cli.log
