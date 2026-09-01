@@ -54,8 +54,12 @@ mistakes them for claims. Live specimens carry explicit `manifesto-claims` regio
    over globally-normalized text; the raw source occurrence is committed alongside the
    semantic `claim_id`.
 
-## Not in this step
+## Status
 
-No parser, no compiler. These specimens are the pressure the parser will be built
-against. Building the parser before this corpus is agreed would fit the spec to the code
-instead of the code to the spec.
+The PARSE layer now EXISTS (`parser.py`, pinned markdown-it-py==4.2.0) and the PARSE
+column above is executable in `test_parser.py` (17 specimens + determinism, run by the
+CI gate). Specimens 03/04/05/07/08 carry explicit regions so their threat is exercised
+inside a live region. The COMPILE column (schema + association: `DANGLING_CLAIM_REF`,
+`DUPLICATE_CLAIM_REF`) is NOT yet executed — that is the 3c compiler. So 09/15/16 are
+checked only for correct STRUCTURE here; their association verdicts remain pending. This
+corpus is the spec the parser was built against, not the reverse.

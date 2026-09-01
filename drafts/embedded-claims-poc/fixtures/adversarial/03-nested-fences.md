@@ -1,8 +1,10 @@
 # Adversarial 03 — nested fences (T4)
 
-A capsule shown INSIDE a wider fence, as documentation of how to write one. The inner
-closing fence must not be mistaken for the capsule's terminator, and the whole thing
-is an illustration, not a live capsule.
+A capsule shown INSIDE a wider fence, as documentation, all within a live region. The
+inner capsule must stay inert (it is content of the outer fence), so the region has
+zero live capsules.
+
+<!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
 ````markdown
 Here is how you attach a capsule:
@@ -12,7 +14,9 @@ Here is how you attach a capsule:
 ```
 ````
 
-Expected: the non-greedy `​```json capsule ... ``` ` regex would capture a TRUNCATED
-body and treat this as a live capsule. A conformant parser tracks fence nesting/info
-strings via CommonMark block structure: this capsule is inside a fenced code block, so
-it is inert. No live capsule is found in this document.
+<!-- manifesto-claims:end -->
+
+Expected — PARSE: one region, ZERO capsules, ZERO claims, no errors. The inner
+`json capsule` is content of the outer ````markdown fence, not a separate fence token,
+so CommonMark block structure makes it inert automatically. A regex would have captured
+a truncated body.

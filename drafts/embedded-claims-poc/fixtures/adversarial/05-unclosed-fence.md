@@ -1,11 +1,16 @@
 # Adversarial 05 — unclosed capsule fence (T4)
 
-A capsule fence that is opened but never closed (truncated document, edit accident).
+A capsule fence opened inside a region but never closed. Per CommonMark the fence runs
+to end-of-document, which also swallows the region's `end` marker.
+
+<!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
 ```json capsule
 {"verifier": "glyph://sha256:deadbeef...", "note": "no closing fence follows"}
 
-Expected: the current regex simply fails to match and drops the block SILENTLY — the
-worst outcome, because an author who wrote a capsule sees no error and assumes it was
-read. A conformant parser emits a typed error (UNCLOSED_FENCE) and fails closed, never
-a silent skip.
+<!-- manifesto-claims:end -->
+
+Expected — PARSE: `UNCLOSED_FENCE` (the exact opener is never closed). Because the
+unclosed fence eats everything after it — including the `end` marker — the region is
+also reported `MISSING_END`. The one forbidden outcome is silence: the current regex
+would drop the block with no error. Both are typed.

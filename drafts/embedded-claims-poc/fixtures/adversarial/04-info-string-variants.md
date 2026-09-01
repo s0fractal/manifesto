@@ -1,8 +1,9 @@
 # Adversarial 04 — info-string variants (T4)
 
-Five fenced blocks whose info strings drift from the frozen token. Only the exact
-token may be a live-capsule candidate; the rest must be ignored (as ordinary code) or
-rejected with a typed reason — never silently treated as capsules.
+Five fenced blocks in a live region whose info strings drift from the frozen token.
+Only the exact raw opener may be a live capsule; the rest are ordinary code.
+
+<!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
 ```json claim
 {"note": "architecture doc uses 'json claim'"}
@@ -24,11 +25,10 @@ rejected with a typed reason — never silently treated as capsules.
 {"note": "the exact frozen token"}
 ```
 
-Expected — PARSE layer only (schema/compile not yet reached, so the placeholder
-bodies are irrelevant here): only the LAST block (`json capsule`, exact) is a capsule
-candidate; the four variants are ordinary code blocks. Note the CommonMark subtlety
-(Codex P1): CommonMark TRIMS info-string whitespace, so ``` json capsule``` (leading
-space) has the same structural info string as the exact token — the AST cannot reject
-it. The protocol profile therefore rejects it at the RAW opener-line level (exact
-spelling required). Uppercase, trailing `{profile}`, and the `json claim` token are
-likewise rejected by the raw-span profile. Freezing the one token is open decision §8.2.
+<!-- manifesto-claims:end -->
+
+Expected — PARSE: exactly ONE live capsule (the last block). The others have a
+different RAW opener line (`json claim`, `​``` json capsule` with leading space that
+CommonMark trims from `info` but the raw-span check rejects, `JSON capsule`,
+`json capsule {profile}`) and are ordinary code blocks. Placeholder bodies are
+irrelevant at PARSE — schema runs later.

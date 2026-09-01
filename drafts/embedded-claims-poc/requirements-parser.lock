@@ -1,0 +1,15 @@
+# Pinned dependency lock for the embedded-claims parser (phase 2 step 3b).
+# Codex: markdown-it-py has a transitive dep on mdurl~=0.1, so a bare
+# `pip install markdown-it-py==4.2.0` does NOT fully pin the tree. Both are pinned
+# here with wheel hashes and installed via `pip install --require-hashes`.
+#
+#   pip install --require-hashes -r requirements-parser.lock
+#
+# Both wheels are py3-none-any (pure Python, platform-independent), so the hashes are
+# stable across machines and CI. The parser's identity closure references this lock, so
+# a change to either pinned dependency rotates the parser id — the same closure
+# discipline as the evaluator.
+markdown-it-py==4.2.0 \
+    --hash=sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a
+mdurl==0.1.2 \
+    --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8

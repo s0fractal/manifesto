@@ -95,6 +95,15 @@ cd drafts/embedded-claims-poc
 ../../.venv/bin/python verify.py fixtures/valid/arith-self.md   # one fixture, human report
 ```
 
+The PARSE layer (step 3b) needs pinned Markdown deps (this ends the stdlib-only
+property, deliberately, for the parser):
+
+```sh
+.venv/bin/pip install --require-hashes -r drafts/embedded-claims-poc/requirements-parser.lock
+../../.venv/bin/python test_parser.py     # 17 PARSE specimens over fixtures/adversarial/
+../../.venv/bin/python parser.py fixtures/adversarial/02-multiple-claims.md   # one file
+```
+
 `test_poc.py` exits 0 iff every fixture lands on its exact `(execution, binding)`
 and required facts, AND six invariants hold: identity does not alias
 (world-same-input), the report is byte-deterministic across runs, the body
@@ -154,7 +163,10 @@ settle_core.py  the verdict core: parse/schema/dispatch/identities/facts (IN clo
                 + freshness + binding clamp + D6 effect (observed post-state)
 canonical.py    closed JSON canonicalization + domain-separated record IDs (§17 #1/#2)
 schema.py       closed capsule schema (additionalProperties:false), stdlib-only
+parser.py       PARSE layer (step 3b): pinned CommonMark + protocol profile over raw spans
+requirements-parser.lock   hash-locked markdown-it-py==4.2.0 + mdurl==0.1.2
 test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
+test_parser.py  17 PARSE specimens + determinism (region/fence/claim structure)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,

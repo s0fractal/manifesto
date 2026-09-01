@@ -43,3 +43,18 @@ jobs:
           python3 -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
           python3 drafts/embedded-claims-poc/test_poc.py | tee poc.log
           grep -q "ALL PASS (22 fixtures + 6 invariants)" poc.log
+
+      # The PARSE layer (phase 2 step 3b) uses a PINNED markdown-it-py + mdurl, both
+      # with wheel hashes, installed via --require-hashes (a bare version pin would
+      # leave mdurl transitively unpinned — Codex). The parser identity closure
+      # references this lock, so a drifting dependency fails loudly.
+      - name: Install the pinned parser dependencies (hash-locked)
+        run: pip install --require-hashes -r drafts/embedded-claims-poc/requirements-parser.lock
+
+      - name: Parser PARSE-layer oracle reproduces over the adversarial corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -c "import markdown_it; assert markdown_it.__version__=='4.2.0'; print('markdown-it-py', markdown_it.__version__)"
+          python3 drafts/embedded-claims-poc/test_parser.py | tee parse.log
+          grep -q "ALL PASS (17 PARSE specimens + 1 determinism)" parse.log
