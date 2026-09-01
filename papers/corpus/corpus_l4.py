@@ -56,13 +56,14 @@ def validate_l3_bundle(private_l3):
 
 
 def _act_from_body(b, record_id):
+    # carry the full body so publishability (register membership, mapper closure, subjects)
+    # is re-derived by the SAME record_publishable used by build_l3 — L4 never trusts final_status.
     return {"experiment_id": b.get("experiment_id"), "root_digest": b.get("root_digest"),
             "verifier_identity": b.get("verifier_identity"),
             "agent_run_occurrence": b.get("agent_run_occurrence"),
             "status": b.get("final_status"), "faults": list(b.get("final_faults") or []),
-            "completeness": b.get("completeness_decision"), "publication": b.get("publication_decision"),
             "act_id": (b.get("mapping") or {}).get("act_id"), "record_id": record_id,
-            "local_ref": b.get("local_ref")}
+            "local_ref": b.get("local_ref"), "body": b}
 
 
 def l4_evaluate(private_l3, manifests, trust_root):

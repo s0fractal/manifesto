@@ -125,21 +125,24 @@ C2_MAN = {"claim": "C2", "paper_pin": "paper@x", "experiment_ids": ["EXP-RVB-1c"
           "allowed_exclusions": []}
 
 
-from corpus_map import decision_record_id           # noqa: E402
+from corpus_map import (decision_record_id, _content_subject, _mapping_subject,  # noqa: E402
+                        mapper_closure_id, record_publishable as _publishable_body)
 from corpus_l4 import validate_l3_bundle, l4_evaluate  # noqa: E402
 
 
-def trust(report, admit=True, pin=True, register=None):
+def trust(report, admit=True, pin=True, register=None, mapper=None):
     prov = {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
             "extraction_closure": report["extraction_closure"], "l2_bundle_id": "x",
             "authorities": {"completeness": [], "publication": [], "mapping": []},
             "pinned_manifests": {}, "decision_register": []}
     fid = mint_l2_bundle(report["_priv"], report, prov)["bundle_id"]     # pin the canonical full bundle
-    return {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
-            "extraction_closure": report["extraction_closure"], "l2_bundle_id": fid,
-            "authorities": AUTH if admit else {"completeness": [], "publication": [], "mapping": []},
-            "pinned_manifests": {"C2": manifest_id(C2_MAN)} if pin else {},
-            "decision_register": register or []}
+    tr = {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
+          "extraction_closure": report["extraction_closure"], "l2_bundle_id": fid,
+          "authorities": AUTH if admit else {"completeness": [], "publication": [], "mapping": []},
+          "pinned_manifests": {"C2": manifest_id(C2_MAN)} if pin else {},
+          "decision_register": register or []}
+    tr["mapper_closure"] = mapper if mapper is not None else mapper_closure_id()
+    return tr
 
 
 def full(**kw):
@@ -153,14 +156,14 @@ def full(**kw):
 
 
 def pin_all_decisions(table, tr, bundle):
-    """Simulate the governance act: pin the exact decision-record ids for every act."""
-    out = build_l3(bundle, table, {"C2": C2_MAN}, tr)["metadata_report"]
+    """Simulate the governance act: pin the exact decision-record ids (kind-specific subjects
+    over the FINAL record bodies) for every act."""
     reg = []
-    for a in out["acts"]:
-        c = next(x for x in table if x["local_ref"] == a["local_ref"])
-        reg += [decision_record_id("completeness", a["act_id"], c["completeness_decision"]),
-                decision_record_id("publication", a["act_id"], c["publication_decision"]),
-                decision_record_id("mapping", a["act_id"], c["adjudication"])]
+    for rec in build_l3(bundle, table, {"C2": C2_MAN}, tr)["private_l3"]["records"]:
+        b = rec["body"]; cs = _content_subject(b); ms = _mapping_subject(b)
+        reg += [decision_record_id("completeness", cs, b["completeness_decision"]),
+                decision_record_id("publication", cs, b["publication_decision"]),
+                decision_record_id("mapping", ms, b["mapping"]["adjudication"])]
     return reg
 
 
@@ -169,14 +172,15 @@ tbl, priv, report = full()
 tr0 = trust(report)
 bundle = mint_l2_bundle(priv, report, tr0)
 expect("real bundle CLEAN", bundle["status"] == "CLEAN")
+import copy  # noqa: E402
 out0 = build_l3(bundle, tbl, {"C2": C2_MAN}, tr0)
-expect("admitted authority + empty register -> C2 REFUSED",
-       out0["metadata_report"]["views"]["C2"]["status"] == "REFUSED")
-expect("empty register -> DECISION_NOT_PINNED fault",
-       any("DECISION_NOT_PINNED" in a["faults"] for a in out0["metadata_report"]["acts"]))
+expect("admitted authority + empty register -> C2 REFUSED (no credit)",
+       out0["metadata_report"]["views"]["C2"]["status"] == "REFUSED"
+       and all(not _publishable_body(r["body"], tr0) for r in out0["private_l3"]["records"]))
 
 # governance act: pin every decision-record id -> COMPLETE
-tr_gov = trust(report, register=pin_all_decisions(tbl, tr0, bundle))
+reg_all = pin_all_decisions(tbl, tr0, bundle)
+tr_gov = trust(report, register=reg_all)
 out = build_l3(bundle, tbl, {"C2": C2_MAN}, tr_gov)
 expect("fully governed (register pinned) -> C2 COMPLETE", out["metadata_report"]["views"]["C2"]["status"] == "COMPLETE")
 expect("COMPLETE emits evaluation_id", "evaluation_id" in out["metadata_report"]["views"]["C2"])
@@ -187,11 +191,34 @@ expect("L3 bundle validates", ok)
 l4 = l4_evaluate(out["private_l3"], {"C2": C2_MAN}, tr_gov)   # NO candidate table
 expect("L4 serialized-only reproduces COMPLETE", l4["views"]["C2"]["status"] == "COMPLETE"
        and l4["views"]["C2"].get("evaluation_id") == out["metadata_report"]["views"]["C2"]["evaluation_id"])
-import copy  # noqa: E402
 rm = copy.deepcopy(out["private_l3"]); rm["records"] = rm["records"][:-1]
 expect("L3 record removal -> L3_BUNDLE_MISMATCH", validate_l3_bundle(rm)[1] == "L3_BUNDLE_MISMATCH")
 tp = copy.deepcopy(out["private_l3"]); tp["records"][0]["body"]["root_id"] = "TAMPERED"
 expect("L3 body tamper -> RECORD_ID_MISMATCH", validate_l3_bundle(tp)[1] == "RECORD_ID_MISMATCH")
+
+# === the three mandatory activation regressions (Codex governance review) ===
+# R1: remove mapping decisions from the root used by L4 -> typed refusal, zero credit
+map_ids = {decision_record_id("mapping", _mapping_subject(r["body"]), r["body"]["mapping"]["adjudication"])
+           for r in out["private_l3"]["records"]}
+tr_nomap = trust(report, register=[d for d in reg_all if d not in map_ids])
+expect("R1: L4 with mapping decisions removed -> REFUSED (not COMPLETE)",
+       l4_evaluate(out["private_l3"], {"C2": C2_MAN}, tr_nomap)["views"]["C2"]["status"] == "REFUSED")
+expect("R1: build_l3 also REFUSES", build_l3(bundle, tbl, {"C2": C2_MAN}, tr_nomap)["metadata_report"]["views"]["C2"]["status"] == "REFUSED")
+# R2: mutate a decision-relevant record field -> old decisions no longer grant credit
+tblF = copy.deepcopy(tbl); tblF[0]["response_digest"] = "sha256:" + "f" * 64
+expect("R2: forged response_digest under old register -> REFUSED",
+       build_l3(bundle, tblF, {"C2": C2_MAN}, tr_gov)["metadata_report"]["views"]["C2"]["status"] == "REFUSED")
+# R3: mutating evidence commitments rotates the mapping decision id
+b0 = out["private_l3"]["records"][0]["body"]
+adj_a = b0["mapping"]["adjudication"]; adj_b = {**adj_a, "evidence_commitments": ["OTHER"]}
+expect("R3: evidence-commitment change rotates mapping decision id",
+       decision_record_id("mapping", _mapping_subject(b0), adj_a)
+       != decision_record_id("mapping", _mapping_subject(b0), adj_b))
+# P1: mapper-closure mutation -> not publishable (fork cannot return COMPLETE)
+expect("mapper-closure mutation -> C2 REFUSED",
+       build_l3(bundle, tbl, {"C2": C2_MAN}, trust(report, register=reg_all, mapper="clo:map:FORK")
+                )["metadata_report"]["views"]["C2"]["status"] == "REFUSED")
+
 # L4 without pinned decisions reproduces REFUSED (same vector as build_l3)
 l4r = l4_evaluate(build_l3(bundle, tbl, {"C2": C2_MAN}, tr0)["private_l3"], {"C2": C2_MAN}, tr0)
 expect("L4 reproduces REFUSED vector", l4r["views"]["C2"]["status"] == "REFUSED")

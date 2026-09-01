@@ -81,7 +81,8 @@ def recompute_report_id(report):
 
 
 TRUST_FIELDS = {"schema", "note", "report_id", "corpus_commitment", "extraction_closure",
-                "l2_bundle_id", "authorities", "pinned_manifests", "decision_register"}
+                "l2_bundle_id", "authorities", "pinned_manifests", "decision_register",
+                "mapper_closure"}
 
 
 def validate_trust_root(tr):
@@ -103,16 +104,67 @@ def validate_trust_root(tr):
     reg = tr.get("decision_register", [])          # pinned exact decision-record ids (P0-3)
     if not isinstance(reg, list) or len(reg) != len(set(reg)) or not all(isinstance(x, str) for x in reg):
         return "TRUST_ROOT_INVALID"
+    if "mapper_closure" in tr and not (isinstance(tr["mapper_closure"], str) and tr["mapper_closure"]):
+        return "TRUST_ROOT_INVALID"                # optional; when present, binds the approved evaluator
     return None
 
 
-def decision_record_id(kind, subject_act_id, dec):
-    """Content id of a decision, bound to its subject act — the thing the register pins."""
-    d = dec if isinstance(dec, dict) else {}
-    return "dec:" + ids.json_digest({"kind": kind, "subject": subject_act_id,
-                                     "decision": d.get("decision"),
-                                     "adjudicator_identity": d.get("adjudicator_identity"),
-                                     "authority": d.get("authority")})
+DECISION_SCHEMA = {"completeness": {"adjudicator_identity", "authority", "decision"},
+                   "publication": {"adjudicator_identity", "authority", "decision"},
+                   "mapping": {"adjudicator_identity", "authority", "decision", "evidence_commitments"}}
+_PRE_DECISION_OMIT = {"final_status", "final_faults", "completeness_decision",
+                      "publication_decision", "mapping"}
+
+
+def decision_record_id(kind, subject_id, dec):
+    """Content id of a CLOSED decision body, bound to its exact pre-decision subject (P0-2/P0-3).
+    Unknown/missing fields -> dec:INVALID (never a partial projection)."""
+    if kind not in DECISION_SCHEMA or not isinstance(dec, dict) or set(dec) != DECISION_SCHEMA[kind]:
+        return "dec:INVALID"
+    body = dict(dec)
+    if kind == "mapping":                          # evidence commitment is part of the identity
+        body["evidence_commitments"] = sorted(body.get("evidence_commitments") or [])
+    return "dec:" + ids.json_digest({"kind": kind, "subject": subject_id, "body": body})
+
+
+def _content_subject(record_body):
+    """The exact pre-decision proposition a completeness/publication decision is about."""
+    return ids.json_digest({k: v for k, v in record_body.items() if k not in _PRE_DECISION_OMIT})
+
+
+def _mapping_subject(record_body):
+    """The exact mapping proposition: the act + four components + evidence commitment."""
+    return ids.json_digest({
+        "content": _content_subject(record_body),
+        "components": [record_body.get("experiment_id"), record_body.get("root_digest"),
+                       record_body.get("verifier_identity"), record_body.get("agent_run_occurrence")],
+        "evidence_commitment": (record_body.get("mapping") or {}).get("evidence_commitment")})
+
+
+def record_publishable(body, trust_root):
+    """Publishability is a pure function of the FINAL record body + trust root — computed
+    identically by build_l3 and L4 (closes P0-1: L4 re-checks the register, never trusts a
+    baked-in EXACT). Requires EXACT + fault-free + admitted authority labels + all three
+    decision-record ids (kind-specific subjects) pinned in the register."""
+    if body.get("final_status") != "EXACT" or body.get("final_faults"):
+        return False
+    comp = body.get("completeness_decision"); pub = body.get("publication_decision")
+    adj = (body.get("mapping") or {}).get("adjudication")
+    if not (_decides(comp, "COMPLETE") and _decides(pub, "CLEARED_FOR_PUBLICATION")
+            and isinstance(adj, dict)):
+        return False
+    A = trust_root.get("authorities") or {}
+    if comp.get("authority") not in set(A.get("completeness", [])) \
+            or pub.get("authority") not in set(A.get("publication", [])) \
+            or adj.get("authority") not in set(A.get("mapping", [])):
+        return False
+    if trust_root.get("mapper_closure") and body.get("mapper_closure") != trust_root["mapper_closure"]:
+        return False
+    reg = set(trust_root.get("decision_register", []))
+    cs, ms = _content_subject(body), _mapping_subject(body)
+    return (decision_record_id("completeness", cs, comp) in reg
+            and decision_record_id("publication", cs, pub) in reg
+            and decision_record_id("mapping", ms, adj) in reg)
 
 
 def verify_report(report, trust_root):
@@ -249,32 +301,19 @@ def _check_evidence(cand, index):
     return validated, committed, faults
 
 
-def _admitted(dec, kind, trust_root, positive, subject):
-    """A decision grants credit only if its exact decision-record id is pinned in the
-    register (P0-3) — an admitted authority *label* is necessary but not sufficient."""
-    if not (isinstance(dec, dict) and dec.get("adjudicator_identity") and dec.get("authority")):
-        return False
-    if dec.get("decision") != positive:
-        return False
-    if dec["authority"] not in set((trust_root.get("authorities") or {}).get(kind, [])):
-        return False
-    return decision_record_id(kind, subject, dec) in set(trust_root.get("decision_register", []))
-
-
-def _adjudication_ok(adj, committed_ev, trust_root, subject):
-    if not isinstance(adj, dict):
+def _adjudication_ok(adj, committed_ev, trust_root):
+    """Structural + evidence binding for an EXACT mapping (label admission + exact evidence).
+    Register membership is enforced later, by record_publishable on the final record body."""
+    if not isinstance(adj, dict) or set(adj) != DECISION_SCHEMA["mapping"]:
         return False, "EXACT_WITHOUT_ADJUDICATION"
-    for k in ("adjudicator_identity", "authority", "decision", "evidence_commitments"):
-        if not adj.get(k):
-            return False, "EXACT_WITHOUT_ADJUDICATION"
+    if not all(adj.get(k) for k in ("adjudicator_identity", "authority", "decision")):
+        return False, "EXACT_WITHOUT_ADJUDICATION"
     if adj["decision"] != "EXACT":
         return False, "ADJUDICATION_DECISION"
     if adj["authority"] not in set((trust_root.get("authorities") or {}).get("mapping", [])):
         return False, "AUTHORITY_NOT_ADMITTED"
     if set(adj["evidence_commitments"]) != set(committed_ev):
         return False, "ADJUDICATION_MISMATCH"
-    if decision_record_id("mapping", subject, adj) not in set(trust_root.get("decision_register", [])):
-        return False, "DECISION_NOT_PINNED"           # authority label admitted, but record not pinned
     return True, None
 
 
@@ -315,14 +354,6 @@ def _validate(cand, index, trust_root):
     ordered, bodies, of = _validate_occurrences(cand, index); f += of
     closure = index[ordered[0][0]]["extraction_closure"] if ordered and ordered[0][0] in index else "unknown"
     aid = ids.act_id(closure, cand.get("blob_id", ""), ordered, ids.content_digest(bodies)) if ordered else "act:INVALID"
-    # a positive completeness/publication decision must have its exact decision-record id pinned
-    # in the register (P0-3): an admitted authority label is necessary but not sufficient.
-    if _decides(cand.get("completeness_decision"), "COMPLETE") \
-            and not _admitted(cand.get("completeness_decision"), "completeness", trust_root, "COMPLETE", aid):
-        f.append("DECISION_NOT_PINNED")
-    if _decides(cand.get("publication_decision"), "CLEARED_FOR_PUBLICATION") \
-            and not _admitted(cand.get("publication_decision"), "publication", trust_root, "CLEARED_FOR_PUBLICATION", aid):
-        f.append("DECISION_NOT_PINNED")
     validated, committed_ev, ef = _check_evidence(cand, index); f += ef
     samp = cand.get("sampling", {})
     if not isinstance(samp, dict):
@@ -335,7 +366,7 @@ def _validate(cand, index, trust_root):
         f.append("BAD_STATUS"); status = "AMBIGUOUS"
     elif claimed == "EXACT":
         missing = [c for c in REQUIRED_COMPONENTS if c not in validated]
-        adj_ok, adj_fault = _adjudication_ok(cand.get("adjudication"), committed_ev, trust_root, aid)
+        adj_ok, adj_fault = _adjudication_ok(cand.get("adjudication"), committed_ev, trust_root)
         if not adj_ok:
             f.append(adj_fault); status = "AMBIGUOUS"
         elif missing or (BLOCKING & set(f)):
@@ -481,9 +512,7 @@ def manifest_id(m):
 
 
 def _publishable(a, trust_root):
-    return (not a["faults"] and a["status"] == "EXACT"
-            and _admitted(a["completeness"], "completeness", trust_root, "COMPLETE", a["act_id"])
-            and _admitted(a["publication"], "publication", trust_root, "CLEARED_FOR_PUBLICATION", a["act_id"]))
+    return record_publishable(a.get("body") or {}, trust_root)
 
 
 def _view(claim, acts, manifest, bundle, trust_root, mclo):
