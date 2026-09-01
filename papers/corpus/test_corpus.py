@@ -418,8 +418,22 @@ try:
                == {(r["root_digest"], r["verifier_identity"]) for r in rows_})
     expect("proposal is for C2-MAP only (C2-MEAS not claimed)",
            pr["for"] == "C2-MAP" and pr["manifest"]["claim"] == "C2-MAP")
+    # the machine-local ACTIVATION-REPORT (structural bind; span revalidation is machine-local)
+    ar = json.loads((PAPER / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
+    expect("activation report_id recomputes",
+           ar["report_id"] == "arpt:" + ids.json_digest({k: v for k, v in ar.items() if k != "report_id"}))
+    expect("activation report: all assertions true", all(ar["assertions"].values()) and ar["metadata_only"])
+    expect("activation report binds the operand + proposal",
+           ar["operand"]["digest"] == "sha256:" + hashlib.sha256(opf.read_bytes()).hexdigest()
+           and ar["proposal"]["proposal_id"] == pr["proposal_id"])
+    expect("activation report: C2-MEAS stays REFUSED (no laundering)",
+           ar["result_vector"]["C2-MEAS"]["status"] == "REFUSED"
+           and ar["result_vector"]["applied"]["C2-MAP"] == "COMPLETE"
+           and ar["result_vector"]["baseline"]["C2-MAP"] == "REFUSED")
+    expect("activation report: trust root still unchanged (empty)",
+           ar["assertions"]["trust_root_unchanged"] and json.loads((PAPER / "CORPUS-TRUST-ROOT.json").read_text())["decision_register"] == [])
 except FileNotFoundError as e:
-    expect(f"production operand/proposal present: {e}", False)
+    expect(f"production operand/proposal/report present: {e}", False)
 
 print()
 if fails:
