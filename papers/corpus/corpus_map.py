@@ -31,7 +31,11 @@ import base64
 
 import corpus_ids as ids
 
-REQUIRED_COMPONENTS = ("experiment_id", "root_digest", "verifier_identity", "agent_run_occurrence")
+# experiment_id (EXP-RVB-1c) is not present in the raw transcripts and cannot be evidenced;
+# per the governance narrowing (operator, 2026-09-02) C2 is the OBSERVED-MODEL 4x2 unit, so the
+# required-evidence components are the three that ARE in the transcript bytes. experiment_id stays
+# an asserted field (1b/1c provenance AMBIGUOUS) — part of the mapping subject, not evidence-gated.
+REQUIRED_COMPONENTS = ("root_digest", "verifier_identity", "agent_run_occurrence")
 FORBIDDEN_EVIDENCE = {"count", "verdict"}
 ALLOWED_UNIT_KEYS = {"root_digest", "verifier_identity", "depth", "agent_run_occurrence", "experiment_id"}
 ACTRECORD_REQUIRED = (

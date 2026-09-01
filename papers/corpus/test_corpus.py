@@ -76,8 +76,9 @@ def mk(lr, root, ver, run="run", exp="EXP-RVB-1c", status="EXACT", comp="COMPLET
     eid = ids.event_id(TCLO, b, 0, len(body), ids.line_digest(body))
     ev, digs, off = [], [], 0
     for kind, val in parts:
-        it = evrec(kind, eid, off, off + len(val), val)
-        if with_ev:
+        # experiment_id is not an evidence-gated component (narrowed 2026-09-02): assert, don't evidence.
+        if with_ev and kind != "experiment_id":
+            it = evrec(kind, eid, off, off + len(val), val)
             ev.append(it); digs.append(ids.json_digest({k: it[k] for k in
                       ("kind", "event_id", "value_start", "value_end", "observed_value_digest")}))
         off += len(val) + 1
