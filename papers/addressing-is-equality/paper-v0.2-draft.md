@@ -234,16 +234,24 @@ The components are classical, and each source supports only the exact adjacent r
   construction; it is **not** a direct authority for content-addressed result-identity as phrased,
   and is cited only for the hash-tree lineage.
 
-**Novelty candidate (narrow, treated as OPEN).** After the NbE-freshness and content-addressed-system
-prior art above, the candidate is not "addressing is identity" (Dhall/Unison already do that) but the
-much thinner **priced settlement with a receipt** — an equality settlement that carries *both*
-normal-form addresses, both exit kinds, the **ATP budget spends**, and the machine/profile identity
-as the verdict. Even that thin sliver is not yet in the deposit end-to-end: the included Warrant pack
-is one-sided and `LEGACY_UNPINNED`, and the two-sided implementation lives only in the external DRAFT
-proposal, which the manifest does not yet vendor or pin by full content closure. **Novelty is
-therefore OPEN pending external prior-art review** (search log required in `DEPOSIT-AND-AUDIT.md`).
-Falsifier F1: if the composition reduces to an existing published technique, the novelty claim is
-withdrawn.
+- **Priced execution with a receipt** — gas-metered VMs (the Ethereum EVM) meter each operation and
+  emit a consensus receipt carrying `gasUsed`. This is the **nearest miss** to the sliver below: it
+  is priced execution with a receipt, but the receipt attests to *execution*, not to *equality of two
+  normal forms*, and gas is market-priced, not a deterministic budget bound on a total evaluator.
+
+**Novelty candidate (narrow, treated as OPEN).** After the NbE-freshness, content-addressed-system,
+and priced-execution prior art above, the candidate is not "addressing is identity" (Dhall/Unison/Nix
+already make the hash of the normal form the identity) but the much thinner **priced *equality*
+settlement with a two-sided receipt** — carrying *both* normal-form addresses, both exit kinds, the
+**ATP budget spend on each side**, and the machine/profile identity as the verdict, on a
+deterministic total evaluator where budget exhaustion is a canonical non-verdict. Even that thin
+sliver has a near-miss (Ethereum gas receipts) and is not yet in the deposit end-to-end: the included
+Warrant pack is one-sided and `LEGACY_UNPINNED`, and the two-sided implementation lives only in the
+external DRAFT proposal, which the manifest does not yet vendor or pin by full content closure.
+**Novelty is therefore OPEN** — an out-of-lineage search log is on file
+([`novelty-search-log.md`](novelty-search-log.md), Kimi 2026-09-01) but still needs an independent /
+human prior-art check. Falsifier F1: if the composition reduces to an existing published technique,
+the novelty claim is withdrawn.
 
 ## 7. Downstream execution (conformance, not adoption)
 

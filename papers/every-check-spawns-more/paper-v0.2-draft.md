@@ -213,13 +213,23 @@ These counterexamples suffice to retire the theorem; they do **not** validate an
 replacement is left to a reviewer with the relevant expertise, and "open" here means *open to us*,
 **not** claimed novel: under one natural set of assumptions — a work-conserving FIFO server, no
 abandonment, and each root closing as a Galton–Watson tree with mean total progeny 1/(1−μ) — this is
-a queue with branching-type service, and a stability result of the form "closes iff λ_G < (1−μ)λ_V"
-is likely already **standard** in the branching-process / general-branching literature
-(Crump–Mode–Jagers, Bellman–Harris). The honest framing is therefore "reduces to a known form under
-assumptions A, and the counterexamples above show it fails under B", not "a new open problem". We do
-not assert which citation settles it — that is exactly the one-hour check for a queueing-theory
-reviewer. A minimal executable simulation of the two counterexamples ships with the artifact so the
-retired theorem cannot return (`DEPOSIT-AND-AUDIT.md`).
+a queue with branching-type service. Two independent LLM reviewers (Fable, Kimi 2026-09-01) place
+the resulting stability condition λ_G < (1−μ)λ_V in the **standard** branching-service / feedback-queue
+literature — Crump–Mode–Jagers and multitype branching (Jagers 1975; Mode 1971), and the M/G/1 queue
+with feedback where the effective per-root service requirement is 1/(1−μ) acts (Disney–König 1985;
+Takagi 1991). The honest framing is therefore "reduces to a known form under assumptions A, and the
+counterexamples above show it fails under B", not "a new open problem". **Two corrections carry over
+from that reading:** (i) the v0.1 counterexamples fail precisely because they did mean-size
+accounting without fixing the scheduler — the mean-load bound is tight under *work-conserving FIFO
+with no size information* and false under size-aware scheduling (SRPT); and (ii) μ ≥ 1 with
+infinite-mean closure is a **transience** result (the backlog is not positive-recurrent), **not** a
+"throughput → 0" result — throughput → 0 additionally requires the scheduler to be unable to
+prioritise short closures. Both reviewers are themselves LLMs, not queueing-theory authorities, so
+the exact citation remains a one-hour check for a human reviewer; we assert the *reduction direction*,
+not a settled theorem. A minimal executable simulation of the two counterexamples ships with the
+artifact so the retired theorem cannot return (`DEPOSIT-AND-AUDIT.md`). What is *genuinely* open is
+whether the Monday-corpus process meets those assumptions at all — its offspring are not i.i.d., not
+depth-independent, and the path selection is purposive.
 
 ## 8. Historical settlement episode (legacy inline gate)
 
