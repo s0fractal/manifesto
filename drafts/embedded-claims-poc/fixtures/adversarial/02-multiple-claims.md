@@ -1,12 +1,23 @@
-# Adversarial 02 — multiple claims in one paragraph (T2)
+# Adversarial 02 — multiple capsules in one region (T2, capsule form)
+
+A region may carry several explicit capsules. Each is a separate machine-eligible bet;
+the surrounding prose is untouched.
+
+Звичайна проза може говорити про сім тез, цінність і білий конус — і це лишається
+прозою.
 
 <!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
-У корені три файли й шість підпапок, разом ⟦arith: 3 + 6 = 9⟧ елементів; діалогів
-Monday — ⟦arith: 74 + 1 = 75⟧, що більше за чернетки, тож ⟦cmp: 75 > 8⟧.
+```json capsule
+{"schema_version": "manifesto.capsule.v2", "claim": {"local_id": "A", "class": "arith", "payload": "3 + 6 = 9"}}
+```
+
+```json capsule
+{"schema_version": "manifesto.capsule.v2", "claim": {"local_id": "B", "class": "count", "payload": "/^## Теза [0-9]+:/ in README.md = 7"}}
+```
 
 <!-- manifesto-claims:end -->
 
-Expected: a conformant parser returns THREE live claims in document order
-(arith 3+6=9, arith 74+1=75, cmp 75>8), each with its own result — never just the
-first. Order is load-bearing (binding environment threads left-to-right).
+Expected — PARSE: status VALID, TWO capsules in document order, each with its own raw
+byte span. The prose sentence about theses is inert. Claims live INSIDE the capsules —
+the parser never scans the sentence.

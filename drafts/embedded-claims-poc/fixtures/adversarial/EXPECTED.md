@@ -1,73 +1,57 @@
-# Adversarial corpus — expected parser behavior (spec before code)
+# Adversarial corpus — expected parser behavior (capsule-only)
 
-What a CONFORMANT parser/compiler must do for each specimen. Written BEFORE the parser
-exists (Codex's pressure: record the ambiguities first). Each row becomes a test when
-the parser is built (phase 2 step 3) — passing with a TYPED reason, never a silent skip.
+What a CONFORMANT parser must do for each specimen. Executable in `test_parser.py`
+(13 specimens + 2 invariants, run by the CI gate).
 
-**Report-level status (Codex P0).** Every parse returns `status ∈ {VALID, INVALID,
-INERT}`: any fatal parse error ⇒ INVALID (candidates kept for diagnostics only, never
-for compile); a document with no live region ⇒ INERT; live regions with no fatal error
-⇒ VALID. The compiler precondition is `status == VALID`.
+**The pivot (operator + Codex).** The canonical pipeline grants machine credit ONLY to
+an explicit `json capsule` inside a live region. The parser never scans prose for inline
+claims — prose stays prose. The capsule CONTAINS the claim (class, payload, plus
+verifier/dep/binding), so claim↔capsule association is structural containment; the whole
+inline-glyph / `⟧`-escaping / `claim_ref` / `{#local_id}` / multiple-inline apparatus is
+retired from the normative parser (it survives only as LEGACY `settle_gate` authoring).
 
-**Layers are separated (Codex P1).** PARSE = region + block structure + claim/capsule
-recognition. COMPILE = closed-schema validation + claim↔capsule association + identity.
-A specimen that tests COMPILE uses schema-valid capsules so it actually reaches that
-layer instead of being rejected at schema first. A specimen that tests PARSE says so and
-its placeholder bodies are irrelevant to the parse verdict.
+**Report status (fail-closed).** `status ∈ {VALID, INVALID, INERT}`: any fatal parse
+error ⇒ INVALID; no live region ⇒ INERT; live region with no fatal error ⇒ VALID. The
+compiler precondition is `status == VALID`. Layers stay separated: PARSE = region + block
+structure + capsule extraction (byte spans); COMPILE (3c) = schema validation of the v2
+capsule + settlement of the contained claim.
 
-The specimens are themselves format-shaped text, so they also belong to the T1
-illustration corpus: they live under `fixtures/adversarial/` precisely so no repo sweep
-mistakes them for claims. Live specimens carry explicit `manifesto-claims` regions.
+## Region layer
 
-## Region layer (the decided §8.1 rule)
+| Specimen | Expected |
+|---|---|
+| `10-no-live-region.md` | INERT, `NO_LIVE_REGION` — explicit, not a silent skip. |
+| `11-unknown-profile.md` | INVALID, `UNKNOWN_PROFILE` — no fallback profile. |
+| `12-unbalanced-region.md` | INVALID, `NESTED_OR_DUP_BEGIN` + `MISSING_END`. |
+| `13-marker-in-fence.md` | INERT, `NO_LIVE_REGION` — markers inside a fence/blockquote are inert. |
+| `14-unexpected-end.md` | INVALID, `UNEXPECTED_END` — an `end` with no open region. |
+| `17-fake-end-in-fence.md` | VALID, 0 capsules — a fenced `end` is inert; the region spans past it (region state over CommonMark block state, not raw text). |
 
-| Specimen | Layer | Expected |
-|---|---|---|
-| `10-no-live-region.md` | PARSE | `NO_LIVE_REGION` — explicit, not a silent skip; glyphs never settled. |
-| `11-unknown-profile.md` | PARSE | `UNKNOWN_PROFILE` typed failure; no fallback profile. |
-| `12-unbalanced-region.md` | PARSE | `NESTED_OR_DUP_BEGIN` / `MISSING_END`; nothing inside settled. |
-| `13-marker-in-fence.md` | PARSE | Markers inside a fence/blockquote are inert ⇒ `NO_LIVE_REGION`. |
-| `14-unexpected-end.md` | PARSE | `UNEXPECTED_END` — an `end` with no open region; fail closed. |
-| `17-fake-end-in-fence.md` | PARSE | A fenced `end` is inert; the region spans both claims ⇒ TWO live claims. Region state is over CommonMark block state, not raw text. |
+## Capsule extraction
 
-## Claim / capsule sub-parsing (assumed inside a live region)
+| Specimen | Expected |
+|---|---|
+| `01-illustration-vs-live.md` | VALID, 1 capsule — the illustration inside an outer fence is inert; only the in-region capsule is live. |
+| `02-multiple-claims.md` | VALID, 2 capsules in order (local_ids A, B); surrounding prose inert. |
+| `03-nested-fences.md` | VALID, 0 capsules — a capsule inside an outer fence is inert (CommonMark block structure). |
+| `04-info-string-variants.md` | VALID, 1 capsule — only the exact raw opener ` ```json capsule` counts; leading-space (CommonMark trims `info`), uppercase, `json claim`, and `{profile}` variants are ordinary code. |
+| `05-unclosed-fence.md` | INVALID, `UNCLOSED_FENCE` (+`MISSING_END`, since the unclosed fence eats the region end). |
+| `09-claim-inside-capsule.md` | VALID, 1 capsule whose raw body contains the full v2 claim object; association is containment. |
+| `20-noncloser-line.md` | INVALID, `UNCLOSED_FENCE` (+`MISSING_END`) — ```` ```not-a-closer ```` is not a valid closing fence. |
 
-| Specimen | Threat | Layer | Expected |
-|---|---|---|---|
-| `01-illustration-vs-live.md` | T1 | PARSE | Exactly one live claim (`3+6=9`); the fenced `2+2=5` (fence wins inside region) and the out-of-region `1+1=3` are inert. |
-| `02-multiple-claims.md` | T2 | PARSE | All THREE claims, in document order, each its own result. Never just the first. |
-| `03-nested-fences.md` | T4 | PARSE | The `json capsule` inside an outer fence is inert; NO live capsule found. |
-| `04-info-string-variants.md` | T4 | PARSE | Only the exact `json capsule` opener is a candidate; the leading-space variant (CommonMark trims it) and the others are rejected at the RAW opener-line level. |
-| `05-unclosed-fence.md` | T4 | PARSE | `UNCLOSED_FENCE` typed error (CommonMark would run it to EOF); fail closed, never silent-drop. |
-| `06-glyph-in-code-fence.md` | T5 | PARSE | Prose glyph live; identical glyph inside ```` ```text ```` inert. |
-| `18-inline-code-and-html.md` | T5 | PARSE | VALID, one prose claim; glyphs in inline code / inline HTML inert; a `⟧` in a code span is not a delimiter error (claims come from TEXT nodes only). |
-| `19-malformed-claim-open.md` | — | PARSE | INVALID, `MALFORMED_CLAIM_OPEN` — an unmatched `⟦` fails closed instead of silently vanishing. |
-| `20-noncloser-line.md` | T4 | PARSE | INVALID, `UNCLOSED_FENCE` (+`MISSING_END`) — ```` ```not-a-closer ```` is not a valid closing fence; the exact closer rule rejects it. |
-| `07-delimiter-injection.md` | T7 | PARSE | No truncation at an embedded `⟧`; a capsule string's ```` ``` ```` does not close the fence. Absent an escaping rule, a typed error — never silent truncation. |
-| `08-unicode-normalization.md` | T6 | PARSE→ID | Default EXACT scalars; normalize a field only under its verifier profile; commit raw source occurrence separately; accept only U+27E6/U+27E7 delimiters. Global NFC is forbidden (it would alias distinct predicates). |
-| `09-claim-capsule-association.md` | T8 | COMPILE | Capsules bind by `claim_ref` (out-of-order on purpose), not adjacency; bodies are schema-valid (`manifesto.capsule.v1`) so association is actually reached; both capsules validate and carry claim_ref A/B (this is now an executable suite invariant). |
-| `15-dangling-claim-ref.md` | T8 | COMPILE | Capsule is schema-valid, then `DANGLING_CLAIM_REF` — `claim_ref` names no existing claim. |
-| `16-duplicate-local-id.md` | T8 | COMPILE | Two schema-valid capsules bind one local_id ⇒ `DUPLICATE_CLAIM_REF`; a claim owns at most one capsule. |
+## Invariants (across the corpus)
 
-## Invariants across the whole corpus
-
-1. **No silent skip.** Every malformed/ambiguous construct produces a typed, enumerable
-   outcome. Silence is the one forbidden result.
-2. **No guessing liveness.** Liveness is declared by an explicit region, or the parser
-   returns `NO_LIVE_REGION`. It is never inferred.
-3. **Structure, then protocol.** A pinned CommonMark pass gives block/nesting/inertness;
-   a protocol profile over the raw source spans adds exact-opener and explicit-closing
-   requirements CommonMark cannot express.
-4. **Identity after (field-scoped) normalization, with raw occurrence kept.** No digest
-   over globally-normalized text; the raw source occurrence is committed alongside the
-   semantic `claim_id`.
+1. **No silent skip.** Every malformed/ambiguous construct is a typed, enumerable outcome.
+2. **No guessing liveness.** Liveness is an explicit region, or `NO_LIVE_REGION`.
+3. **Structure, then protocol.** Pinned CommonMark for block/nesting/inertness; a protocol
+   profile over raw spans for exact opener/closer and exact markers.
+4. **Byte spans.** Every capsule carries a raw `[start,end]` byte span; the body is the raw
+   source slice (the source occurrence the compiler needs), and the span slices back to it.
+5. **parser_id binds the runtime.** The identity closes over parser.py + the lock + the
+   installed bytes/versions of markdown_it and mdurl; path-independent, checked cross-venv.
 
 ## Status
 
-The PARSE layer now EXISTS (`parser.py`, pinned markdown-it-py==4.2.0) and the PARSE
-column above is executable in `test_parser.py` (17 specimens + determinism, run by the
-CI gate). Specimens 03/04/05/07/08 carry explicit regions so their threat is exercised
-inside a live region. The COMPILE column (schema + association: `DANGLING_CLAIM_REF`,
-`DUPLICATE_CLAIM_REF`) is NOT yet executed — that is the 3c compiler. So 09/15/16 are
-checked only for correct STRUCTURE here; their association verdicts remain pending. This
-corpus is the spec the parser was built against, not the reverse.
+PARSE layer implemented and green (`parser.py`, pinned markdown-it-py==4.2.0). COMPILE
+(schema v2 + settlement of the contained claim) is the 3c compiler. The old inline
+`settle_gate` form and the SSD demos remain legacy authoring, not auto-migrated.

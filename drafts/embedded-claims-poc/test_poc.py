@@ -136,26 +136,8 @@ def main():
           + "canonical: deterministic + domain-separated + rejects float/dup/surrogate/bigint")
     failures += 0 if canon_ok else 1
 
-    # phase-2 step-3 oracle: adversarial 09's two capsules must be schema-valid under
-    # capsule.v1 (they were red before — `unknown field capsule.claim_ref`).
-    import re as _re
-    import schema as _S
-    txt = open(os.path.join(HERE, "fixtures/adversarial/09-claim-capsule-association.md"),
-               encoding="utf-8").read()
-    bodies = _re.findall(r"```json capsule\s*\n(.*?)\n```", txt, _re.S)
-    try:
-        parsed = [C.loads_strict(b) for b in bodies]
-        oracle_ok = (len(parsed) == 2
-                     and all(not _S.validate_capsule(p) for p in parsed)
-                     and sorted(p.get("claim_ref") for p in parsed) == ["A", "B"])
-    except C.CanonicalError:
-        oracle_ok = False
-    print(("ok   " if oracle_ok else "FAIL ")
-          + "adversarial 09: both capsules schema-valid, claim_ref A/B (capsule.v1)")
-    failures += 0 if oracle_ok else 1
-
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "
-          f"({len(CASES)} fixtures + 6 invariants)")
+          f"({len(CASES)} fixtures + 5 invariants)")
     return 0 if failures == 0 else 1
 
 

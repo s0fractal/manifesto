@@ -1,5 +1,20 @@
 # Parser threat model — embedded-claims phase 2 step 2 (before code)
 
+> **PIVOT (after step 3b, operator + Codex): the canonical pipeline is CAPSULE-ONLY.**
+> The parser no longer scans prose for inline `⟦…⟧` claims. Machine credit is granted
+> only to an explicit `json capsule` inside a live region, and the capsule CONTAINS its
+> claim, so claim↔capsule association is structural containment. This RETIRES threats
+> T2 (multiple inline claims), T3 (inline-in-prose), T5 (glyph-in-fence at the inline
+> level), and T7 (inline delimiter injection) from the normative parser, along with the
+> `{#local_id}` suffix and `claim_ref`. What STAYS load-bearing: T1 (live vs
+> illustration — solved by regions), T4 (fenced-capsule Markdown ambiguities), T6
+> (Unicode, now a compile/ID concern on capsule bodies), T8 (dissolved by containment),
+> plus the installed-dependency closure, exact markers/opener/closer, byte spans, and
+> report-level fail-closed. The inline sections below are kept for provenance; read them
+> as the history that led to the pivot, not as current parser requirements. The old
+> inline `settle_gate` form and the SSD demos remain LEGACY authoring, not auto-migrated.
+
+
 **Status:** threat model + corpus spec, written BEFORE the parser (Codex's pressure:
 don't wait, act — start from real documents and adversarial cases, not code). Records
 the Markdown ambiguities a conformant capsule/claim parser must resolve, grounded in

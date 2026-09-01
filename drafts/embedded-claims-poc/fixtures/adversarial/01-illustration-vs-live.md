@@ -1,24 +1,26 @@
-# Adversarial 01 — illustration vs live claim (T1, the central threat)
+# Adversarial 01 — illustration capsule vs live capsule (T1, the central threat)
 
-Two glyph claims that look identical byte-for-byte, disambiguated by the live-region
-rule and by fence context — not by guessing.
+Two `json capsule` blocks that look identical, disambiguated structurally: one is an
+illustration inside an outer fence, the other is live inside a region. No guessing.
+
+An illustration of a capsule, fenced as documentation (inert):
+
+````markdown
+```json capsule
+{"claim": {"class": "arith", "payload": "2 + 2 = 5"}}
+```
+````
+
+A live capsule inside a region:
 
 <!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
-A live claim, in prose inside the region: the repo root holds ⟦arith: 3 + 6 = 9⟧
-top-level entries.
-
-An illustration, fenced even though it is inside the region — the fence makes it inert:
-
-```text
-⟦arith: 2 + 2 = 5⟧
+```json capsule
+{"schema_version": "manifesto.capsule.v2", "claim": {"local_id": "T", "class": "arith", "payload": "3 + 6 = 9"}}
 ```
 
 <!-- manifesto-claims:end -->
 
-And a claim OUTSIDE any region, which is inert by construction: ⟦arith: 1 + 1 = 3⟧.
-
-Expected: exactly ONE live claim (`3+6=9`). The fenced `2+2=5` is inert (fence wins,
-even inside a region); the `1+1=3` outside the region is inert (no region). A parser
-that settles or refutes either non-live claim is wrong even though both are "false" —
-they were never claims.
+Expected — PARSE: status VALID, exactly ONE capsule (the live one). The illustration is
+content of the outer ````markdown fence, so CommonMark block structure makes it inert.
+Prose stays prose; only the explicit in-region capsule is machine-eligible.

@@ -91,25 +91,30 @@ Then:
 
 ```sh
 cd drafts/embedded-claims-poc
-../../.venv/bin/python test_poc.py                       # 22 fixtures + 6 invariants
+../../.venv/bin/python test_poc.py                       # 22 fixtures + 5 invariants
 ../../.venv/bin/python verify.py fixtures/valid/arith-self.md   # one fixture, human report
 ```
+
+**Pivot (step 3b):** the canonical pipeline is **capsule-only** — the parser grants
+machine credit only to an explicit `json capsule` inside a live region, and the capsule
+CONTAINS its claim. The inline `⟦…⟧` form above (`verify.py`, the 22 fixtures) is now
+LEGACY authoring / the settlement core, not the canonical extraction path; it is not
+auto-migrated. See `PARSER-THREAT-MODEL.md` and `fixtures/adversarial/EXPECTED.md`.
 
 The PARSE layer (step 3b) needs pinned Markdown deps (this ends the stdlib-only
 property, deliberately, for the parser):
 
 ```sh
 .venv/bin/pip install --require-hashes -r drafts/embedded-claims-poc/requirements-parser.lock
-../../.venv/bin/python test_parser.py     # 20 PARSE specimens over fixtures/adversarial/
+../../.venv/bin/python test_parser.py     # 13 PARSE specimens (capsule-only) over fixtures/adversarial/
 ../../.venv/bin/python parser.py fixtures/adversarial/02-multiple-claims.md   # one file
 ```
 
 `test_poc.py` exits 0 iff every fixture lands on its exact `(execution, binding)`
-and required facts, AND six invariants hold: identity does not alias
+and required facts, AND five invariants hold: identity does not alias
 (world-same-input), the report is byte-deterministic across runs, the body
 commitment detects field mutation, the effect path is Sigma-independent (runs under
-`python -S`), canonicalization rejects floats/dup-keys/surrogates/big-ints, and the
-adversarial `09` capsules are schema-valid under `manifesto.capsule.v1` (`claim_ref`).
+`python -S`), and canonicalization rejects floats/dup-keys/surrogates/big-ints.
 
 ## What actually stood up (verified)
 
@@ -166,7 +171,7 @@ schema.py       closed capsule schema (additionalProperties:false), stdlib-only
 parser.py       PARSE layer (step 3b): pinned CommonMark + protocol profile over raw spans
 requirements-parser.lock   hash-locked markdown-it-py==4.2.0 + mdurl==0.1.2
 test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
-test_parser.py  20 PARSE specimens + 2 invariants (status, golden claims/refs/spans, x-proc determinism)
+test_parser.py  13 PARSE specimens + 2 invariants (capsule-only: status, capsule count/local_id/span)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,

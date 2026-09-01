@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           python3 -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
           python3 drafts/embedded-claims-poc/test_poc.py | tee poc.log
-          grep -q "ALL PASS (22 fixtures + 6 invariants)" poc.log
+          grep -q "ALL PASS (22 fixtures + 5 invariants)" poc.log
 
       # The PARSE layer (phase 2 step 3b) uses a PINNED markdown-it-py + mdurl, both
       # with wheel hashes, installed via --require-hashes (a bare version pin would
@@ -57,4 +57,4 @@ jobs:
           set -euo pipefail
           python3 -c "import markdown_it; assert markdown_it.__version__=='4.2.0'; print('markdown-it-py', markdown_it.__version__)"
           python3 drafts/embedded-claims-poc/test_parser.py | tee parse.log
-          grep -q "ALL PASS (20 PARSE specimens + 2 invariants)" parse.log
+          grep -q "ALL PASS (13 PARSE specimens + 2 invariants)" parse.log
