@@ -225,33 +225,45 @@ The components are classical, and each source supports only the exact adjacent r
   must be fresh / unnameable (de Bruijn levels, gensym). "An admitted domain that refuses terms
   naming the marker" is that same side-condition under another name; recognising this *narrows* the
   contribution rather than voiding it.
-- **Content-addressed identity in real systems** — the idiom "the hash of the normal form *is* the
-  identity" already exists in deployed tools: **Dhall's** semantic-integrity hash is literally the
-  hash of a normalized expression; **Unison** makes the content hash the definition's identity;
-  **Nix** derivation hashes and **IPLD** content-address structured data. These are the nearest
-  living prior art and **must be examined in the search log before any novelty is asserted.**
+- **Content-addressed identity in real systems — three *different* hash relations, not one.** They
+  all narrow novelty, but by different routes, and must not be merged into "the hash of the normal
+  form is identity":
+  - **Dhall** — the semantic-integrity hash of a *canonicalised/normalised* expression. This is the
+    **close normal-form precedent** and the one that most directly pre-empts "addressing is identity"
+    for normalized data.
+  - **Unison** — hashes a term/type *declaration's internal syntax structure and dependencies*:
+    **definition identity**, not the normal form of a *computed result*.
+  - **Nix** — distinguishes input-addressed derivations from content-addressed build outputs /
+    realisations: **build-product identity**, not program normal-form identity.
+  - **IPLD / Merkle** content-address structured data (data-structure identity).
+  These are the nearest living prior art and are examined in
+  [`novelty-search-log.md`](novelty-search-log.md).
 - **Content-addressing lineage** — Merkle 1987 [@merkle1987] is a hash-based *digital-signature*
   construction; it is **not** a direct authority for content-addressed result-identity as phrased,
   and is cited only for the hash-tree lineage.
 
-- **Priced execution with a receipt** — gas-metered VMs (the Ethereum EVM) meter each operation and
-  emit a consensus receipt carrying `gasUsed`. This is the **nearest miss** to the sliver below: it
-  is priced execution with a receipt, but the receipt attests to *execution*, not to *equality of two
-  normal forms*, and gas is market-priced, not a deterministic budget bound on a total evaluator.
+- **Priced execution with a receipt** — gas-metered VMs (the Ethereum EVM) have a *deterministic
+  protocol gas schedule* and a per-transaction gas limit for a fixed execution context (the wei
+  *price* per gas is the separate, market/protocol-priced quantity — do not conflate the two). The
+  real boundary is not "deterministic vs market-priced": it is that an EVM receipt records
+  *execution / state-transition facts and gas used*, **not a two-sided equality settlement over a
+  total canonicalising evaluator**. That is the near-miss.
 
-**Novelty candidate (narrow, treated as OPEN).** After the NbE-freshness, content-addressed-system,
-and priced-execution prior art above, the candidate is not "addressing is identity" (Dhall/Unison/Nix
-already make the hash of the normal form the identity) but the much thinner **priced *equality*
-settlement with a two-sided receipt** — carrying *both* normal-form addresses, both exit kinds, the
-**ATP budget spend on each side**, and the machine/profile identity as the verdict, on a
-deterministic total evaluator where budget exhaustion is a canonical non-verdict. Even that thin
-sliver has a near-miss (Ethereum gas receipts) and is not yet in the deposit end-to-end: the included
+**Novelty candidate (narrow, treated as OPEN).** After the prior art above, the candidate is not
+"addressing is identity" — Dhall already hashes the normalised expression, and Unison and Nix pin
+definition- and build-product identity by other routes. The much thinner surviving candidate is a
+**priced *equality* settlement with a two-sided receipt** — carrying *both* normal-form addresses,
+both exit kinds, the **ATP budget spend on each side**, and the machine/profile identity as the
+verdict, on a deterministic total evaluator where budget exhaustion is a canonical non-verdict. Even
+that has the EVM-receipt near-miss above and is not yet in the deposit end-to-end: the included
 Warrant pack is one-sided and `LEGACY_UNPINNED`, and the two-sided implementation lives only in the
 external DRAFT proposal, which the manifest does not yet vendor or pin by full content closure.
-**Novelty is therefore OPEN** — an out-of-lineage search log is on file
-([`novelty-search-log.md`](novelty-search-log.md), Kimi 2026-09-01) but still needs an independent /
-human prior-art check. Falsifier F1: if the composition reduces to an existing published technique,
-the novelty claim is withdrawn.
+**Novelty is therefore OPEN.** A comparison memo from an out-of-lineage reviewer is on file
+([`novelty-search-log.md`](novelty-search-log.md), Kimi 2026-09-01) — but it is a *comparison memo,
+not yet a reproducible search log* (no query strings, databases, per-query dates, DOIs for most rows,
+inclusion criteria, or screened counts), so the prior-art obligation is **not closed** and still needs
+an independent / human search. Falsifier F1: if the composition reduces to an existing published
+technique, the novelty claim is withdrawn.
 
 ## 7. Downstream execution (conformance, not adoption)
 

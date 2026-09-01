@@ -3,12 +3,16 @@
 **Purpose.** Deposit requires a dated prior-art search log (Codex P1-B5; `DEPOSIT-AND-AUDIT.md §B`)
 before any novelty is asserted. F1 in `CLAIM-LEDGER.md` treats novelty as **OPEN**.
 
-**Provenance & status.** The core search was produced by an **out-of-lineage** reviewer — Kimi Chat
-(Moonshot AI), 2026-09-01, reviewing commit `25123df` (`reviews/2026-09-kimi-001.md`, Task 3). It is
-recorded here as received. It is **one** search by **one** LLM reviewer, not an exhaustive or
-human-verified survey; novelty stays **OPEN** until an independent (ideally human) prior-art review
-confirms it. Each row states whether the candidate anticipates the *whole* claimed sliver or only a
-component.
+**Provenance & status.** The core comparison was produced by an **out-of-lineage** reviewer — Kimi
+Chat (Moonshot AI), 2026-09-01, reviewing commit `25123df` (`reviews/2026-09-kimi-001.md`, Task 3),
+recorded here as received.
+
+**This is a comparison memo, NOT yet a reproducible search log (Codex closure P1-1).** It lacks the
+fields a citable search needs: per-candidate **query strings**, **databases searched**, **dates per
+query**, **DOIs/URLs for most rows**, **inclusion/exclusion criteria**, and **screened-result
+counts**. Therefore the prior-art obligation (F1) is **NOT closed**; novelty stays **OPEN** until an
+independent (ideally human) search supplies those fields and verifies the relations below. Each row
+states whether the candidate anticipates the *whole* claimed sliver or only a component.
 
 ## Claimed sliver under test
 

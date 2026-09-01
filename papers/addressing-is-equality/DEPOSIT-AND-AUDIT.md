@@ -40,9 +40,12 @@ ledger*:
 
 ## B. Bibliography audit
 
-**None of these keys is connected to the v0.2 body through a Pandoc citation today (Codex P1-S4/B5).**
-The `[@key]` markers in §6 must be added before any "in-text: yes" is true and before `--citeproc`
-resolves anything. Each source is scoped to the *exact adjacent relation* it actually supports:
+**Status (updated over the Kimi commit, Codex P1-3).** §6 now carries **four** `[@key]` markers —
+`@ershov1958`, `@filliatre2006`, `@berger1991`, `@merkle1987`; a matching `references.bib` and
+`--citeproc` resolution are still owed, and the deployed-systems rows (Dhall/Unison/Nix/IPLD, EVM) are
+cited by name/URL in `novelty-search-log.md`, not yet as bib keys. (Paper A's body still has **no**
+`[@key]`; the two papers differ here.) Each source is scoped to the *exact adjacent relation* it
+supports:
 
 | key | supports (exact relation) | over-reach to avoid | verdict |
 |---|---|---|---|
@@ -157,35 +160,35 @@ status_note: >
 - Author, exact date, keywords, artifact revision, evaluator (`0.6.7`) **and** the DRAFT profile
   commit (`196c45a`) are front-matter fields; profile commit is separate from evaluator version.
 
-## F. Acceptance-gate self-check (brief §8)
+## F. Acceptance-gate self-check (brief §8) — truthful status, not blanket "yes" (Codex P1-3/P0-4)
 
-- every abstract claim is a ledger row — **yes** (B1–B8);
-- no historical false claim outside history/counterexample — **unconditional soundness / bare 601 ATP
-  / "released profile" / `ISZERO∘SUB` all removed**; errata trajectory in §8;
-- assumptions adjacent — **yes** (§3 boundary, §4 contract stated as argued obligations);
-- every number replayed or classified — **yes** (§C; ATP replay, surface-labeled, bound to term hash);
-- positive and negative fixtures both exercised — **yes** (cost matrix + collision counterexample +
-  mutations + admission refusal of `PLUS 7 5`);
-- current/legacy and permissive/DRAFT-profile not conflated — **yes** (surface label throughout;
-  evaluator wheel split from profile commit);
-- CI/replay/review/publication/adoption distinct — **yes** (§0, §7 two Warrant credits, §8);
-- one-paragraph "what would weaken the central claim" — **yes** (§9 typed falsifiers; only
-  `integrity_break`/`within-sample_counterexample` falsify);
-- license scope + missing external validation (no second implementation; novelty OPEN) visible —
-  **yes** (§6, §9, §B search log, §E);
-- no document-level green inferred from local green — **N/A** (single settlement method, not a
-  document verdict), and the checker is being rebuilt so its local green no longer borrows the
-  broader "re-executes / released-profile" claim (§A).
+| gate | status | note |
+|---|---|---|
+| every abstract claim is a ledger row | **yes** | B1–B8 |
+| no historical false claim outside history/counterexample | **yes** | unconditional soundness / bare 601 ATP / "released profile" / `ISZERO∘SUB` removed; typed blocklist; errata in §8 |
+| assumptions adjacent | **yes** | §3 boundary; §4 contract stated as argued obligations |
+| every number replayed or classified | **PARTIAL / BLOCKED** | ATP replay + receipts re-derived and surface-labeled, but the paper says figures are "bound by AST hash" (§1, §5) and **the checker emits no term/AST hashes** — the closed-manifest checker (§A) is not implemented |
+| positive and negative fixtures both exercised | **yes** | cost matrix + marker collision + M1/M2/M3 + admission refusal of `PLUS 7 5` |
+| candidate paper bound to the checker | **BLOCKED** | deleting `paper-v0.2-draft.md` leaves the checker green (Codex P0-4); no candidate digest / closed claim-ID set consumed |
+| DRAFT profile vendored + admission fixtures | **BLOCKED** | `church@v0` @196c45a is not yet vendored/pinned; admission/refusal fixtures not in the deposit |
+| current/legacy and permissive/DRAFT-profile not conflated | **yes** | surface label throughout; evaluator wheel split from profile commit |
+| CI/replay/review/publication/adoption distinct | **yes** | §0; §7 two Warrant credits; §8 |
+| "what would weaken the central claim" | **yes** | §9 typed falsifiers |
+| license scope + missing external validation visible | **yes** | §6, §9, §B, §E |
+| no document-level green inferred from local green | **N/A** | single settlement method; checker rebuild pending (§A) so local green no longer borrows the "re-executes / released-profile" claim |
 
 ## H. Zenodo mechanics & record genre (operator decisions; from Fable review 2026-09-01 §2.8/§3)
 
-Cross-paper Zenodo mechanics (one `license` field per record, two linked records, v0.2 as first
-version, author = accountable human + ORCID, ship `reviews/`, stale `.html`) are recorded once in the
-**flagship** `every-check-spawns-more/DEPOSIT-AND-AUDIT.md §H`; they apply here identically.
+Cross-paper Zenodo mechanics (**mixed-license uploads are supported — two linked records are a policy
+choice, not a Zenodo requirement**; v0.2 as first version; author = accountable human + ORCID; ship
+`reviews/` + `reviews/prompts/`; the build now refuses the SUPERSEDED source; stale `.html`) are
+recorded once in the **flagship** `every-check-spawns-more/DEPOSIT-AND-AUDIT.md §H–§I`; they apply here
+identically.
 
 **Record genre for this paper.** Because no deposited implementation both admits the motivating case
 and emits the two-sided receipt (the paper's own central finding), this belongs as
 `upload_type: publication / technicalnote` — an **incident-and-repair note** — or as an appendix to
 Paper A, **not** as a "paper" that would lead a reader to expect a realized method. **Review
-provenance:** the Fable review is same-lineage with the draft, so it is within-lineage replication,
-not the out-of-lineage adversarial pass; Codex remains the only out-of-lineage review to date.
+provenance (updated over the Kimi commit):** Codex (OpenAI) and Kimi (Moonshot) are **out-of-lineage**;
+Fable is **same-lineage** (within-lineage replication). "Two model readings, one out-of-lineage" —
+never "two independent reviewers". A **human** prior-art / adversarial review is still owed.

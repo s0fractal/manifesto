@@ -209,27 +209,23 @@ break the v0.1 closed forms for other schedulers:
 - An expiry equilibrium would require a **reflected, non-negative** queue (`max(0, (λ_G−(1−μ)λ_V)/δ)`);
   the v0.1 formula can go negative.
 
-These counterexamples suffice to retire the theorem; they do **not** validate any replacement. The
-replacement is left to a reviewer with the relevant expertise, and "open" here means *open to us*,
-**not** claimed novel: under one natural set of assumptions — a work-conserving FIFO server, no
-abandonment, and each root closing as a Galton–Watson tree with mean total progeny 1/(1−μ) — this is
-a queue with branching-type service. Two independent LLM reviewers (Fable, Kimi 2026-09-01) place
-the resulting stability condition λ_G < (1−μ)λ_V in the **standard** branching-service / feedback-queue
-literature — Crump–Mode–Jagers and multitype branching (Jagers 1975; Mode 1971), and the M/G/1 queue
-with feedback where the effective per-root service requirement is 1/(1−μ) acts (Disney–König 1985;
-Takagi 1991). The honest framing is therefore "reduces to a known form under assumptions A, and the
-counterexamples above show it fails under B", not "a new open problem". **Two corrections carry over
-from that reading:** (i) the v0.1 counterexamples fail precisely because they did mean-size
-accounting without fixing the scheduler — the mean-load bound is tight under *work-conserving FIFO
-with no size information* and false under size-aware scheduling (SRPT); and (ii) μ ≥ 1 with
-infinite-mean closure is a **transience** result (the backlog is not positive-recurrent), **not** a
-"throughput → 0" result — throughput → 0 additionally requires the scheduler to be unable to
-prioritise short closures. Both reviewers are themselves LLMs, not queueing-theory authorities, so
-the exact citation remains a one-hour check for a human reviewer; we assert the *reduction direction*,
-not a settled theorem. A minimal executable simulation of the two counterexamples ships with the
-artifact so the retired theorem cannot return (`DEPOSIT-AND-AUDIT.md`). What is *genuinely* open is
-whether the Monday-corpus process meets those assumptions at all — its offspring are not i.i.d., not
-depth-independent, and the path selection is purposive.
+These counterexamples suffice to retire the theorem; they do **not** validate any replacement, and
+this paper **states no replacement**. We deliberately do not assert a stability condition, a
+throughput statement, a fraction-closed bound, or a scheduler comparison here — those are four
+different observables, and the v0.1 error was to bind them into one sentence.
+
+What we can honestly say is a **pointer, not a result**: two model readings (Fable; Kimi 2026-09-01 —
+one out-of-lineage, neither a queueing-theory authority) suggest the natural formalisation is a
+single-server queue with *branching-type service*, and that its literature family is general branching
+processes (Crump–Mode–Jagers / multitype: Jagers 1975; Mode 1971) and single-server queues with
+feedback (Disney–König–Schmidt 1984). That is **discovery credit** — where a reviewer should look —
+not adjacent evidence for any specific proposition: none of those sources is yet connected to an exact
+theorem/page matching a defined model here. Writing the model down (queue state, service law,
+discipline, one observable, a proposition, a proof, and a matching citation) is future work; so is the
+scheduler-counterexample simulation, which is **planned and not yet in the artifact** (see
+`DEPOSIT-AND-AUDIT.md` and the ledger's open list — it is owed, not shipped). Until then §7 is
+**genuinely open**, and it is further open whether the Monday-corpus process meets those assumptions at
+all — its offspring are not i.i.d., not depth-independent, and the path selection is purposive.
 
 ## 8. Historical settlement episode (legacy inline gate)
 

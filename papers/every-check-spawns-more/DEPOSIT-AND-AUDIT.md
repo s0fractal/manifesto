@@ -130,30 +130,39 @@ status_note: >
 - Author, exact date, keywords, artifact revision, and evaluator/interpreter identifiers are
   placeholders and must be filled at deposit.
 
-## F. Acceptance-gate self-check (brief §8)
+## F. Acceptance-gate self-check (brief §8) — truthful status, not blanket "yes" (Codex P1-3/P0-4)
 
-- every abstract claim is a ledger row — **yes** (`CLAIM-LEDGER.md` C1–C9);
-- no historical false claim survives outside history/counterexample — **theorem/bound/phase-transition
-  removed** (§A of MIGRATION-NOTES);
-- model assumptions adjacent to the statement — **yes** (§5 policies-first);
-- every number re-derived / replayed / classified — **yes** (§C split);
-- positive and negative fixtures exercised — **yes** (controls + counterexamples + gate boundary);
-- current and legacy pipelines not conflated — **yes** (§7 labels the legacy inline gate);
-- CI / replay / review / publication / adoption kept distinct — **yes** (§0 status vocabulary);
-- one-paragraph "what would weaken the central claim" — **yes** (§8 falsifiers F1–F6);
-- license scope and missing external validation visible — **yes** (§9, §E);
-- no document-level green inferred from local green — **N/A to this paper; asserted for the pipeline it cites**.
+A "yes" here must correspond to an implemented, executable gate. Several do not yet, so they read
+**BLOCKED** with a pointer to the missing artifact — not "yes".
+
+| gate | status | note |
+|---|---|---|
+| every abstract claim is a ledger row | **yes** | ledger rows are **C1–C8** (there is no C9) |
+| no historical false claim outside history/counterexample | **yes** | theorem/bound/phase-transition removed (MIGRATION §A); typed blocklist |
+| model assumptions adjacent to the statement | **yes** | §5 policies-first; §7 states no model |
+| every number re-derived / replayed / classified | **PARTIAL / BLOCKED** | COMPILE-0030 + AIE replay & receipts are re-derived; the per-act ô tables are **transcript-only, not re-derived** — the closed-manifest checker (§A) is not implemented |
+| positive and negative fixtures exercised | **PARTIAL / BLOCKED** | controls + gate boundary present; the promised **scheduler-counterexample simulation does not exist yet** (§7, ledger open list) |
+| candidate paper bound to the checker | **BLOCKED** | deleting `paper-v0.2-draft.md` leaves the checker green (Codex P0-4); no candidate digest / closed claim-ID set is consumed |
+| current and legacy pipelines not conflated | **yes** | §8 labels the legacy inline gate |
+| CI / replay / review / publication / adoption kept distinct | **yes** | §0 status vocabulary |
+| "what would weaken the central claim" | **yes** | §9 typed falsifiers |
+| license scope and missing external validation visible | **yes** | §9, §E, §H |
+| no document-level green inferred from local green | **N/A** | asserted for the pipeline it cites |
 
 ## H. Zenodo mechanics (cross-paper; from Fable review 2026-09-01 §3) — operator decisions, not executed here
 
-These correct a wrong implicit assumption in §E: **Zenodo binds one `license` field per record; it
-has no path-scoped dual license.** The GitHub integration archives the whole repo under a single
-field. Therefore, at deposit (operator's call — nothing here reserves a DOI or creates a record):
+At deposit (operator's call — nothing here reserves a DOI or creates a record):
 
-1. **Two linked records, not one.** A *publication* record under CC BY-SA 4.0 (paper PDF + md +
-   ledger + documentary evidence) and a *software* record under AGPL-3.0-only (tools, checkers),
-   linked by `isSupplementedBy` / `isSupplementTo` — or a single manual curated upload of the §E
-   manifest. Option one matches the repository's own path-scoped `LICENSE`.
+1. **Two linked records are a policy *choice*, not a Zenodo requirement (corrected, Codex P1-2).**
+   Current Zenodo help documents **mixed-license uploads** (multiple applicable licenses may be
+   declared for files under different licenses), so a single mixed-license record is possible; the
+   older REST API's singular `license` field is not a safe description of the current model. **Verify
+   the chosen workflow against the current Zenodo UI/API immediately before deposit.** Two linked
+   records — a *publication* (CC BY-SA 4.0: paper PDF + md + ledger + documentary evidence) and a
+   *software* record (AGPL-3.0-only: tools, checkers), linked by `isSupplementedBy` /
+   `isSupplementTo` — may still be the clearest design for genre/citation/versioning reasons; keep it
+   for those reasons, not because Zenodo forbids a mixed record. Either way, include the repository's
+   path-scoped `LICENSE` authority and both complete license texts in the curated artifact.
 2. **Versions.** Deposit **v0.2 as the first version** of the record (concept DOI + version DOI). Do
    **not** deposit v0.1 — it lives in git history; the record links the commit. Promotion order:
    `paper-v0.2-draft.md → paper.md`, and `paper.md → paper-v0.1-superseded.md`.
@@ -163,13 +172,36 @@ field. Therefore, at deposit (operator's call — nothing here reserves a DOI or
    it, and the field would fake one.
 4. **`CITATION.cff`.** Keep `type: software` for the repo; add a `preferred-citation` block
    (`type: article`/`report`) carrying the DOI once minted.
-5. **Ship `reviews/` in the record.** Codex, Qwen, and this Fable review, plus responses. This is
-   what makes "not peer-reviewed" both honest and informative, and is the record's real distinction
-   from an ordinary preprint.
-6. **Stale build artifacts.** The `.html` in the paper dirs is built from v0.1 and must be removed or
-   regenerated from the promoted draft before deposit; `build.sh` must target the v0.2 surface.
+5. **Ship `reviews/` in the record.** Codex, Kimi, Qwen, and the Fable review, plus responses and the
+   `reviews/prompts/` used. This is what makes "not peer-reviewed" both honest and informative, and is
+   the record's real distinction from an ordinary preprint.
+6. **Stale build artifacts.** The `.html` in the paper dirs is built from v0.1 (now carries a
+   SUPERSEDED banner) and must be removed or regenerated from the promoted draft before deposit;
+   `build.sh` must target the v0.2 surface (see §I).
 
-**Review-provenance caveat.** The Fable 2026-09-01 review is **same-lineage** with the drafts (both
-Claude-family), so by the papers' own §3.5 logic it is within-lineage replication, **not** the
-out-of-lineage adversarial pass. Codex remains the only out-of-lineage review; the planned Kimi/Qwen
-pass is still owed before "externally reviewed" may be claimed.
+**Review-provenance (updated over the Kimi commit, Codex P1-3).** Reviews to date:
+**Codex** (OpenAI) and **Kimi** (Moonshot) are **out-of-lineage** with the Claude-family drafts;
+**Fable** is **same-lineage** (within-lineage replication, not independent validation). "Two model
+readings, one out-of-lineage" — never "two independent reviewers". Lineage diversity is discovery
+credit, not validation. Still owed before "externally reviewed": a **human** review (and the planned
+Qwen adversarial pass on the v0.2 surface).
+
+## I. Controlled-forgetting interim state (Codex closure P0-3) — retirement pending / quarantined
+
+Controlled forgetting so far removed the retired claims from the **README surface** (what the Kimi
+Step-0 probe reads), but the full v0.1 body still sits at the canonical `paper.md` path, and copying a
+retired artifact under a tombstone is itself a resurrection channel
+(`drafts/CONTROLLED-FORGETTING-0.1.md` I2/I3). Until promotion is authorized, this repository is in an
+explicit **retirement-pending / quarantined** state, made honest by:
+
+- a `status: SUPERSEDED` front-matter field + a typed tombstone at each canonical `paper.md`;
+- **`build.sh` now refuses a SUPERSEDED source (exit 2)** — the default build cannot regenerate the
+  retired body;
+- a SUPERSEDED banner on the stale `.html`;
+- `papers/README.md` marking the canonical files "v0.1 (retirement pending)".
+
+**This is interim, not the end state.** At promotion (operator's call, deferred until v0.2
+placeholders/citations are filled): rename `paper.md → paper-v0.1-superseded.md`, promote the reviewed
+`paper-v0.2-draft.md → paper.md` (which drops the `status: SUPERSEDED` guard), regenerate the build
+and HTML, and record the exact loss. A default-context/build probe must then be unable to recover a
+retired claim without explicitly requesting the historical file.
