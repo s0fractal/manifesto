@@ -71,6 +71,8 @@
       "title": "the eight preserved transcripts selected for the governed 4x2 cohort (four crossed-comparison roots x observed model) form an addressable 4x2 cohort, byte-mapped to the frozen corpus; run-level 1b/1c provenance NOT established",
       "corpus_dir": "papers/every-check-spawns-more",
       "definition": "papers/every-check-spawns-more/CORPUS-C2-MAP-CLAIM-0.1.md",
+      "trust_anchor": {"repo": "s0fractal/manifesto", "ref": "refs/remotes/origin/main",
+        "note": "Declared policy input (NOT cryptographic): the activation + receipt commits must be ancestors of the pinned repository's fetched remote-tracking ref. A signed-commit/tag or GitHub attestation anchor would strengthen this; absent it, credit is refused."},
       "operands": [
         "papers/every-check-spawns-more/CORPUS-C2-MAPPING-0.2.json",
         "papers/every-check-spawns-more/CORPUS-C2-MAP-ACTIVATION-0.1.json",

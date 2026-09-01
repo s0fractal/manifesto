@@ -7,7 +7,7 @@
  "note": "Explicit, reviewable activation overlay (NOT a one-off simulation). The operator act is to apply trust_root_diff to the committed empty CORPUS-TRUST-ROOT.json. It activates ONLY C2-MAP (cohort addressability of the 8 transcripts). C2-MEAS (offspring/dedup/ô) has no manifest and stays REFUSED: MEASUREMENT_NOT_REPLAYED — greening it from this would be composition laundering.",
  "manifest": {
   "claim": "C2-MAP",
-  "paper_pin": "sha256:c43bcbff12b0f1d3bed948467813bdae6dac676255003c4aeb8ac6a2dd1ef1a4",
+  "paper_pin": "sha256:198509d7c20990f868b6a82efaf13d4f29a648e4cd62c002b7f58a0f540b2098",
   "experiment_ids": [
    "asserted:EXP-RVB-1c"
   ],
@@ -618,7 +618,7 @@
    ]
   },
   "pinned_manifests": {
-   "C2-MAP": "man:1cf440238444d480e17aabba9cd21c25b5d1f048d1c0d50b1458626276b3cedd"
+   "C2-MAP": "man:d91472741099e2832828e9b6d0fec431c35915f14ef01b5812a81316d887ead5"
   },
   "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
   "decision_register": [
@@ -648,5 +648,5 @@
    "dec:72ebbca9487ec028a3e31fec4a428fb8a87db30ee6795b713a9c2e93f0ac90a8"
   ]
  },
- "proposal_id": "prop:51f6f3030d951144824c769b88f487f32647fea88b2d38b1d71f83352f90a98b"
+ "proposal_id": "prop:1abb685d30aee7a49b04b073844e9d14955bb4ac38625094a94156db37de1a12"
 }

@@ -31,6 +31,7 @@ PAPER = Path(__file__).resolve().parents[1] / "every-check-spawns-more"
 AUTHORIZED_PATHS = ["papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
                     "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json"]
 COMMIT_RECEIPT = "CORPUS-C2-MAP-COMMIT-RECEIPT.json"
+RECEIPT_PATH = "papers/every-check-spawns-more/CORPUS-C2-MAP-COMMIT-RECEIPT.json"
 COMMIT_RECEIPT_FIELDS = {"schema", "activation_commit", "parent_commit", "changed_paths",
                          "trust_root_blob_digest", "operator_act_blob_digest",
                          "proposal_id", "activation_report_id", "resulting_trust_root_digest"}
@@ -128,14 +129,60 @@ def build_commit_receipt(activation_commit, act, live_root_bytes, act_bytes):
             "resulting_trust_root_digest": act["resulting_trust_root_digest"]}
 
 
-def verify_activation_commit(repo_root, corpus_dir, act, receipt, live_root_bytes, act_bytes):
-    """Bind the operator act to a REAL, path-limited Git activation commit (P0-1). Distinguishes the
-    promised governance commit from two self-minted JSON files. The operator-authority rule is
-    EXPLICIT: repository-write authority, evidenced by the activation commit being an ancestor of the
-    branch tip (it was accepted into the pushed history). Returns (ok, faults).
+def verify_activation_commit_core(repo_root, commit, act, live_root_bytes, act_bytes):
+    """Local Git-execution integrity of the ACTIVATION commit alone: it exists, has exactly the named
+    parent, changed exactly the two authorized paths, and its two committed blobs are byte-identical to
+    the validated live root + operator act. Returns (ok, faults). Does NOT prove authority."""
+    F = []
 
-    If no Git object database is reachable (a deposit/archive tarball), fails closed with a typed
-    reason — credit for the transition requires the verifiable Git provenance."""
+    def need(c, code):
+        if not c:
+            F.append(code)
+        return c
+    rc, _ = _git(repo_root, "rev-parse", "--git-dir")
+    if rc != 0:
+        return False, ["OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE"]
+    rc, _ = _git(repo_root, "cat-file", "-e", commit + "^{commit}")
+    if not need(rc == 0, "ACTIVATION_COMMIT_MISSING"):
+        return False, F
+    rc, out = _git(repo_root, "rev-parse", commit + "^")
+    rc2, want_parent = _git(repo_root, "rev-parse", act["parent_commit"])
+    need(rc == 0 and rc2 == 0 and out.strip() and out.strip() == want_parent.strip(), "ACTIVATION_COMMIT_WRONG_PARENT")
+    rc, out = _git(repo_root, "diff-tree", "--no-commit-id", "--name-only", "-r", commit)
+    changed = sorted(x for x in out.decode().splitlines() if x)
+    need(rc == 0 and changed == sorted(AUTHORIZED_PATHS), "ACTIVATION_COMMIT_PATHS")
+    rc, root_at = _git(repo_root, "show", f"{commit}:{AUTHORIZED_PATHS[0]}")
+    need(rc == 0 and root_at == live_root_bytes, "ACTIVATION_COMMIT_ROOT_BLOB")
+    rc, act_at = _git(repo_root, "show", f"{commit}:{AUTHORIZED_PATHS[1]}")
+    need(rc == 0 and act_at == act_bytes, "ACTIVATION_COMMIT_ACT_BLOB")
+    return len(F) == 0, F
+
+
+def _authority_ok(repo_root, commits, trust_anchor):
+    """EXPLICIT authority contract (P0-2). Local reachability is NOT authority. Credit requires a
+    declared external trust anchor: the given commits must be ancestors of the PINNED repository's
+    fetched remote-tracking ref (a declared policy input — the fetched ref of the pinned remote — NOT
+    cryptographic proof). Absent/attacker-local `.git` with no matching remote fails closed."""
+    if not (isinstance(trust_anchor, dict) and trust_anchor.get("repo") and trust_anchor.get("ref")):
+        return False, ["AUTHORITY_ANCHOR_REQUIRED"]
+    rc, url = _git(repo_root, "config", "--get", "remote.origin.url")
+    if rc != 0 or trust_anchor["repo"] not in url.decode().strip():
+        return False, ["AUTHORITY_REMOTE_MISMATCH"]
+    rc, _ = _git(repo_root, "rev-parse", "--verify", trust_anchor["ref"])
+    if rc != 0:
+        return False, ["AUTHORITY_REF_UNAVAILABLE"]
+    for c in commits:
+        rc, _ = _git(repo_root, "merge-base", "--is-ancestor", c, trust_anchor["ref"])
+        if rc != 0:
+            return False, ["AUTHORITY_COMMIT_NOT_PUSHED"]
+    return True, []
+
+
+def verify_activation_commit(repo_root, corpus_dir, act, receipt, live_root_bytes, act_bytes,
+                             receipt_bytes, trust_anchor):
+    """Bind the operator act to a REAL, path-limited TWO-COMMIT Git governance act (P0-1) with an
+    EXPLICIT authority anchor (P0-2). Verifies both the activation commit AND the receipt commit as
+    execution events, then requires the declared external authority anchor. Returns (ok, faults)."""
     F = []
 
     def need(c, code):
@@ -157,29 +204,33 @@ def verify_activation_commit(repo_root, corpus_dir, act, receipt, live_root_byte
         return False, F
 
     commit = receipt["activation_commit"]
-    rc, _ = _git(repo_root, "rev-parse", "--git-dir")
-    if rc != 0:
-        return False, ["OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE"]
-    rc, _ = _git(repo_root, "cat-file", "-e", commit + "^{commit}")
-    if not need(rc == 0, "ACTIVATION_COMMIT_MISSING"):
+    core_ok, core_f = verify_activation_commit_core(repo_root, commit, act, live_root_bytes, act_bytes)
+    if not core_ok:
+        return False, core_f
+
+    # P0-1: the receipt COMMIT R (not just the working-tree file). R is the immediate descendant of the
+    # activation commit on the path to HEAD; it must change EXACTLY the receipt path, and the committed
+    # receipt blob must equal both the strict-loaded bytes AND the live working-tree bytes.
+    rc, out = _git(repo_root, "rev-list", "--reverse", "--ancestry-path", f"{commit}..HEAD")
+    chain = out.decode().split()
+    R = chain[0] if rc == 0 and chain else None
+    if not need(R is not None, "RECEIPT_COMMIT_MISSING"):
         return False, F
-    # exact parent
-    rc, out = _git(repo_root, "rev-parse", commit + "^")
-    rc2, want_parent = _git(repo_root, "rev-parse", act["parent_commit"])
-    need(rc == 0 and rc2 == 0 and out.strip() and out.strip() == want_parent.strip(), "ACTIVATION_COMMIT_WRONG_PARENT")
-    # exactly the two authorized paths changed
-    rc, out = _git(repo_root, "diff-tree", "--no-commit-id", "--name-only", "-r", commit)
+    rc, pout = _git(repo_root, "rev-parse", R + "^")
+    need(rc == 0 and pout.decode().strip() == commit, "RECEIPT_COMMIT_WRONG_PARENT")
+    rc, out = _git(repo_root, "diff-tree", "--no-commit-id", "--name-only", "-r", R)
     changed = sorted(x for x in out.decode().splitlines() if x)
-    need(rc == 0 and changed == sorted(AUTHORIZED_PATHS), "ACTIVATION_COMMIT_PATHS")
-    # the two committed blobs equal the validated live root + operator-act bytes
-    rc, root_at = _git(repo_root, "show", f"{commit}:{AUTHORIZED_PATHS[0]}")
-    need(rc == 0 and root_at == live_root_bytes, "ACTIVATION_COMMIT_ROOT_BLOB")
-    rc, act_at = _git(repo_root, "show", f"{commit}:{AUTHORIZED_PATHS[1]}")
-    need(rc == 0 and act_at == act_bytes, "ACTIVATION_COMMIT_ACT_BLOB")
-    # authority rule: the commit is in the pushed history (ancestor of the branch tip)
-    rc, _ = _git(repo_root, "merge-base", "--is-ancestor", commit, "HEAD")
-    need(rc == 0, "ACTIVATION_COMMIT_NOT_IN_HISTORY")
-    return len(F) == 0, F
+    need(rc == 0 and changed == [RECEIPT_PATH], "RECEIPT_COMMIT_PATHS")
+    rc, rec_at = _git(repo_root, "show", f"{R}:{RECEIPT_PATH}")
+    need(rc == 0 and rec_at == receipt_bytes, "RECEIPT_COMMIT_BLOB")
+    if F:
+        return False, F
+
+    # P0-2: explicit external authority anchor — both commits pushed to the pinned repository.
+    auth_ok, auth_f = _authority_ok(repo_root, [commit, R], trust_anchor)
+    if not auth_ok:
+        return False, auth_f
+    return True, []
 
 
 def readback():
@@ -233,7 +284,18 @@ def main(argv):
         if not (commit and act_p.exists()):
             print("REFUSED: --emit-receipt requires --commit <activation commit> and a committed operator act.")
             return 1
+        # P1-3: refuse BEFORE writing unless the report verifies AND the named activation commit is a
+        # real, path-limited activation commit with the expected blobs.
+        if not r["report_verified"]:
+            print(f"REFUSED: report verification failed ({r['report_faults']}) — will not emit receipt.")
+            return 1
+        rc, top = _git(PAPER, "rev-parse", "--show-toplevel")
         act = load_strict_json(act_p)
+        core_ok, core_f = (verify_activation_commit_core(top.decode().strip(), commit, act,
+                           root_p.read_bytes(), act_p.read_bytes()) if rc == 0 else (False, ["NO_GIT"]))
+        if not core_ok:
+            print(f"REFUSED: named activation commit does not verify ({core_f}) — will not emit receipt.")
+            return 1
         rec = build_commit_receipt(commit, act, root_p.read_bytes(), act_p.read_bytes())
         Path(emit_receipt).write_text(json.dumps(rec, indent=1, ensure_ascii=False))
         print(f"\nwrote commit receipt -> {emit_receipt} (activation_commit={commit}); commit it SEPARATELY.")

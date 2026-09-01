@@ -311,8 +311,10 @@ def strat_corpus_activation(base, spec):
     repo_top = top.decode().strip()
     live_root_bytes = (corpus_dir / "CORPUS-TRUST-ROOT.json").read_bytes()
     act_bytes = act_path.read_bytes()
-    commit_ok, commit_faults = verify_activation_commit(repo_top, corpus_dir, act, receipt,
-                                                        live_root_bytes, act_bytes)
+    receipt_bytes = receipt_path.read_bytes()
+    commit_ok, commit_faults = verify_activation_commit(
+        repo_top, corpus_dir, act, receipt, live_root_bytes, act_bytes,
+        receipt_bytes, spec.get("trust_anchor"))
     if not commit_ok:
         return REFUSED, "OPERATOR_COMMIT_UNVERIFIED", {**ev, "faults": commit_faults}
     if ar["result_vector"]["applied"].get("C2-MAP") != "COMPLETE":

@@ -61,14 +61,24 @@ trust root applies the governance diff — not a CI re-run of the raw bytes.
 2. **Commit-receipt commit** — `CORPUS-C2-MAP-COMMIT-RECEIPT.json` names the resulting activation
    commit and pins its parent, changed-path set, and the two committed blob digests.
 
-Before granting credit the consumer verifies from the Git object database that the activation
-commit exists, has exactly the named parent, changed exactly the two authorized paths, and whose
-committed blobs equal the validated live root and operator act. **Operator-authority rule
-(explicit): repository-write authority**, evidenced by the activation commit being an ancestor of
-the branch tip (accepted into the pushed history). In a deposit/archive environment with no Git
-object database, the strategy fails closed with `OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE` unless an
-independently bound commit receipt is supplied. The transition is addressable and reversible:
-reverting the trust root returns the claim to `REFUSED`.
+Before granting credit the consumer verifies from the Git object database that **both commits are
+real execution events**: the activation commit exists, has exactly the named parent, changed exactly
+the two authorized paths, and its committed blobs equal the validated live root and operator act;
+and the **receipt commit** is the immediate descendant of the activation commit, changed exactly the
+receipt path, and its committed blob equals the consumed receipt bytes.
+
+**Operator-authority rule (explicit, and explicitly limited).** Local Git reachability is NOT
+authority. Credit requires a **declared external trust anchor** pinned in the claim manifest: both
+commits must be ancestors of the pinned repository's fetched remote-tracking ref
+(`refs/remotes/origin/main` of `s0fractal/manifesto`). This is a **declared policy input — trust in
+the fetched ref of the pinned remote — not cryptographic proof**; a signed commit/tag under a pinned
+key or a GitHub attestation would strengthen it, and adopting one is the stated next hardening step.
+An attacker-created local repository with no matching remote, or a deposit/archive tarball with no
+Git object database, **fails closed** (`AUTHORITY_ANCHOR_REQUIRED` / `AUTHORITY_REMOTE_MISMATCH` /
+`OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE`) — it never upgrades the files from refused to checked.
+
+The transition is addressable and reversible: reverting the trust root returns the claim to
+`REFUSED`.
 
 ---
 

@@ -548,49 +548,89 @@ try:
            stm == "REFUSED" and rsm in ("OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE", "OPERATOR_COMMIT_UNVERIFIED"))
     shutil.rmtree(mal.parent)
 
-    # ---- positive: a REAL temporary Git repo with a path-limited activation commit ----
-    trepo = Path(tempfile.mkdtemp())
-    cdir = trepo / "papers" / "every-check-spawns-more"
-    cdir.parent.mkdir(parents=True)
-    shutil.copytree(PAPER, cdir)
-    for a in (["init", "-q"], ["config", "user.email", "t@t"], ["config", "user.name", "t"],
-              ["add", "-A"], ["commit", "-qm", "pre-activation corpus"]):
-        _git(trepo, *a)
-    parent = _git(trepo, "rev-parse", "HEAD").stdout.strip()
-    # apply the diff + write the operator act (bound to the REAL parent) as ONE path-limited commit
-    (cdir / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(applied_trust_root(
-        json.loads((cdir / "CORPUS-TRUST-ROOT.json").read_text()), prop_s["trust_root_diff"]), indent=1))
-    live_b = (cdir / "CORPUS-TRUST-ROOT.json").read_bytes()
-    act = build_operator_act(json.loads(live_b), prop_s, ar_s, "operator:s0fractal", "operator@corpus-governance", parent)
-    (cdir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(act, indent=1))
-    _git(trepo, "add", "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
-         "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json")
-    _git(trepo, "commit", "-qm", "activate C2-MAP")
-    cact = _git(trepo, "rev-parse", "HEAD").stdout.strip()
-    # separate commit: the receipt naming the activation commit
-    (cdir / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(
-        build_commit_receipt(cact, act, live_b, (cdir / "CORPUS-OPERATOR-ACT.json").read_bytes()), indent=1))
-    _git(trepo, "add", "-A"); _git(trepo, "commit", "-qm", "activation commit receipt")
-    spec = {"corpus_dir": str(cdir)}
+    # ---- REAL two-commit Git activation fixtures (activation commit + receipt commit + pushed anchor) ----
+    def build_repo(commit_receipt=True, unrelated_in_receipt=False, push=True, act_parent=None):
+        trepo = Path(tempfile.mkdtemp())
+        cdir = trepo / "papers" / "every-check-spawns-more"
+        cdir.parent.mkdir(parents=True)
+        shutil.copytree(PAPER, cdir)
+        for a in (["init", "-q", "-b", "main"], ["config", "user.email", "t@t"],
+                  ["config", "user.name", "t"], ["add", "-A"], ["commit", "-qm", "pre-activation"]):
+            _git(trepo, *a)
+        parent = _git(trepo, "rev-parse", "HEAD").stdout.strip()
+        live = applied_trust_root(json.loads((cdir / "CORPUS-TRUST-ROOT.json").read_text()), prop_s["trust_root_diff"])
+        (cdir / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(live, indent=1))
+        act = build_operator_act(live, prop_s, ar_s, "operator:s0fractal",
+                                 "operator@corpus-governance", act_parent or parent)
+        (cdir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(act, indent=1))
+        _git(trepo, "add", "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
+             "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json")
+        _git(trepo, "commit", "-qm", "activate C2-MAP")
+        cact = _git(trepo, "rev-parse", "HEAD").stdout.strip()
+        rec = build_commit_receipt(cact, act, (cdir / "CORPUS-TRUST-ROOT.json").read_bytes(),
+                                   (cdir / "CORPUS-OPERATOR-ACT.json").read_bytes())
+        (cdir / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(rec, indent=1))
+        if commit_receipt:
+            _git(trepo, "add", "papers/every-check-spawns-more/CORPUS-C2-MAP-COMMIT-RECEIPT.json")
+            if unrelated_in_receipt:
+                (trepo / "UNRELATED.txt").write_text("x")
+                _git(trepo, "add", "UNRELATED.txt")
+            _git(trepo, "commit", "-qm", "activation commit receipt")
+        bare = Path(tempfile.mkdtemp()) / "remote.git"
+        _git(trepo, "init", "--bare", "-q", str(bare))
+        _git(trepo, "remote", "add", "origin", str(bare))
+        if push:
+            _git(trepo, "push", "-q", "origin", "main")
+            _git(trepo, "fetch", "-q", "origin")
+        anchor = {"repo": str(bare), "ref": "refs/remotes/origin/main"}
+        return trepo, cdir, cact, anchor
+
+    # positive: valid two-commit act, pushed, with the declared anchor -> CHECKED
+    trepo, cdir, cact, anchor = build_repo()
+    spec = {"corpus_dir": str(cdir), "trust_anchor": anchor}
     st, rs, evd = dc.strat_corpus_activation(repo_root, spec)
-    expect("REAL path-limited Git activation commit -> C2-MAP CHECKED", st == "CHECKED")
+    expect("REAL two-commit Git act + pushed anchor -> C2-MAP CHECKED", st == "CHECKED")
     if st != "CHECKED":
-        print("   got:", st, rs)
-    expect("CHECKED evidence binds the activation commit + operator", st == "CHECKED"
-           and evd.get("activation_commit") == cact and evd.get("operator") == "operator:s0fractal")
-    # C2-MEAS still refused under the same activated commit (no composition laundering)
+        print("   got:", st, rs, evd.get("faults"))
+    expect("CHECKED evidence binds the activation commit + operator",
+           st == "CHECKED" and evd.get("activation_commit") == cact and evd.get("operator") == "operator:s0fractal")
     st2, rs2, _ = dc.strat_refused(cdir, {"reason": "MEASUREMENT_NOT_REPLAYED"})
     expect("under activation, C2-MEAS STILL REFUSED (no composition laundering)",
            st2 == "REFUSED" and rs2 == "MEASUREMENT_NOT_REPLAYED")
-    # stale/wrong parent in the act (real commit's parent != named parent) -> REFUSED
-    stale = build_operator_act(json.loads(live_b), prop_s, ar_s, "operator:s0fractal", "operator@corpus-governance", "8b2eb65")
-    (cdir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(stale, indent=1))
-    (cdir / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(
-        build_commit_receipt(cact, stale, live_b, (cdir / "CORPUS-OPERATOR-ACT.json").read_bytes()), indent=1))
-    sts, rss, _ = dc.strat_corpus_activation(repo_root, spec)
-    expect("stale/wrong parent_commit -> REFUSED (was a passing fixture before)",
-           sts == "REFUSED" and rss in ("OPERATOR_COMMIT_UNVERIFIED", "OPERATOR_ACT_INVALID"))
+    # no declared trust anchor -> REFUSED (local reachability is not authority)
+    st3, rs3, ev3 = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cdir)})
+    expect("no trust anchor -> REFUSED (AUTHORITY_ANCHOR_REQUIRED)",
+           st3 == "REFUSED" and "AUTHORITY_ANCHOR_REQUIRED" in (ev3.get("faults") or []))
     shutil.rmtree(trepo)
+
+    # P0-1: untracked receipt (activation commit only, receipt in working tree, not committed) -> REFUSED
+    trU, cU, _, aU = build_repo(commit_receipt=False)
+    stU, rsU, evU = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cU), "trust_anchor": aU})
+    expect("untracked (uncommitted) receipt -> REFUSED (RECEIPT_COMMIT_MISSING)",
+           stU == "REFUSED" and "RECEIPT_COMMIT_MISSING" in (evU.get("faults") or []))
+    shutil.rmtree(trU)
+
+    # P0-1: receipt commit that also touches an unrelated path -> REFUSED
+    trX, cX, _, aX = build_repo(unrelated_in_receipt=True)
+    stX, rsX, evX = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cX), "trust_anchor": aX})
+    expect("receipt commit with an unrelated changed path -> REFUSED (RECEIPT_COMMIT_PATHS)",
+           stX == "REFUSED" and "RECEIPT_COMMIT_PATHS" in (evX.get("faults") or []))
+    shutil.rmtree(trX)
+
+    # activation commit whose real parent != the act's named parent -> REFUSED
+    trP, cP, _, aP = build_repo(act_parent="8b2eb65")
+    stP, rsP, evP = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cP), "trust_anchor": aP})
+    expect("stale/wrong parent_commit -> REFUSED (ACTIVATION_COMMIT_WRONG_PARENT)",
+           stP == "REFUSED" and "ACTIVATION_COMMIT_WRONG_PARENT" in (evP.get("faults") or []))
+    shutil.rmtree(trP)
+
+    # P0-2: coherent local two-commit act but NOT pushed to the anchor -> REFUSED (no authority)
+    trN, cN, _, aN = build_repo(push=False)
+    stN, rsN, evN = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cN), "trust_anchor": aN})
+    expect("valid local commits but not pushed to the pinned remote -> REFUSED (authority)",
+           stN == "REFUSED" and any(c in (evN.get("faults") or [])
+                                    for c in ("AUTHORITY_REF_UNAVAILABLE", "AUTHORITY_COMMIT_NOT_PUSHED")))
+    shutil.rmtree(trN)
 except FileNotFoundError as e:
     expect(f"production operand/proposal/report present: {e}", False)
 
