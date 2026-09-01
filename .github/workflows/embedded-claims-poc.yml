@@ -81,3 +81,13 @@ jobs:
           set -euo pipefail
           python3 drafts/embedded-claims-poc/test_runner.py | tee run.log
           grep -qE "^ALL PASS \([0-9]+ runner-boundary checks\)" run.log
+
+      # End-to-end on a REAL document: the orchestration CLI runs the whole chain
+      # (parse → compile → run) over drafts/EMBEDDED-CLAIMS-E2E-0.1.md, whose one world
+      # capsule counts README's thesis headings against a pinned README snapshot. --strict
+      # is a policy projection (exit 0 iff every record REPLAYED), NOT a document badge. A
+      # README or engine change rotates the pin and this fails until re-pinned — the
+      # closure/freshness discipline, on the real specimen too.
+      - name: End-to-end — claims run --strict on the real specimen
+        shell: bash
+        run: python3 drafts/embedded-claims-poc/claims.py run --strict drafts/EMBEDDED-CLAIMS-E2E-0.1.md

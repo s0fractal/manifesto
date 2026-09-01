@@ -110,6 +110,19 @@ property, deliberately, for the parser):
 ../../.venv/bin/python parser.py fixtures/adversarial/02-multiple-claims.md   # one file
 ```
 
+End-to-end on a real document — the whole chain in one command:
+
+```sh
+../../.venv/bin/python claims.py run ../EMBEDDED-CLAIMS-E2E-0.1.md          # JSON vector REPORT
+../../.venv/bin/python claims.py run --strict ../EMBEDDED-CLAIMS-E2E-0.1.md # exit 0 iff all REPLAYED
+```
+
+`drafts/EMBEDDED-CLAIMS-E2E-0.1.md` carries one world capsule (count of README thesis
+headings, pinned to a README snapshot). Its `REPLAYED` addresses only the heading count
+for that regex + snapshot — it does not green the theses or README, and the document gets
+no global verdict. Deliberately NOT placed inside README.md (a capsule pinning README's
+own digest would be self-hash recursion).
+
 `test_poc.py` exits 0 iff every fixture lands on its exact `(execution, binding)`
 and required facts, AND five invariants hold: identity does not alias
 (world-same-input), the report is byte-deterministic across runs, the body
@@ -174,7 +187,8 @@ test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S,
 test_parser.py  13 PARSE specimens + 4 invariants (capsule-only: status, count, local_id, span, CRLF)
 compiler.py     COMPILE layer (3c/3c.1): VALID ParseReport → self-contained bundle of canonical records (id+body), claim-bound binding, occurrence w/ doc digest
 runner.py       RUN layer (3d): COMPILED bundle → re-verify every id/link → settle → vector REPORT (no Markdown; no document-level MATCH; binding never raised)
-test_runner.py  14 runner-boundary checks (tamper→0 evaluator calls, vector, serialized bundle)
+test_runner.py  runner-boundary checks (tamper→0 evaluator calls, vector, serialized bundle, typed result per class)
+claims.py       orchestration CLI: `claims run [--strict] <doc.md>` = parse→compile→run→JSON vector REPORT (no new verification code, no file writes, no badge)
 test_compiler.py 14 COMPILE specimens + 9 invariants (bundle, claim-bound binding, plan-inputs, source-occurrence)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
