@@ -38,7 +38,7 @@ compiled-check separate axis, and the retired queue model are §6–§7.)*
 | ô stayed non-zero through the finite depths sampled (to depth 4). | Any asymptotic value; the round-1 geometric extrapolation was disconfirmed. |
 | One prose claim compiled to a priced deterministic check has a **terminal execution sub-act with zero emitted prose obligations**. | That compilation lowers the *same* ô, or that the compiled artifact captures the claim's meaning. |
 | An external reviewer's counterexamples break the v0.1 closed forms. | Any *specified* replacement queue model — §7 is an open problem, not a result. |
-| ô is verifier-dependent; and over four paired crossed roots, negative verdicts replicated while positive ones did not. | A clean "Fable vs Sonnet" factor effect (the 2×2 confounds verifier with root assignment). |
+| ô is verifier-dependent; and over four paired crossed roots, negative verdicts replicated while positive ones did not. | A clean "Opus-5 vs Sonnet" factor effect (the 2×2 confounds verifier with root assignment; and the "Fable 5" label was mislabeled — observed `claude-opus-5`, see §3 correction). |
 
 Status vocabulary is fixed: **measurement** (a number from a stated protocol), **negative result**
 (a bounding counterexample), **open** (named, not established). *Local CI, evaluator replay,
@@ -88,7 +88,16 @@ measurements, deposited as a claim to be repaired, not as a finished reproducibl
 
 ## 3. Measured results (raw before interpretation)
 
-### 3.1 Round 1 — trees (Fable 5, 12 *Monday* roots, 60 acts)
+> **Correction (verifier identity, from the corpus discovery `CORPUS-C2-DISCOVERY-0.1.md`).** v0.1 and
+> earlier v0.2 drafts named the non-Sonnet verifier **"Fable 5"**. The preserved act transcripts record
+> the actual model (`model` field on every assistant event) as **`claude-opus-5` (Opus 5)** — uniformly
+> across round 1 (10/12 trees), round 2, and the crossed design — **not** `claude-fable-5`. The Sonnet
+> side matches (`claude-sonnet-5`). The contrast reported below is therefore **Opus 5 vs Sonnet 5**;
+> "Fable" was a mislabel. (A minority of other acts ran on `claude-opus-4-8` — a further version
+> heterogeneity noted for the frozen corpus.) This is the `verifier_declared ≠ verifier_observed` split
+> the corpus schema anticipated, now surfaced from raw evidence.
+
+### 3.1 Round 1 — trees (Opus 5, 12 *Monday* roots, 60 acts)
 
 Verifier-reported mean offspring by depth: **ô₀ = 5.42, ô₁ = 3.38, ô₂ = 2.50** (d0 spread 4–7,
 sd ≈ 0.8). By claim type at d0: formal 5.50, empirical 5.50, conceptual 5.25 — no measurable type
@@ -110,10 +119,10 @@ offspring (minimum 1, once). *(The number 100 in v0.1 was the cumulative Round 1
 60 + 40; it is not a Round 2 act count.)*
 
 **Verifier and counting-instruction contrasts — reported as confounded, not as clean factors.** The
-2×2 layout assigns different roots to different verifiers, so the raw Fable ≈3.15 / Sonnet ≈2.10 and
+2×2 layout assigns different roots to different verifiers, so the raw Opus-5 ≈3.15 / Sonnet ≈2.10 and
 standard 2.80 / anti-quantization 2.45 means confound verifier with root assignment. The only
 *paired* verifier contrast is the four crossed roots of §5.1 (n=2 per direction) — a small descriptive
-paired difference, not an established factor effect. A verbatim-vs-paraphrased control lowered Fable's
+paired difference, not an established factor effect. A verbatim-vs-paraphrased control lowered Opus-5's
 reported ô₀ from 5.42 to 4.25 (~20% extraction inflation in round 1).
 
 ### 3.3 Uncertainty and sample size
@@ -141,14 +150,14 @@ that "well-founded" does not entail "self-discharging", and that rhetoric can ad
 
 Crossing four purposively-selected roots across verifiers (n = 2 per direction, one vendor lineage):
 
-| root | Fable verdict | Sonnet verdict | agreement |
+| root | Opus-5 verdict | Sonnet verdict | agreement |
 |---|---|---|---|
 | 0030 confidence monotonicity | INVALID | VALID | **flip** |
 | 0025 modal core (◇⁻/◇⁺) | UNVERIFIABLE | VALID | **flip** |
 | FLOW §15 central thesis | UNVERIFIABLE | UNVERIFIABLE | agree (negative) |
 | FLOW §17 "Player" | UNVERIFIABLE | UNVERIFIABLE | agree (negative) |
 
-The two **positive** Sonnet verdicts (0030, 0025) fail to replicate under Fable; the two verdicts
+The two **positive** Sonnet verdicts (0030, 0025) fail to replicate under Opus-5; the two verdicts
 that **agree** are *different* roots (FLOW §15, §17), both non-positive. So "negative replicated,
 positive did not" is a statement about **two roots per direction**, not a matched 2/2-vs-0/2 on one
 root set. After crossing, no informal corpus claim was VALID under both verifiers. Two counterexamples
@@ -263,7 +272,9 @@ type them:
 
 ## 10. Artifact map, provenance, and the deposit blocker
 
-- **Model / date.** Anthropic "Fable 5"; date on file. Byte reproducibility not claimed for LLM counts.
+- **Model / date.** Verifiers as **observed in the act transcripts**: `claude-opus-5` (the "Fable 5"
+  label was incorrect, §3 correction) and `claude-sonnet-5`, with a minority on `claude-opus-4-8`; date
+  on file. Byte reproducibility not claimed for LLM counts.
 - **Summary records (present).** `drafts/EXP-RVB-1-RESULTS.md`, `drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md`.
 - **Frozen act corpus (REQUIRED, not yet present — deposit blocker).** A machine-readable, append-only
   export with exact source/model/prompt/selected-child/pre-and-post-dedup/removal-decision/rejected-candidate

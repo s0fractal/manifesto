@@ -3,7 +3,7 @@
   "base": "../..",
   "candidate": {
     "path": "papers/every-check-spawns-more/paper-v0.2-draft.md",
-    "sha256": "b7fac3ca38dde5804ad1f99ab8dc99baa783ce869e429a0b987f1b0a813d5ef8"
+    "sha256": "9e64513b807dc726c93c1626e0e1367502aaacca5c8db5849ead6604287e9232"
   },
   "ledger": {
     "path": "papers/every-check-spawns-more/CLAIM-LEDGER.md",

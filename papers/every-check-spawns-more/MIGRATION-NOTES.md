@@ -37,7 +37,7 @@ decision may promote the draft to `paper.md`.
 | §1 "State the bound / phase transition at μ=1" | **rewrite** | Becomes the research question (v0.2 §1); "bound/phase transition" removed as deliverables. |
 | §2 the model, §2.1–§2.3 | **retire → v0.2 §7 (open problem)** | Not "conditional model" — the queueing question is stated as OPEN with the counterexamples (C6) that refuted the closed forms adjacent; the paper commits to no queue model. §2.2 status box content becomes constitutive. §2.3 "escape hatch" reframed as a measured intervention (§6.1), no "theorem". |
 | §3.1 protocol | **keep → v0.2 §2** | Removal test / dedup / depth policy preserved verbatim in substance; add reproducibility class. |
-| §3.2–§3.3 results | **rewrite → v0.2 §3–§4** | Raw counts before interpretation; round 2 is **40 acts (8 chains × 5 depths)**, not 100; depth-1 means are **selected-path** (first+middle roots, non-random) and are not unbiased estimates; the Fable/Sonnet split is reported **confounded**; controls (§4) explain which control isolates which alternative. |
+| §3.2–§3.3 results | **rewrite → v0.2 §3–§4** | Raw counts before interpretation; round 2 is **40 acts (8 chains × 5 depths)**, not 100; depth-1 means are **selected-path** (first+middle roots, non-random) and are not unbiased estimates; the **Opus-5/Sonnet** split (verifier identity corrected from the mislabeled "Fable 5" to the observed `claude-opus-5`, F-C2-1) is reported **confounded**; controls (§4) explain which control isolates which alternative. |
 | §3.4 amortization | **rewrite → v0.2 §6.1** | Add the **non-monotone** debt curves explicitly (G5 6→3→3→7; G6 6→3→3→7→4→8) — v0.1 compressed these. |
 | §3.5 threats | **rewrite → v0.2 §8** | Expanded: lineage, protocol/adjudicator sensitivity, scheduler sensitivity, transcript class; falsifiers F1–F6. |
 | §4 COMPILE-0030 | **rewrite → v0.2 §6.2** | Keep the settlement ATP numbers; frame as a **terminal execution sub-act with zero emitted prose obligations on a separate axis from ô**, not "compilation lowers μ"; the surrounding review's closure/binding/dependency obligations are *excluded operands*; keep "`return true` also terminates"; state semantic binding OPEN; never say "the gap is crossed". |
@@ -57,7 +57,8 @@ decision may promote the draft to `paper.md`.
 - any use of "RVB theorem".
 - "100 acts" for round 2 (it is 40); "an unbiased estimate" of any depth mean (selection is
   first+middle, non-random); "compilation lowers μ" (the compiled terminal sub-act is a *separate
-  axis* from ô, §6.2); "Fable-vs-Sonnet factor effect" stated as clean (it is confounded).
+  axis* from ô, §6.2); "Opus-5-vs-Sonnet factor effect" stated as clean (it is confounded); the verifier
+label "Fable 5" itself (observed `claude-opus-5`, F-C2-1).
 
 ## What history/comparator retains
 
