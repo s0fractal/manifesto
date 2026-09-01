@@ -11,16 +11,22 @@ keywords:
   - verifiable computation
 classification: cs.LO, cs.PL, cs.CR
 bibliography: references.bib
+status: SUPERSEDED by paper-v0.2-draft.md — historical comparator only
 ---
 
-> ⚠️ **This paper has errata.** Several claims below are false as written or
-> wider than their evidence — see
-> [`drafts/ADDRESSING-IS-EQUALITY.errata.md`](../../drafts/ADDRESSING-IS-EQUALITY.errata.md),
-> reproduced by execution with `python3 tools/aie_errata_check.py`. In
-> particular: the `601 ATP` figure belongs to the permissive
-> `tools/glyphlib.py` harness, which admits any expression; the upstream safety
-> profile `church@v0` refuses `PLUS 7 5` and cannot settle it. The address
-> `8785b7dd…` is this harness's marker, not an `EqualityProfile` marker.
+> 🪦 **SUPERSEDED — historical (v0.1).** This file is **retired** and kept only as a git-preserved
+> comparator; the earlier errata-banner approach is **replaced by full supersession**. The equality
+> slogan is **not** a live unconditional claim here — soundness is domain-scoped and *argued*, the
+> executed comparator is `AND(LEQ,LEQ)`, and the safety profile `church@v0` is a **DRAFT** (upstream
+> commit `196c45a`, not the released `0.6.7` wheel) that **refuses** the motivating `PLUS 7 5`. The
+> rescoped result lives in [`paper-v0.2-draft.md`](paper-v0.2-draft.md) — an *incident-and-repair
+> note*. Do not cite this file; cite v0.2.
+>
+> **What v0.2 changed (loss report, I4):** the `601 ATP` figure is labelled permissive-harness (the
+> `tools/glyphlib.py` marker `8785b7dd…`, not a released-profile fact); the unconditional soundness
+> statement is withdrawn to a **hash-relative observation identity**; and novelty is reopened as
+> **OPEN** pending prior-art review. The execution errata remain reproducible via
+> `python3 tools/aie_errata_check.py`. Nothing is redacted; history stays in git.
 
 # Abstract
 

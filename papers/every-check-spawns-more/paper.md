@@ -14,7 +14,22 @@ keywords:
   - deterministic evaluation
 classification: cs.AI, cs.LO, cs.SE
 bibliography: references.bib
+status: SUPERSEDED by paper-v0.2-draft.md — historical comparator only
 ---
+
+> 🪦 **SUPERSEDED — historical (v0.1).** This file is **retired** and kept only as a git-preserved
+> comparator. Its central quantitative model — a reflexive-verification *theorem* with a stability
+> condition and a phase transition — is **not a live claim**: the closed forms are refuted by
+> scheduler counterexamples (see [`paper-v0.2-draft.md`](paper-v0.2-draft.md) C6 and
+> [`MIGRATION-NOTES.md`](MIGRATION-NOTES.md)). The measured content survives, **rescoped**, in
+> `paper-v0.2-draft.md` — a *verifier-reported* offspring count ô on a **single Monday corpus**. Do
+> not cite this file; cite v0.2.
+>
+> **What v0.2 dropped (loss report, I4):** the detailed AIE cost table (moved to the
+> `addressing-is-equality` paper); the model's *guessed* memory numbers (transcript-only, never
+> re-derived); and the (C)-style closed-form derivation — false under an adversarial scheduler, but
+> retained here in history because it records *which* assumption (size-blind scheduling /
+> well-foundedness) was missing. Nothing is redacted; history stays in git.
 
 # Abstract
 
