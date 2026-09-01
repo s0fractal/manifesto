@@ -91,7 +91,7 @@ Then:
 
 ```sh
 cd drafts/embedded-claims-poc
-../../.venv/bin/python test_poc.py                       # 19 fixtures + 5 invariants
+../../.venv/bin/python test_poc.py                       # 22 fixtures + 5 invariants
 ../../.venv/bin/python verify.py fixtures/valid/arith-self.md   # one fixture, human report
 ```
 
@@ -128,8 +128,11 @@ floats/duplicate-keys.
   capsule→records compiler, and conformance vectors. Record shapes are stabilizing
   but not frozen.
 - **Verifier closure is code, not environment.** The identities digest the `.py`
-  files on the settlement path — dispatch/renderer (`verify.py`), gate, glyphlib,
-  resolver (`sigma_boundary.py`), and evaluator — but NOT the interpreter build,
+  files that determine a verdict — the verdict core (`settle_core.py`),
+  `canonical.py`, `schema.py`, gate, glyphlib, resolver (`sigma_boundary.py`), and
+  evaluator. `verify.py` (CLI + renderer) is deliberately **out** of the closure, so
+  editing a docstring or a print never rotates a verifier id. The closure omits the
+  interpreter build,
   OS, or editable-package/import state. That closure is deliberately open, and the
   identity claim is scoped to code accordingly. The engine is **lazy-loaded**: the
   effect path imports neither `settle_gate` nor Sigma (`effect-sandbox://` runs
@@ -146,16 +149,18 @@ floats/duplicate-keys.
 ## Files
 
 ```
-verify.py       thin verifier: 2 axes + facts + identity block + verifier closure
+verify.py       CLI + renderer (OUT of the verifier closure)
+settle_core.py  the verdict core: parse/schema/dispatch/identities/facts (IN closure)
                 + freshness + binding clamp + D6 effect (observed post-state)
 canonical.py    closed JSON canonicalization + domain-separated record IDs (§17 #1/#2)
 schema.py       closed capsule schema (additionalProperties:false), stdlib-only
-test_poc.py     19 fixtures + 5 invariants (aliasing, determinism, mutation, -S, canonical)
+test_poc.py     22 fixtures + 5 invariants (aliasing, determinism, mutation, -S, canonical)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,
                     wrong-binding, self-declared-reviewed, mismatch-result-address,
                     combined-verifier-stale-mismatch, stdout-same-effect-different,
-                    effect-short-digest, capsule-unknown-field, capsule-dup-key
+                    effect-short-digest, capsule-unknown-field, capsule-dup-key,
+                    capsule-malformed-json, capsule-bad-binding-type, capsule-lone-surrogate
 fixtures/limits/    effect-invisible-effect   (a demonstrated blind spot)
 ```

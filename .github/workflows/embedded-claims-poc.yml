@@ -42,4 +42,4 @@ jobs:
           set -euo pipefail
           python3 -c "import sigma_glyph; print('evaluator:', sigma_glyph.__file__)"
           python3 drafts/embedded-claims-poc/test_poc.py | tee poc.log
-          grep -q "ALL PASS (19 fixtures + 5 invariants)" poc.log
+          grep -q "ALL PASS (22 fixtures + 5 invariants)" poc.log
