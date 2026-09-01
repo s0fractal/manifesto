@@ -128,8 +128,9 @@ def compile_report(parse_report, source_bytes):
     dependency, and form the binding axis WITHOUT reparsing the source Markdown.
     STRUCTURAL only — no settlement. `source_bytes` anchors every occurrence to a
     document digest (a byte span alone is not a source address)."""
+    parser_id = parse_report.get("parser")
     if parse_report.get("status") != "VALID":
-        return {"compiler": compiler_id(), "status": "REFUSED",
+        return {"compiler": compiler_id(), "parser_id": parser_id, "status": "REFUSED",
                 "parser_status": parse_report.get("status"), "records": [],
                 "errors": [{"code": "PRECONDITION_NOT_VALID", "line": 0,
                             "detail": f"parser status {parse_report.get('status')!r} "
@@ -139,6 +140,17 @@ def compile_report(parse_report, source_bytes):
     records, errors, seen = [], [], set()
     for cap in parse_report.get("capsules", []):
         line = cap.get("line")
+        span = cap.get("span")
+        # P0: the occurrence must actually address the capsule bytes in the source.
+        # A mutated ParseReport (new body_raw, old span) is caught here — a byte span
+        # alone is not a source address; it must slice back to exactly body_raw.
+        if not (isinstance(span, list) and len(span) == 2
+                and all(isinstance(x, int) for x in span)
+                and 0 <= span[0] <= span[1] <= len(source_bytes)
+                and source_bytes[span[0]:span[1]] == cap.get("body_raw", "").encode("utf-8")):
+            errors.append({"code": "SOURCE_OCCURRENCE_MISMATCH", "line": line,
+                           "detail": "capsule body_raw does not equal source_bytes[span]"})
+            continue
         try:
             body = canonical.loads_strict(cap["body_raw"])
         except (canonical.CanonicalError, json.JSONDecodeError, UnicodeError) as e:
@@ -157,11 +169,15 @@ def compile_report(parse_report, source_bytes):
 
         claim_body = {"class": claim["class"], "payload": claim["payload"]}
         claim_id = canonical.record_id("claim", claim_body)
-        plan_body = {"claim": claim_id, "verifier": body.get("verifier")}
-        plan_id = canonical.record_id("plan", plan_body)
         dep_body = body.get("dep")
-        dep_rec = ({"id": canonical.record_id("dependency", dep_body), "body": dep_body}
-                   if dep_body is not None else None)
+        dep_id = (canonical.record_id("dependency", dep_body) if dep_body is not None else None)
+        dep_rec = {"id": dep_id, "body": dep_body} if dep_body is not None else None
+        # P0: a VerificationPlan names its inputs — bind the dependency into plan_id, so
+        # changing the dependency rotates the plan identity ("this verifier over these
+        # inputs"), null when absent.
+        plan_body = {"claim": claim_id, "verifier": body.get("verifier"),
+                     "dependency": dep_id}
+        plan_id = canonical.record_id("plan", plan_body)
         binding_rec = None
         if "binding" in body:
             # P0: bind the binding to its claim, so an identical relation/target/status
@@ -185,7 +201,8 @@ def compile_report(parse_report, source_bytes):
 
     # Fail-closed as a whole: records are handed forward ONLY from a COMPILED report.
     status = "COMPILED" if not errors else "INVALID"
-    return {"compiler": compiler_id(), "status": status, "parser_status": "VALID",
+    return {"compiler": compiler_id(), "parser_id": parser_id, "status": status,
+            "parser_status": "VALID",
             "records": records if status == "COMPILED" else [], "errors": errors}
 
 

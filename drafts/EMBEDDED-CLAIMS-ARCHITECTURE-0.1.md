@@ -924,6 +924,34 @@ certificate власного дизайну.
 **Контроль:** coverage vector, declared eligibility profile, claim inventory і
 окремий список high-impact uncompiled claims.
 
+### 13.11. Composition laundering і credit amplification
+
+Навіть якщо кожен окремий claim коректно replayed, їхня послідовність або граф
+не стають автоматично replayed, істинними, безпечними чи легальними. Добір
+локально правдивих тверджень може приховати релевантну альтернативу; коректні
+операції можуть утворити exploit; правильні receipts можуть бути з'єднані
+нелегальним inference. **Композиція сама є новим claim**, а не безкоштовним
+наслідком зеленості її частин.
+
+Те саме стосується cross-protocol coupling. Запис на кшталт
+`developed_with(Sigma-Glyph v1, Warrant 0.9, Manifesto 0.3)` є корисною
+development provenance, але не означає ні `validated_by`, ні
+`normatively_authorized_by`. Якщо протоколи посилаються один на одного по колу,
+цикл не карбує нового validation credit і не може бути власним незалежним
+підтвердженням.
+
+**Контроль:**
+
+- validation credit локальний і нетранзитивний за замовчуванням;
+- кожне ребро між claim'ами або протоколами має typed relation, точні версії,
+  напрямок, scope, known loss і falsifier;
+- inference, plan або action над кількома зеленими records потребує окремого
+  claim/warrant і власного способу перевірки;
+- development provenance, execution evidence, semantic adequacy, governance
+  adoption і authority лишаються різними відношеннями;
+- цикл без незалежного вхідного evidence не підвищує credit, а composite report
+  показує вектор статусів замість одного глобального green badge.
+
 ---
 
 ## 14. Мінімальна схема receipt

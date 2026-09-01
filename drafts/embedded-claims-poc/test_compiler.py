@@ -102,25 +102,57 @@ def main():
         and "document" in rec["occurrence"],
         "compiled bundle is self-contained (verifier + dep body present; no source needed)")
 
-    # same span, different documents ⇒ different occurrence identity
-    cap = ('{"schema_version":"manifesto.capsule.v2",'
+    def synth(body_raw, prefix):
+        src = prefix + body_raw.encode("utf-8")
+        span = [len(prefix), len(prefix) + len(body_raw.encode("utf-8"))]
+        pr = {"status": "VALID", "regions": [], "errors": [], "parser": "parser://sha256:t",
+              "capsules": [{"line": 0, "span": span, "region": 0, "body_raw": body_raw}]}
+        return pr, src
+
+    CAP = ('{"schema_version":"manifesto.capsule.v2",'
            '"claim":{"local_id":"X","class":"arith","payload":"1 + 1 = 2"}}')
-    pr = {"status": "VALID", "regions": [], "errors": [],
-          "capsules": [{"line": 0, "span": [10, 50], "region": 0, "body_raw": cap}]}
-    oa = C.compile_report(pr, b"A" * 100)["records"][0]["occurrence_id"]
-    ob = C.compile_report(pr, b"B" * 100)["records"][0]["occurrence_id"]
+
+    # same span (equal-length prefixes), different documents ⇒ different occurrence id
+    pa, sa = synth(CAP, b"AAAA")
+    pb, sb = synth(CAP, b"BBBB")
+    oa = C.compile_report(pa, sa)["records"][0]["occurrence_id"]
+    ob = C.compile_report(pb, sb)["records"][0]["occurrence_id"]
     inv(oa != ob, "same span in different documents ⇒ different occurrence identity")
+
+    # P0: plan names its inputs — changing the dependency rotates plan_id
+    c1 = ('{"schema_version":"manifesto.capsule.v2","claim":{"local_id":"P","class":'
+          '"count","payload":"/x/ in R = 1"},"verifier":"settle-gate://sha256:' + "a" * 64
+          + '","dep":{"path":"R","sha256":"' + "1" * 64 + '"}}')
+    c2 = c1.replace("1" * 64, "2" * 64)  # only the dependency digest differs
+    p1, s1 = synth(c1, b""); p2, s2 = synth(c2, b"")
+    r1 = C.compile_report(p1, s1)["records"][0]; r2 = C.compile_report(p2, s2)["records"][0]
+    inv(r1["dependency"]["id"] != r2["dependency"]["id"]
+        and r1["plan"]["id"] != r2["plan"]["id"],
+        "changing the dependency rotates plan_id (plan names its inputs)")
+
+    # P0: forged body_raw (≠ source[span]) is refused
+    pf = {"status": "VALID", "regions": [], "errors": [], "parser": "parser://sha256:t",
+          "capsules": [{"line": 0, "span": [0, 10], "region": 0, "body_raw": CAP}]}
+    rf = C.compile_report(pf, b"YYYYYYYYYY")
+    inv(rf["status"] == "INVALID" and rf["records"] == []
+        and sorted({e["code"] for e in rf["errors"]}) == ["SOURCE_OCCURRENCE_MISMATCH"],
+        "forged body_raw (≠ source[span]) ⇒ SOURCE_OCCURRENCE_MISMATCH, whole compile INVALID")
 
     # domain separation: identical canonical bytes in different domains ⇒ different IDs
     body = {"x": 1, "y": [2, 3]}
     inv(canonical.record_id("claim", body) != canonical.record_id("plan", body),
         "same canonical bytes in different record domains ⇒ different IDs")
 
+    # end-to-end provenance: the compile report carries parser_id
+    inv(str(compile_file("09-claim-inside-capsule.md").get("parser_id", ""))
+        .startswith("parser://sha256:"),
+        "compile report carries parser_id provenance")
+
     inv(C.compiler_id().startswith("compiler://sha256:") and C.compiler_id() == C.compiler_id(),
         "compiler_id binds compiler+canonical closure")
 
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "
-          f"({len(GOLDEN)} COMPILE specimens + 6 invariants) — structural; settlement is 3d")
+          f"({len(GOLDEN)} COMPILE specimens + 9 invariants) — structural; settlement is 3d")
     return 0 if failures == 0 else 1
 
 
