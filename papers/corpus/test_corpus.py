@@ -433,8 +433,13 @@ try:
            ar["result_vector"]["C2-MEAS"]["status"] == "REFUSED"
            and ar["result_vector"]["applied"]["C2-MAP"] == "COMPLETE"
            and ar["result_vector"]["baseline"]["C2-MAP"] == "REFUSED")
-    expect("activation report: trust root still unchanged (empty)",
-           ar["assertions"]["trust_root_unchanged"] and json.loads((PAPER / "CORPUS-TRUST-ROOT.json").read_text())["decision_register"] == [])
+    # the report records an unchanged (empty) root at GENERATION time; the live committed root is
+    # either that empty base (pre-activation) or EXACTLY the activated root (after the operator act).
+    live_root_now = json.loads((PAPER / "CORPUS-TRUST-ROOT.json").read_text())
+    expect("committed trust root is the empty base OR exactly the activated root",
+           ar["assertions"]["trust_root_unchanged"] is True
+           and (live_root_now["decision_register"] == []
+                or live_root_now["decision_register"] == pr["trust_root_diff"]["decision_register"]))
     # P0-1: the engine's ACTUAL reason is preserved, NOT overwritten by the authored projection
     meas = ar["result_vector"]["C2-MEAS"]
     expect("activation report: C2-MEAS keeps the engine reason (P0-1)",
@@ -513,23 +518,39 @@ try:
     byid = {c["id"]: c for c in rep["claims"]}
     expect("C2-MAP + C2-MEAS are registered canonical claims",
            "C2-MAP" in byid and "C2-MEAS" in byid)
-    # before activation (trust root empty): C2-MAP is refused ACTIVATION_NOT_APPLIED
-    expect("C2-MAP REFUSED: ACTIVATION_NOT_APPLIED (trust root still empty)",
-           byid["C2-MAP"]["status"] == "REFUSED" and byid["C2-MAP"]["reason"] == "ACTIVATION_NOT_APPLIED")
+    # live C2-MAP is activation-state dependent: CHECKED (activated, binds the activation commit) or a
+    # typed REFUSAL (e.g. pre-activation, or a checkout topology without the pinned remote ref). It must
+    # never crash or launder C2-MEAS. C2-MEAS is permanently REFUSED in every topology.
+    cmap = byid["C2-MAP"]
+    expect("C2-MAP live: CHECKED binds the activation commit, else a typed refusal",
+           (cmap["status"] == "CHECKED" and cmap["evidence"].get("activation_commit"))
+           or (cmap["status"] == "REFUSED" and isinstance(cmap.get("reason"), str)))
     expect("C2-MEAS REFUSED: MEASUREMENT_NOT_REPLAYED (permanent, separate claim)",
            byid["C2-MEAS"]["status"] == "REFUSED" and byid["C2-MEAS"]["reason"] == "MEASUREMENT_NOT_REPLAYED")
     # positive path: SIMULATE the operator applying the diff into a temp corpus -> CHECKED,
     # while C2-MEAS stays refused (no laundering). The committed root is untouched.
     import subprocess  # noqa: E402
-    from corpus_operator_readback import applied_trust_root, build_operator_act, build_commit_receipt  # noqa: E402
+    from corpus_operator_readback import (applied_trust_root, build_operator_act,  # noqa: E402
+                                          build_commit_receipt, _reconstructed_base)
     repo_root = Path(__file__).resolve().parents[2]
 
     def _git(cwd, *a):
         return subprocess.run(["git", "-C", str(cwd), *a], capture_output=True, text=True)
 
+    def _reset_pre(d):
+        """Make a copied corpus dir activation-AGNOSTIC: reconstruct the empty pre-activation trust
+        root and remove any committed operator act / receipt, so a fixture can build its own scenario
+        regardless of whether the live repo has already activated C2-MAP."""
+        root = d / "CORPUS-TRUST-ROOT.json"
+        cur = json.loads(root.read_text())
+        if cur.get("decision_register") or (cur.get("authorities") or {}).get("mapping"):
+            root.write_text(json.dumps(_reconstructed_base(cur), indent=1))
+        for f in ("CORPUS-OPERATOR-ACT.json", "CORPUS-C2-MAP-COMMIT-RECEIPT.json"):
+            (d / f).unlink(missing_ok=True)
+
     # ---- mallory: a self-minted act + self-named commit in a NON-git dir -> REFUSED, zero credit ----
     mal = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
-    shutil.copytree(PAPER, mal)
+    shutil.copytree(PAPER, mal); _reset_pre(mal)
     base_tr = json.loads((mal / "CORPUS-TRUST-ROOT.json").read_text())
     prop_s = json.loads((mal / "CORPUS-C2-MAP-ACTIVATION-0.1.json").read_text())
     ar_s = json.loads((mal / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
@@ -553,7 +574,7 @@ try:
         trepo = Path(tempfile.mkdtemp())
         cdir = trepo / "papers" / "every-check-spawns-more"
         cdir.parent.mkdir(parents=True)
-        shutil.copytree(PAPER, cdir)
+        shutil.copytree(PAPER, cdir); _reset_pre(cdir)
         for a in (["init", "-q", "-b", "main"], ["config", "user.email", "t@t"],
                   ["config", "user.name", "t"], ["add", "-A"], ["commit", "-qm", "pre-activation"]):
             _git(trepo, *a)
