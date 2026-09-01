@@ -520,37 +520,77 @@ try:
            byid["C2-MEAS"]["status"] == "REFUSED" and byid["C2-MEAS"]["reason"] == "MEASUREMENT_NOT_REPLAYED")
     # positive path: SIMULATE the operator applying the diff into a temp corpus -> CHECKED,
     # while C2-MEAS stays refused (no laundering). The committed root is untouched.
-    from corpus_operator_readback import applied_trust_root, build_operator_act  # noqa: E402
-    sim_dir = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
-    shutil.copytree(PAPER, sim_dir)
-    base_tr = json.loads((sim_dir / "CORPUS-TRUST-ROOT.json").read_text())
-    prop_s = json.loads((sim_dir / "CORPUS-C2-MAP-ACTIVATION-0.1.json").read_text())
-    ar_s = json.loads((sim_dir / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
-    live = applied_trust_root(base_tr, prop_s["trust_root_diff"])
-    (sim_dir / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(live, indent=1))
+    import subprocess  # noqa: E402
+    from corpus_operator_readback import applied_trust_root, build_operator_act, build_commit_receipt  # noqa: E402
     repo_root = Path(__file__).resolve().parents[2]
-    spec = {"corpus_dir": str(sim_dir)}  # abs path -> temp
-    # P0-3: applied root but NO operator act -> REFUSED (a bare root edit is not the governance act)
-    st0, rs0, _ = dc.strat_corpus_activation(repo_root, spec)
+
+    def _git(cwd, *a):
+        return subprocess.run(["git", "-C", str(cwd), *a], capture_output=True, text=True)
+
+    # ---- mallory: a self-minted act + self-named commit in a NON-git dir -> REFUSED, zero credit ----
+    mal = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
+    shutil.copytree(PAPER, mal)
+    base_tr = json.loads((mal / "CORPUS-TRUST-ROOT.json").read_text())
+    prop_s = json.loads((mal / "CORPUS-C2-MAP-ACTIVATION-0.1.json").read_text())
+    ar_s = json.loads((mal / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
+    live = applied_trust_root(base_tr, prop_s["trust_root_diff"])
+    (mal / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(live, indent=1))
+    st0, rs0, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(mal)})
     expect("applied root WITHOUT operator act -> REFUSED: OPERATOR_ACT_ABSENT",
            st0 == "REFUSED" and rs0 == "OPERATOR_ACT_ABSENT")
-    # write a valid path-limited operator act -> CHECKED
-    act = build_operator_act(live, prop_s, ar_s, "operator:s0fractal", "operator@corpus-governance", "8b2eb65")
-    (sim_dir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(act, indent=1))
+    mal_act = build_operator_act(live, prop_s, ar_s, "mallory:anyone", "self-asserted:anything", "not-a-git-commit")
+    (mal / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(mal_act, indent=1))
+    (mal / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(
+        build_commit_receipt("deadbeef" * 5, mal_act, (mal / "CORPUS-TRUST-ROOT.json").read_bytes(),
+                             (mal / "CORPUS-OPERATOR-ACT.json").read_bytes()), indent=1))
+    stm, rsm, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(mal)})
+    expect("mallory self-minted act in a non-git dir -> REFUSED (no positive credit)",
+           stm == "REFUSED" and rsm in ("OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE", "OPERATOR_COMMIT_UNVERIFIED"))
+    shutil.rmtree(mal.parent)
+
+    # ---- positive: a REAL temporary Git repo with a path-limited activation commit ----
+    trepo = Path(tempfile.mkdtemp())
+    cdir = trepo / "papers" / "every-check-spawns-more"
+    cdir.parent.mkdir(parents=True)
+    shutil.copytree(PAPER, cdir)
+    for a in (["init", "-q"], ["config", "user.email", "t@t"], ["config", "user.name", "t"],
+              ["add", "-A"], ["commit", "-qm", "pre-activation corpus"]):
+        _git(trepo, *a)
+    parent = _git(trepo, "rev-parse", "HEAD").stdout.strip()
+    # apply the diff + write the operator act (bound to the REAL parent) as ONE path-limited commit
+    (cdir / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(applied_trust_root(
+        json.loads((cdir / "CORPUS-TRUST-ROOT.json").read_text()), prop_s["trust_root_diff"]), indent=1))
+    live_b = (cdir / "CORPUS-TRUST-ROOT.json").read_bytes()
+    act = build_operator_act(json.loads(live_b), prop_s, ar_s, "operator:s0fractal", "operator@corpus-governance", parent)
+    (cdir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(act, indent=1))
+    _git(trepo, "add", "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
+         "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json")
+    _git(trepo, "commit", "-qm", "activate C2-MAP")
+    cact = _git(trepo, "rev-parse", "HEAD").stdout.strip()
+    # separate commit: the receipt naming the activation commit
+    (cdir / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(
+        build_commit_receipt(cact, act, live_b, (cdir / "CORPUS-OPERATOR-ACT.json").read_bytes()), indent=1))
+    _git(trepo, "add", "-A"); _git(trepo, "commit", "-qm", "activation commit receipt")
+    spec = {"corpus_dir": str(cdir)}
     st, rs, evd = dc.strat_corpus_activation(repo_root, spec)
-    expect("SIMULATED activation + valid operator act -> C2-MAP CHECKED", st == "CHECKED")
+    expect("REAL path-limited Git activation commit -> C2-MAP CHECKED", st == "CHECKED")
     if st != "CHECKED":
         print("   got:", st, rs)
-    # a tampered act (names another proposal) -> REFUSED
-    (sim_dir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps({**act, "proposal_id": "prop:OTHER"}, indent=1))
-    stx, rsx, _ = dc.strat_corpus_activation(repo_root, spec)
-    expect("tampered operator act (wrong proposal) -> REFUSED: OPERATOR_ACT_INVALID",
-           stx == "REFUSED" and rsx == "OPERATOR_ACT_INVALID")
-    # C2-MEAS must STILL be refused under the same activated root (composition-laundering guard)
-    st2, rs2, _ = dc.strat_refused(sim_dir, {"reason": "MEASUREMENT_NOT_REPLAYED"})
+    expect("CHECKED evidence binds the activation commit + operator", st == "CHECKED"
+           and evd.get("activation_commit") == cact and evd.get("operator") == "operator:s0fractal")
+    # C2-MEAS still refused under the same activated commit (no composition laundering)
+    st2, rs2, _ = dc.strat_refused(cdir, {"reason": "MEASUREMENT_NOT_REPLAYED"})
     expect("under activation, C2-MEAS STILL REFUSED (no composition laundering)",
            st2 == "REFUSED" and rs2 == "MEASUREMENT_NOT_REPLAYED")
-    shutil.rmtree(sim_dir.parent)
+    # stale/wrong parent in the act (real commit's parent != named parent) -> REFUSED
+    stale = build_operator_act(json.loads(live_b), prop_s, ar_s, "operator:s0fractal", "operator@corpus-governance", "8b2eb65")
+    (cdir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(stale, indent=1))
+    (cdir / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(
+        build_commit_receipt(cact, stale, live_b, (cdir / "CORPUS-OPERATOR-ACT.json").read_bytes()), indent=1))
+    sts, rss, _ = dc.strat_corpus_activation(repo_root, spec)
+    expect("stale/wrong parent_commit -> REFUSED (was a passing fixture before)",
+           sts == "REFUSED" and rss in ("OPERATOR_COMMIT_UNVERIFIED", "OPERATOR_ACT_INVALID"))
+    shutil.rmtree(trepo)
 except FileNotFoundError as e:
     expect(f"production operand/proposal/report present: {e}", False)
 

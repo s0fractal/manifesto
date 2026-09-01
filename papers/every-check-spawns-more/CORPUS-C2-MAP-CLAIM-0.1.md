@@ -50,11 +50,25 @@ trust root applies the governance diff — not a CI re-run of the raw bytes.
 - `bijection_break` — the eight acts do not exactly cover the 4×2 `(root, model)` grid
   (a missing unit, a duplicate run across units, or an unexpected unit).
 
-**Lifecycle.** `REFUSED: ACTIVATION_NOT_APPLIED` while `CORPUS-TRUST-ROOT.json` is empty;
-`CHECKED` only after the operator applies the pinned `trust_root_diff`
-(`CORPUS-C2-MAP-ACTIVATION-0.1.json`) as a path-limited governance commit and records the
-readback (`CORPUS-OPERATOR-ACT.md`). The transition is addressable and reversible: reverting
-the trust root returns the claim to `REFUSED`.
+**Lifecycle.** `REFUSED: ACTIVATION_NOT_APPLIED` while `CORPUS-TRUST-ROOT.json` is empty.
+`CHECKED` requires a **verified two-commit governance act**, not a self-issued file:
+
+1. **Activation commit** — changes EXACTLY `CORPUS-TRUST-ROOT.json` (the pinned resulting root)
+   and `CORPUS-OPERATOR-ACT.json` (the closed act, binding base/result digests, proposal id,
+   report id, diff digest, operator identity + authority, authorized paths, and the exact
+   pre-activation parent commit). Its parent is the external commitment; it never contains its
+   own commit id (no hash cycle).
+2. **Commit-receipt commit** — `CORPUS-C2-MAP-COMMIT-RECEIPT.json` names the resulting activation
+   commit and pins its parent, changed-path set, and the two committed blob digests.
+
+Before granting credit the consumer verifies from the Git object database that the activation
+commit exists, has exactly the named parent, changed exactly the two authorized paths, and whose
+committed blobs equal the validated live root and operator act. **Operator-authority rule
+(explicit): repository-write authority**, evidenced by the activation commit being an ancestor of
+the branch tip (accepted into the pushed history). In a deposit/archive environment with no Git
+object database, the strategy fails closed with `OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE` unless an
+independently bound commit receipt is supplied. The transition is addressable and reversible:
+reverting the trust root returns the claim to `REFUSED`.
 
 ---
 

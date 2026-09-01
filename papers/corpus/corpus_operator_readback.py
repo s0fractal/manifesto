@@ -16,7 +16,9 @@ Read-only by default (prints the readback). With `--emit <path>` it writes the e
 trust-root JSON the operator would commit — applying it is still the operator's separate act.
 The two commit ids (parent + resulting) are filled in by the operator after committing.
 """
+import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,6 +30,24 @@ from corpus_activation_report import verify_activation_report
 PAPER = Path(__file__).resolve().parents[1] / "every-check-spawns-more"
 AUTHORIZED_PATHS = ["papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
                     "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json"]
+COMMIT_RECEIPT = "CORPUS-C2-MAP-COMMIT-RECEIPT.json"
+COMMIT_RECEIPT_FIELDS = {"schema", "activation_commit", "parent_commit", "changed_paths",
+                         "trust_root_blob_digest", "operator_act_blob_digest",
+                         "proposal_id", "activation_report_id", "resulting_trust_root_digest"}
+COMMIT_RECEIPT_SCHEMA = "manifesto.corpus.activation-commit-receipt.v0.1"
+
+
+def _sha256_bytes(b):
+    return "sha256:" + hashlib.sha256(b).hexdigest()
+
+
+def _git(repo, *args):
+    """Run a read-only git command; return (rc, stdout_bytes). rc!=0 -> git said no."""
+    try:
+        p = subprocess.run(["git", "-C", str(repo), *args], capture_output=True)
+        return p.returncode, p.stdout
+    except (OSError, FileNotFoundError):
+        return 127, b""
 
 
 EMPTY_AUTH = {"completeness": [], "publication": [], "mapping": []}
@@ -97,6 +117,71 @@ def validate_operator_act(act, live_root, prop, ar):
     return len(F) == 0, F
 
 
+def build_commit_receipt(activation_commit, act, live_root_bytes, act_bytes):
+    """The SEPARATE readback (second commit) that names the resulting activation commit — this is
+    where the commit id lives, so the operator act itself never contains its own commit id (no cycle)."""
+    return {"schema": COMMIT_RECEIPT_SCHEMA, "activation_commit": activation_commit,
+            "parent_commit": act["parent_commit"], "changed_paths": list(AUTHORIZED_PATHS),
+            "trust_root_blob_digest": _sha256_bytes(live_root_bytes),
+            "operator_act_blob_digest": _sha256_bytes(act_bytes),
+            "proposal_id": act["proposal_id"], "activation_report_id": act["activation_report_id"],
+            "resulting_trust_root_digest": act["resulting_trust_root_digest"]}
+
+
+def verify_activation_commit(repo_root, corpus_dir, act, receipt, live_root_bytes, act_bytes):
+    """Bind the operator act to a REAL, path-limited Git activation commit (P0-1). Distinguishes the
+    promised governance commit from two self-minted JSON files. The operator-authority rule is
+    EXPLICIT: repository-write authority, evidenced by the activation commit being an ancestor of the
+    branch tip (it was accepted into the pushed history). Returns (ok, faults).
+
+    If no Git object database is reachable (a deposit/archive tarball), fails closed with a typed
+    reason — credit for the transition requires the verifiable Git provenance."""
+    F = []
+
+    def need(c, code):
+        if not c:
+            F.append(code)
+        return c
+    # the commit receipt must be well-formed and agree with the operator act
+    if not (isinstance(receipt, dict) and set(receipt) == COMMIT_RECEIPT_FIELDS):
+        return False, ["COMMIT_RECEIPT_MALFORMED"]
+    need(receipt["schema"] == COMMIT_RECEIPT_SCHEMA, "COMMIT_RECEIPT_SCHEMA")
+    need(receipt["parent_commit"] == act["parent_commit"], "COMMIT_RECEIPT_PARENT_MISMATCH")
+    need(receipt["proposal_id"] == act["proposal_id"], "COMMIT_RECEIPT_PROPOSAL_MISMATCH")
+    need(receipt["activation_report_id"] == act["activation_report_id"], "COMMIT_RECEIPT_REPORT_MISMATCH")
+    need(receipt["resulting_trust_root_digest"] == act["resulting_trust_root_digest"], "COMMIT_RECEIPT_RESULT_MISMATCH")
+    need(receipt["changed_paths"] == list(AUTHORIZED_PATHS), "COMMIT_RECEIPT_PATHS")
+    need(receipt["trust_root_blob_digest"] == _sha256_bytes(live_root_bytes), "COMMIT_RECEIPT_ROOT_BLOB")
+    need(receipt["operator_act_blob_digest"] == _sha256_bytes(act_bytes), "COMMIT_RECEIPT_ACT_BLOB")
+    if F:
+        return False, F
+
+    commit = receipt["activation_commit"]
+    rc, _ = _git(repo_root, "rev-parse", "--git-dir")
+    if rc != 0:
+        return False, ["OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE"]
+    rc, _ = _git(repo_root, "cat-file", "-e", commit + "^{commit}")
+    if not need(rc == 0, "ACTIVATION_COMMIT_MISSING"):
+        return False, F
+    # exact parent
+    rc, out = _git(repo_root, "rev-parse", commit + "^")
+    rc2, want_parent = _git(repo_root, "rev-parse", act["parent_commit"])
+    need(rc == 0 and rc2 == 0 and out.strip() and out.strip() == want_parent.strip(), "ACTIVATION_COMMIT_WRONG_PARENT")
+    # exactly the two authorized paths changed
+    rc, out = _git(repo_root, "diff-tree", "--no-commit-id", "--name-only", "-r", commit)
+    changed = sorted(x for x in out.decode().splitlines() if x)
+    need(rc == 0 and changed == sorted(AUTHORIZED_PATHS), "ACTIVATION_COMMIT_PATHS")
+    # the two committed blobs equal the validated live root + operator-act bytes
+    rc, root_at = _git(repo_root, "show", f"{commit}:{AUTHORIZED_PATHS[0]}")
+    need(rc == 0 and root_at == live_root_bytes, "ACTIVATION_COMMIT_ROOT_BLOB")
+    rc, act_at = _git(repo_root, "show", f"{commit}:{AUTHORIZED_PATHS[1]}")
+    need(rc == 0 and act_at == act_bytes, "ACTIVATION_COMMIT_ACT_BLOB")
+    # authority rule: the commit is in the pushed history (ancestor of the branch tip)
+    rc, _ = _git(repo_root, "merge-base", "--is-ancestor", commit, "HEAD")
+    need(rc == 0, "ACTIVATION_COMMIT_NOT_IN_HISTORY")
+    return len(F) == 0, F
+
+
 def readback():
     base = load_strict_json(PAPER / "CORPUS-TRUST-ROOT.json")
     prop = load_strict_json(PAPER / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
@@ -138,8 +223,28 @@ def main(argv):
     print("                             the external commitment; record the resulting commit id in a")
     print("                             SEPARATE readback commit (no hash cycle — see P0-3).")
 
-    # P1-5: fail closed unless the current base is the expected empty pre-activation state.
+    # POST-activation phase: emit the separate commit receipt naming the resulting activation commit.
+    # (Runs after the operator commit, so the base is the resulting root, not empty — hence a distinct
+    # branch that does not go through the empty-base guard below.)
+    emit_receipt = _arg(argv, "--emit-receipt")
+    if emit_receipt:
+        commit = _arg(argv, "--commit", "")
+        act_p, root_p = PAPER / "CORPUS-OPERATOR-ACT.json", PAPER / "CORPUS-TRUST-ROOT.json"
+        if not (commit and act_p.exists()):
+            print("REFUSED: --emit-receipt requires --commit <activation commit> and a committed operator act.")
+            return 1
+        act = load_strict_json(act_p)
+        rec = build_commit_receipt(commit, act, root_p.read_bytes(), act_p.read_bytes())
+        Path(emit_receipt).write_text(json.dumps(rec, indent=1, ensure_ascii=False))
+        print(f"\nwrote commit receipt -> {emit_receipt} (activation_commit={commit}); commit it SEPARATELY.")
+        return 0
+
+    # P1-2 + P1-5: fail closed BEFORE writing anything if verification failed or the base is not the
+    # expected empty pre-activation state — never leave governance-looking artifacts from a bad run.
     ok = r["report_verified"] and r["resulting_trust_root_valid"]
+    if not ok:
+        print(f"\nREFUSED: report/root verification failed ({r['report_faults']}) — will not emit.")
+        return 1
     if not r["base_is_empty"]:
         print("\nREFUSED: base trust root is NOT the expected empty pre-activation state — will not emit.")
         return 1

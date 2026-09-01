@@ -75,7 +75,10 @@
         "papers/every-check-spawns-more/CORPUS-C2-MAPPING-0.2.json",
         "papers/every-check-spawns-more/CORPUS-C2-MAP-ACTIVATION-0.1.json",
         "papers/every-check-spawns-more/CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json",
-        "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json"
+        "papers/every-check-spawns-more/CORPUS-C2-MAP-L3-0.1.json",
+        "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
+        "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json (after the operator act)",
+        "papers/every-check-spawns-more/CORPUS-C2-MAP-COMMIT-RECEIPT.json (after the operator act)"
       ]
     },
     "C2-MEAS": {

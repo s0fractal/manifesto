@@ -259,7 +259,9 @@ def strat_corpus_activation(base, spec):
     try:
         from corpus_activation_report import verify_activation_report
         from corpus_map import load_strict_json, validate_trust_root
-        from corpus_operator_readback import validate_operator_act, applied_trust_root, _reconstructed_base
+        from corpus_operator_readback import (validate_operator_act, applied_trust_root,
+                                              _reconstructed_base, verify_activation_commit,
+                                              COMMIT_RECEIPT, _git)
     except Exception as e:  # noqa
         return REFUSED, "CORPUS_ENGINE_UNAVAILABLE", {"detail": repr(e)}
 
@@ -295,9 +297,28 @@ def strat_corpus_activation(base, spec):
     act_ok, act_faults = validate_operator_act(act, tr, prop, ar)
     if not act_ok:
         return REFUSED, "OPERATOR_ACT_INVALID", {**ev, "faults": act_faults}
+    # P0-1: the act must be a REAL path-limited Git activation commit, not a self-minted JSON.
+    receipt_path = corpus_dir / COMMIT_RECEIPT
+    if not receipt_path.exists():
+        return REFUSED, "OPERATOR_COMMIT_RECEIPT_ABSENT", ev
+    try:
+        receipt = load_strict_json(receipt_path)
+    except ValueError as e:
+        return REFUSED, "OPERATOR_COMMIT_RECEIPT_STRICT_JSON", {"detail": str(e)}
+    rc, top = _git(corpus_dir, "rev-parse", "--show-toplevel")
+    if rc != 0 or not top.strip():
+        return REFUSED, "OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE", ev
+    repo_top = top.decode().strip()
+    live_root_bytes = (corpus_dir / "CORPUS-TRUST-ROOT.json").read_bytes()
+    act_bytes = act_path.read_bytes()
+    commit_ok, commit_faults = verify_activation_commit(repo_top, corpus_dir, act, receipt,
+                                                        live_root_bytes, act_bytes)
+    if not commit_ok:
+        return REFUSED, "OPERATOR_COMMIT_UNVERIFIED", {**ev, "faults": commit_faults}
     if ar["result_vector"]["applied"].get("C2-MAP") != "COMPLETE":
         return REFUSED, "REPORT_NOT_COMPLETE", ev
     return CHECKED, None, {**ev, "operator": act["operator_identity"], "authority": act["authority"],
+                           "activation_commit": receipt["activation_commit"],
                            "parent_commit": act["parent_commit"]}
 
 

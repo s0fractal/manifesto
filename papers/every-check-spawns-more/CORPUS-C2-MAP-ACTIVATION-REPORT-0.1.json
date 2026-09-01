@@ -1,5 +1,5 @@
 {
- "report_id": "arpt:eccfecafcb5ba9213ada0b73341a968d6d432fc5aae2b469de9c90fbf46f3705",
+ "report_id": "arpt:b0c39bcc9cbcedc27614f77d4dfead6e1cb9f32a9612df71179cb0bc1a280155",
  "schema": "manifesto.corpus.c2-map-activation-report.v0.1",
  "kind": "ACTIVATION-REPORT (machine-local; NOT an authenticity receipt)",
  "generated": "2026-09-02",
@@ -10,8 +10,8 @@
  },
  "proposal": {
   "file": "CORPUS-C2-MAP-ACTIVATION-0.1.json",
-  "proposal_id": "prop:e5110c357016849a797522011eca930b6944568d15f3ec953987a984901ea410",
-  "digest": "sha256:8d62027c213fac71efef4d73f42b9fb649676f11d4a0a5377536ab9284d65ed6",
+  "proposal_id": "prop:51f6f3030d951144824c769b88f487f32647fea88b2d38b1d71f83352f90a98b",
+  "digest": "sha256:e96a146fe2f26533ef6660e65b6c888c9f6570d887cde7def0bd9e05f249da98",
   "operand_digest_bound": true,
   "proposal_identity_recomputes": true
  },
@@ -302,7 +302,7 @@
  "activation": {
   "manifest": {
    "claim": "C2-MAP",
-   "paper_pin": "sha256:ca25e2c8856065612b87df4ee88e0b758f01d5c190d02c36c7882b111e9f5584",
+   "paper_pin": "sha256:c43bcbff12b0f1d3bed948467813bdae6dac676255003c4aeb8ac6a2dd1ef1a4",
    "experiment_ids": [
     "asserted:EXP-RVB-1c"
    ],
@@ -346,7 +346,7 @@
    ],
    "allowed_exclusions": []
   },
-  "manifest_id": "man:f11b7fbfe66e5ce2720b4d1c66fc4941aafc3fbda71436805716d6c6a1af6f90",
+  "manifest_id": "man:1cf440238444d480e17aabba9cd21c25b5d1f048d1c0d50b1458626276b3cedd",
   "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
   "mapper_closure_matches_current": true,
   "authorities": {
@@ -399,7 +399,7 @@
     ]
    },
    "pinned_manifests": {
-    "C2-MAP": "man:f11b7fbfe66e5ce2720b4d1c66fc4941aafc3fbda71436805716d6c6a1af6f90"
+    "C2-MAP": "man:1cf440238444d480e17aabba9cd21c25b5d1f048d1c0d50b1458626276b3cedd"
    },
    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
    "decision_register": [
@@ -438,7 +438,7 @@
   "applied": {
    "C2-MAP": "COMPLETE",
    "exact_acts": 8,
-   "evaluation_id": "eval:a2c9b9dda55dc771ba55a193932ee9030252fcf5d56c0dfebb2dcf125230a85a",
+   "evaluation_id": "eval:4c3acaee3b0211545ad488acfd38bcecbedbefb41f2828b24077b8af68a4ca4e",
    "l3_bundle_id": "l3:118c4087d16932630a586a18c8eabc7c53502d4f28def50bb519dfd3c4974ac4",
    "record_ids": [
     "rec:b2cae3bacbd568588afd1306bb839456da3207479264471ed3736f95186ffa5f",
