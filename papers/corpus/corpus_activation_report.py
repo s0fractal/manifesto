@@ -28,7 +28,7 @@ from corpus_extract import extract_from_quarantine
 from corpus_map import (mint_l2_bundle, verify_bundle, build_l3, manifest_id, mapper_closure_id,
                         _content_subject, _mapping_subject, decision_record_id,
                         load_strict_json, proposal_identity, recompute_report_id, validate_manifest)
-from corpus_l4 import l4_evaluate
+from corpus_l4 import l4_evaluate, validate_l3_bundle
 
 REPO = Path(__file__).resolve().parents[2]
 PAPER = REPO / "papers" / "every-check-spawns-more"
@@ -57,7 +57,7 @@ def generate():
     operand = load_strict_json(PAPER / "CORPUS-C2-MAPPING-0.2.json")
     proposal = load_strict_json(PAPER / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
     inventory = load_strict_json(PAPER / "CORPUS-SOURCE-INVENTORY.json")
-    receipt = json.loads((PAPER / "CORPUS-QUARANTINE-RECEIPT.json").read_text())
+    receipt = load_strict_json(PAPER / "CORPUS-QUARANTINE-RECEIPT.json")   # P1-6: strict here too
     rows, overlay = operand["rows"], proposal["overlay_rows"]
     man = proposal["manifest"]
     diff = proposal["trust_root_diff"]
@@ -106,6 +106,13 @@ def generate():
     applied_l3_id = act["private_l3"]["l3_bundle_id"]
     applied_record_ids = [r["record_id"] for r in act["private_l3"]["records"]]
 
+    # Emit the serialized applied L3 as an INDEPENDENTLY-ADDRESSED, metadata-only operand
+    # (no transcript bytes) so the quarantine-free verifier can RECOMPUTE every record id, the
+    # l3 bundle id, and rerun L4 to recompute the evaluation id + vector (closes forged-id path).
+    serialized_l3 = act["private_l3"]
+    assert not any(k in json.dumps(serialized_l3) for k in ("raw_b64", '"content"', '"text"')), "L3 leak"
+    (PAPER / "CORPUS-C2-MAP-L3-0.1.json").write_text(json.dumps(serialized_l3, indent=1, ensure_ascii=False))
+
     # mandatory: C2-MEAS is not claimed by this path. Record the engine's ACTUAL typed result
     # (do NOT overwrite it with a stronger authored reason — P0-1); the normative reading is a
     # SEPARATE, explicitly-authored policy_projection field.
@@ -129,6 +136,9 @@ def generate():
                        "l2_bundle_id": tr["l2_bundle_id"],
                        "quarantine_receipt_digest": _sha(PAPER / "CORPUS-QUARANTINE-RECEIPT.json"),
                        "l2_bundle_verified": ok, "events_total": len(bundle["body"]["events"])},
+        "serialized_l3": {"file": "CORPUS-C2-MAP-L3-0.1.json",
+                          "digest": _sha(PAPER / "CORPUS-C2-MAP-L3-0.1.json"),
+                          "l3_bundle_id": applied_l3_id},
         "evidence": {"span_count": len(span_results), "all_verified": all_spans_ok,
                      "spans": span_results},
         "activation": {"manifest": man, "manifest_id": manifest_id(man),
@@ -232,12 +242,41 @@ def verify_activation_report(paper=PAPER):
     need(prov.get("l2_bundle_id") == tr.get("l2_bundle_id"), "L2_NOT_PINNED_TO_TRUST_ROOT")
     need(prov.get("quarantine_receipt_digest") == _sha(paper / "CORPUS-QUARANTINE-RECEIPT.json"), "RECEIPT_DIGEST_MISMATCH")
 
-    # 5. the evidence-span SET equals the operand's exact closed 24-set (raw truth is machine-local)
+    # 5. the evidence-span SET equals the operand's exact closed 24-set (raw truth is machine-local),
+    #    AND the report's OWN typed verdict must be POSITIVE — a report that says every span failed
+    #    cannot support a claim whose evidence class asserts the spans were revalidated (P0-1).
+    ev = ar.get("evidence", {})
+    spans = ev.get("spans", [])
     want = {(r["local_ref"], e["kind"], e["event_id"], e["value_start"], e["value_end"],
              e["observed_value_digest"]) for r in operand.get("rows", []) for e in r["mapping_evidence"]}
     got = {(s["local_ref"], s["kind"], s["event_id"], s["byte_span"][0], s["byte_span"][1],
-            s["observed_value_digest"]) for s in ar.get("evidence", {}).get("spans", [])}
+            s["observed_value_digest"]) for s in spans}
     need(len(want) == 24 and want == got, "EVIDENCE_SPAN_SET_MISMATCH")
+    need(ev.get("all_verified") is True and ev.get("span_count") == 24
+         and len(spans) == 24 and all(s.get("verified") is True for s in spans)
+         and ar.get("assertions", {}).get("all_24_spans_verified") is True, "SPAN_VERDICT_NOT_POSITIVE")
+
+    # 5b. RECOMPUTE the result addresses from the committed serialized L3 operand and rerun L4 under
+    #     the proposal-applied root (independent of whether the live root is applied yet). Forged
+    #     l3/record/evaluation ids no longer pass; the 24-id register (bound by proposal_id) anchors
+    #     publishability, so a fabricated coherent L3 cannot yield COMPLETE (P0-2).
+    try:
+        l3 = load_strict_json(paper / "CORPUS-C2-MAP-L3-0.1.json")
+    except (ValueError, FileNotFoundError) as e:
+        return False, F + [f"L3_OPERAND:{e}"]
+    need(_sha(paper / "CORPUS-C2-MAP-L3-0.1.json") == ar.get("serialized_l3", {}).get("digest"), "L3_DIGEST_MISMATCH")
+    l3_ok, l3_reason, _ = validate_l3_bundle(l3)              # recomputes every record id + l3 bundle id
+    need(l3_ok, f"L3_INVALID:{l3_reason}")
+    need(l3.get("l2_bundle_id") == tr.get("l2_bundle_id"), "L3_L2_NOT_PINNED")
+    applied_root = {**{k: tr[k] for k in ("schema", "note", "report_id", "corpus_commitment",
+                    "extraction_closure", "l2_bundle_id") if k in tr},
+                    "authorities": diff["authorities"], "pinned_manifests": diff["pinned_manifests"],
+                    "mapper_closure": diff["mapper_closure"], "decision_register": diff["decision_register"]}
+    l4 = l4_evaluate(l3, {"C2-MAP": man}, applied_root).get("views", {}).get("C2-MAP", {})
+    app = ar.get("result_vector", {}).get("applied", {})
+    need(l3.get("l3_bundle_id") == app.get("l3_bundle_id") == ar.get("serialized_l3", {}).get("l3_bundle_id"), "L3_ID_REPORT_MISMATCH")
+    need(sorted(r["record_id"] for r in l3.get("records", [])) == sorted(app.get("record_ids") or []), "RECORD_ID_SET_MISMATCH")
+    need(l4.get("status") == "COMPLETE" and l4.get("evaluation_id") == app.get("evaluation_id"), "L4_RECOMPUTE_MISMATCH")
 
     # 6. C2-MEAS keeps the engine's ACTUAL reason (P0-1); no laundering
     meas = ar.get("result_vector", {}).get("C2-MEAS", {})

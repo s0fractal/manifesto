@@ -68,7 +68,7 @@
     "C2-MAP": {
       "strategy": "corpus_activation",
       "class": "address_map",
-      "title": "the 8 crossed transcripts form an addressable 4x2 observed-model cohort (root_digest x verifier_identity), byte-mapped to the frozen corpus",
+      "title": "the eight preserved transcripts selected for the governed 4x2 cohort (four crossed-comparison roots x observed model) form an addressable 4x2 cohort, byte-mapped to the frozen corpus; run-level 1b/1c provenance NOT established",
       "corpus_dir": "papers/every-check-spawns-more",
       "definition": "papers/every-check-spawns-more/CORPUS-C2-MAP-CLAIM-0.1.md",
       "operands": [

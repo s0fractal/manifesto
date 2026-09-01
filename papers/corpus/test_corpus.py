@@ -471,6 +471,37 @@ try:
            any(c in ff for c in ("L2_NOT_PINNED_TO_TRUST_ROOT", "REGISTER_MISMATCH", "REGISTER_NOT_24")))
     shutil.rmtree(forged_dir.parent)
 
+    def _forge_report(mutate):
+        d = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
+        shutil.copytree(PAPER, d)
+        doc = json.loads((d / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
+        mutate(doc)
+        doc["report_id"] = "arpt:" + ids.json_digest({k: v for k, v in doc.items() if k != "report_id"})
+        (d / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").write_text(json.dumps(doc, indent=1))
+        r = verify_activation_report(d)
+        shutil.rmtree(d.parent)
+        return r
+
+    # P0-1: a report whose OWN typed verdict says every raw span FAILED must not verify.
+    def _neg(doc):
+        doc["evidence"]["all_verified"] = False
+        for s in doc["evidence"]["spans"]:
+            s["verified"] = False
+        doc["assertions"]["all_24_spans_verified"] = False
+    nok, nf = _forge_report(_neg)
+    expect("negative-verdict report (all spans verified=false) FAILS verify (P0-1)",
+           not nok and "SPAN_VERDICT_NOT_POSITIVE" in nf)
+
+    # P0-2: fabricated result addresses (l3/record/evaluation ids) must not verify — they are
+    # recomputed from the committed serialized L3 + a rerun of L4, not trusted by shape.
+    def _ids(doc):
+        a = doc["result_vector"]["applied"]
+        a["l3_bundle_id"] = "l3:FORGED"; a["evaluation_id"] = "eval:FORGED"
+        a["record_ids"] = [f"rec:FORGED-{i}" for i in range(8)]
+    iok, iff = _forge_report(_ids)
+    expect("forged l3/record/evaluation ids FAIL verify (P0-2 recompute)",
+           not iok and any(c in iff for c in ("L3_ID_REPORT_MISMATCH", "RECORD_ID_SET_MISMATCH", "L4_RECOMPUTE_MISMATCH")))
+
     # ============ P0-3: C2-MAP / C2-MEAS as canonical deposit claims ============
     import importlib  # noqa: E402
     dc = importlib.import_module("deposit_check") if "deposit_check" in sys.modules else None
@@ -489,19 +520,32 @@ try:
            byid["C2-MEAS"]["status"] == "REFUSED" and byid["C2-MEAS"]["reason"] == "MEASUREMENT_NOT_REPLAYED")
     # positive path: SIMULATE the operator applying the diff into a temp corpus -> CHECKED,
     # while C2-MEAS stays refused (no laundering). The committed root is untouched.
-    from corpus_operator_readback import applied_trust_root  # noqa: E402
+    from corpus_operator_readback import applied_trust_root, build_operator_act  # noqa: E402
     sim_dir = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
     shutil.copytree(PAPER, sim_dir)
     base_tr = json.loads((sim_dir / "CORPUS-TRUST-ROOT.json").read_text())
     prop_s = json.loads((sim_dir / "CORPUS-C2-MAP-ACTIVATION-0.1.json").read_text())
-    (sim_dir / "CORPUS-TRUST-ROOT.json").write_text(
-        json.dumps(applied_trust_root(base_tr, prop_s["trust_root_diff"]), indent=1))
+    ar_s = json.loads((sim_dir / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
+    live = applied_trust_root(base_tr, prop_s["trust_root_diff"])
+    (sim_dir / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(live, indent=1))
     repo_root = Path(__file__).resolve().parents[2]
-    st, rs, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(sim_dir)})  # abs path -> temp
-    expect("SIMULATED activation -> C2-MAP CHECKED (live-activated root + verified report)",
-           st == "CHECKED")
+    spec = {"corpus_dir": str(sim_dir)}  # abs path -> temp
+    # P0-3: applied root but NO operator act -> REFUSED (a bare root edit is not the governance act)
+    st0, rs0, _ = dc.strat_corpus_activation(repo_root, spec)
+    expect("applied root WITHOUT operator act -> REFUSED: OPERATOR_ACT_ABSENT",
+           st0 == "REFUSED" and rs0 == "OPERATOR_ACT_ABSENT")
+    # write a valid path-limited operator act -> CHECKED
+    act = build_operator_act(live, prop_s, ar_s, "operator:s0fractal", "operator@corpus-governance", "8b2eb65")
+    (sim_dir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps(act, indent=1))
+    st, rs, evd = dc.strat_corpus_activation(repo_root, spec)
+    expect("SIMULATED activation + valid operator act -> C2-MAP CHECKED", st == "CHECKED")
     if st != "CHECKED":
         print("   got:", st, rs)
+    # a tampered act (names another proposal) -> REFUSED
+    (sim_dir / "CORPUS-OPERATOR-ACT.json").write_text(json.dumps({**act, "proposal_id": "prop:OTHER"}, indent=1))
+    stx, rsx, _ = dc.strat_corpus_activation(repo_root, spec)
+    expect("tampered operator act (wrong proposal) -> REFUSED: OPERATOR_ACT_INVALID",
+           stx == "REFUSED" and rsx == "OPERATOR_ACT_INVALID")
     # C2-MEAS must STILL be refused under the same activated root (composition-laundering guard)
     st2, rs2, _ = dc.strat_refused(sim_dir, {"reason": "MEASUREMENT_NOT_REPLAYED"})
     expect("under activation, C2-MEAS STILL REFUSED (no composition laundering)",

@@ -1,17 +1,17 @@
 {
- "report_id": "arpt:9977891dbe399935e14f146a21205f9bc292bf0f1258e8247beacf9cdb9cb34e",
+ "report_id": "arpt:eccfecafcb5ba9213ada0b73341a968d6d432fc5aae2b469de9c90fbf46f3705",
  "schema": "manifesto.corpus.c2-map-activation-report.v0.1",
  "kind": "ACTIVATION-REPORT (machine-local; NOT an authenticity receipt)",
  "generated": "2026-09-02",
- "generator_closure": "clo:activation-report:6d4a54d0012b2b7cc89f434973fa80275571e63b30ea5494b6eeee54f745a264",
+ "generator_closure": "clo:activation-report:2dcbffc6c6650da16a291ff2c6044e914f1831d8f3ff2ff886e80b5023859ff5",
  "operand": {
   "file": "CORPUS-C2-MAPPING-0.2.json",
   "digest": "sha256:be82576149fb400ef23dcc6902f14c5d40db7620a540f8aba87f8ac229ad3368"
  },
  "proposal": {
   "file": "CORPUS-C2-MAP-ACTIVATION-0.1.json",
-  "proposal_id": "prop:75ba7e8717d155e660461d8efef9b5ca12bd2bf931fd37f7c33bfd1a5d5dad6d",
-  "digest": "sha256:dfa970b48c6fcf6182b4aa9618f42ff88c298cf1e4fc87bdc8843f065d79d221",
+  "proposal_id": "prop:e5110c357016849a797522011eca930b6944568d15f3ec953987a984901ea410",
+  "digest": "sha256:8d62027c213fac71efef4d73f42b9fb649676f11d4a0a5377536ab9284d65ed6",
   "operand_digest_bound": true,
   "proposal_identity_recomputes": true
  },
@@ -23,6 +23,11 @@
   "quarantine_receipt_digest": "sha256:e6e2d2ef6f96781f6f7766472ba3d66d703ba068568778bf1ec5d3a773c7c2d2",
   "l2_bundle_verified": true,
   "events_total": 1239
+ },
+ "serialized_l3": {
+  "file": "CORPUS-C2-MAP-L3-0.1.json",
+  "digest": "sha256:a9fcee0f5f662f304ce6c4a520a8c44fc3b4fad7d9b544128c3193ad9c18bb63",
+  "l3_bundle_id": "l3:118c4087d16932630a586a18c8eabc7c53502d4f28def50bb519dfd3c4974ac4"
  },
  "evidence": {
   "span_count": 24,
@@ -297,7 +302,7 @@
  "activation": {
   "manifest": {
    "claim": "C2-MAP",
-   "paper_pin": "sha256:02455c1d97a9b650d5a764a0b5b6fd58eeb71731cd0e82c78d54abbe12e8290e",
+   "paper_pin": "sha256:ca25e2c8856065612b87df4ee88e0b758f01d5c190d02c36c7882b111e9f5584",
    "experiment_ids": [
     "asserted:EXP-RVB-1c"
    ],
@@ -341,7 +346,7 @@
    ],
    "allowed_exclusions": []
   },
-  "manifest_id": "man:26e592eeb5735fbc67172d27c52cafe915d1f4435770516d2bb226c85cfbe2f0",
+  "manifest_id": "man:f11b7fbfe66e5ce2720b4d1c66fc4941aafc3fbda71436805716d6c6a1af6f90",
   "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
   "mapper_closure_matches_current": true,
   "authorities": {
@@ -394,7 +399,7 @@
     ]
    },
    "pinned_manifests": {
-    "C2-MAP": "man:26e592eeb5735fbc67172d27c52cafe915d1f4435770516d2bb226c85cfbe2f0"
+    "C2-MAP": "man:f11b7fbfe66e5ce2720b4d1c66fc4941aafc3fbda71436805716d6c6a1af6f90"
    },
    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
    "decision_register": [
@@ -433,7 +438,7 @@
   "applied": {
    "C2-MAP": "COMPLETE",
    "exact_acts": 8,
-   "evaluation_id": "eval:309aba33d14b64240fecbb79b82ab53634e9862212f9aa08a3919c8f745132a2",
+   "evaluation_id": "eval:a2c9b9dda55dc771ba55a193932ee9030252fcf5d56c0dfebb2dcf125230a85a",
    "l3_bundle_id": "l3:118c4087d16932630a586a18c8eabc7c53502d4f28def50bb519dfd3c4974ac4",
    "record_ids": [
     "rec:b2cae3bacbd568588afd1306bb839456da3207479264471ed3736f95186ffa5f",

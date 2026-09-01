@@ -10,8 +10,11 @@ become `CHECKED`; `C2-MEAS` is permanently `REFUSED` until real measurement repl
 
 ## C2-MAP — cohort addressability (address map)
 
-**Exact body.** The eight crossed transcripts of the observed-model experiment form an
-**addressable 4×2 cohort**. The unit key is `(root_digest, verifier_identity)` with
+**Exact body.** The **eight preserved transcripts selected for the governed 4×2 cohort** (the
+transcripts over the four roots used in the crossed comparison) form an **addressable 4×2
+cohort**. The map proves the four ROOT-token × observed-model pairs — **not** that these exact
+runs belong to the crossed experiment (run-level 1b/1c provenance is not established; see
+Exclusions). The unit key is `(root_digest, verifier_identity)` with
 `verifier_identity ∈ {claude-opus-5, claude-sonnet-5}` (the OBSERVED model; the "Fable 5"
 label was the mislabel corrected in `CORPUS-C2-DISCOVERY-0.1.md` F-C2-1). The four roots
 are the crossed roots

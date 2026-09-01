@@ -259,6 +259,7 @@ def strat_corpus_activation(base, spec):
     try:
         from corpus_activation_report import verify_activation_report
         from corpus_map import load_strict_json, validate_trust_root
+        from corpus_operator_readback import validate_operator_act, applied_trust_root, _reconstructed_base
     except Exception as e:  # noqa
         return REFUSED, "CORPUS_ENGINE_UNAVAILABLE", {"detail": repr(e)}
 
@@ -275,21 +276,29 @@ def strat_corpus_activation(base, spec):
         return REFUSED, "TRUST_ROOT_INVALID", {}
 
     diff = prop["trust_root_diff"]
-    tr_auth = tr.get("authorities") or {}
-    applied = (
-        (tr.get("pinned_manifests") or {}).get("C2-MAP") == diff["pinned_manifests"]["C2-MAP"]
-        and tr.get("mapper_closure") == diff["mapper_closure"]
-        and set(diff["decision_register"]) <= set(tr.get("decision_register") or [])
-        and all(set(diff["authorities"][k]) <= set(tr_auth.get(k, [])) for k in diff["authorities"]))
     ev = {"report_id": ar["report_id"], "proposal_id": prop["proposal_id"],
           "l2_bundle_id": tr.get("l2_bundle_id"),
           "evaluation_id": ar["result_vector"]["applied"].get("evaluation_id")}
-    if not applied:
+    # EXACT application (not subset): the live root must be the empty pinned base with ONLY the
+    # diff's four credit fields applied, nothing else changed.
+    if applied_trust_root(_reconstructed_base(tr), diff) != tr:
         return REFUSED, "ACTIVATION_NOT_APPLIED", ev
-    # live trust root activates C2-MAP AND the verified report attests the applied COMPLETE vector
+    # P0-3: a path-limited operator governance act is a REQUIRED operand. A manual/unattributed
+    # root edit (no act, or one naming another base/proposal/report/result) is REFUSED.
+    act_path = corpus_dir / "CORPUS-OPERATOR-ACT.json"
+    if not act_path.exists():
+        return REFUSED, "OPERATOR_ACT_ABSENT", ev
+    try:
+        act = load_strict_json(act_path)
+    except ValueError as e:
+        return REFUSED, "OPERATOR_ACT_STRICT_JSON", {"detail": str(e)}
+    act_ok, act_faults = validate_operator_act(act, tr, prop, ar)
+    if not act_ok:
+        return REFUSED, "OPERATOR_ACT_INVALID", {**ev, "faults": act_faults}
     if ar["result_vector"]["applied"].get("C2-MAP") != "COMPLETE":
         return REFUSED, "REPORT_NOT_COMPLETE", ev
-    return CHECKED, None, ev
+    return CHECKED, None, {**ev, "operator": act["operator_identity"], "authority": act["authority"],
+                           "parent_commit": act["parent_commit"]}
 
 
 STRATEGIES = {

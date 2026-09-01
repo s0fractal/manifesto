@@ -1,0 +1,489 @@
+{
+ "l3_bundle_id": "l3:118c4087d16932630a586a18c8eabc7c53502d4f28def50bb519dfd3c4974ac4",
+ "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+ "l2_bundle_id": "bnd:2654ab606547b03d81117fe394c783ea659e040a99be4f6f2e246ba7dc03e0b0",
+ "local_ref_index": {
+  "0025::claude-opus-5": "rec:b2cae3bacbd568588afd1306bb839456da3207479264471ed3736f95186ffa5f",
+  "0025::claude-sonnet-5": "rec:7e98a45588ed47ba58cd85d24fb4e7de578ff890e3968089ec1e42fc5ec9ab9a",
+  "0030::claude-opus-5": "rec:0be6f3e4752fa58e185c4f8e8ac0429d4f561463d18ac1d66460c7b211076d70",
+  "0030::claude-sonnet-5": "rec:af429d22c34f889e9c820699aa0bce6afafd8bb65ad27000288e396e3efe0393",
+  "FLOW15::claude-opus-5": "rec:c041a88978ab47e16072314818bd06cfd0705a8e3bfa3e6c9ac788abd8cb0892",
+  "FLOW15::claude-sonnet-5": "rec:b3ef2c282a85d3ba63ed998cc34e5f68b32578c74461e496899c1e95a03f1460",
+  "FLOW17::claude-opus-5": "rec:cc61eceba1a47e3425f9193d9c4e520bff1bc51b05322ba07f216d8dd6696a47",
+  "FLOW17::claude-sonnet-5": "rec:d844d8ee4ef09befa5bc7b28ddfcc9dfcb4ddbc0d10adb4aec67ff5a2e4e63dd"
+ },
+ "records": [
+  {
+   "record_id": "rec:b2cae3bacbd568588afd1306bb839456da3207479264471ed3736f95186ffa5f",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "0025::claude-opus-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:31cf712f723535364e15936d58f108d09db81eb1c787996cfca3e39491646733",
+     "occurrences": [
+      {
+       "event_id": "evt:365cd6017aa98823236ca2dac970e69c64c50ea5d4f32ae17529f621a3cb00ae",
+       "byte_start": 0,
+       "byte_end": 2034,
+       "body_digest": "line:d158c21bdefc98ad3e19651d1b03bc1631de26c1833b907a7a772e43be72d53c"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:0025",
+    "root_digest": "61a110be5bcda201a2a29c377b38bb9d437e6317ebd36f30ffadcd871e2ada54",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Fable 5",
+    "verifier_observed_identity": "claude-opus-5",
+    "verifier_identity": "claude-opus-5",
+    "agent_run_occurrence": "aac209dc4cdcafae2",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:a86cd8109b69f65dcd76aa81e5d28998d3179c5edd762b4c2945875a0d5406ae",
+     "evidence_commitment": "03f83b740e4d7829b4f056cfccc964338f1a5f227d1608488f03893ab4850a8d",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "244452770a43464b5cf0b41700be4b3d6816767b11635c6f0ce9fbb96bc88d16",
+       "886dfeeadfe40e577418842625b2ddffe2557fea88f175c3cf504d811ff251e5",
+       "aebf23e66bc2d488f84c44f1f94b1dea89c60d46ce98ccc0437c8db7090ccf74"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:7e98a45588ed47ba58cd85d24fb4e7de578ff890e3968089ec1e42fc5ec9ab9a",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "0025::claude-sonnet-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:faa8c74240f4a79ede8c8750bceb4e78f6292484a6f203ab92bd021f0d22231a",
+     "occurrences": [
+      {
+       "event_id": "evt:165f03c8d525a8aaabbc6a81ea9f6613f1650686eacef2662e0eaae9826228f3",
+       "byte_start": 0,
+       "byte_end": 2510,
+       "body_digest": "line:7350bd6d9ff32f82914b4916fe6f0cafecc347613a30e0aba2d32e7e3347a3c5"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:0025",
+    "root_digest": "61a110be5bcda201a2a29c377b38bb9d437e6317ebd36f30ffadcd871e2ada54",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Sonnet 5",
+    "verifier_observed_identity": "claude-sonnet-5",
+    "verifier_identity": "claude-sonnet-5",
+    "agent_run_occurrence": "ab8454e235e42cc73",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:e51d86f2798baa64d7d4429432cf938f4215ee3f12a4253eaadf5befa594a54d",
+     "evidence_commitment": "78b03521dee5755b0bc5983e8b364a9a3d642810513caa33227557d05da52b23",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "99e42581329374effc49943369cd374b58b65aaa1b8affc9802092fc73ede313",
+       "b70361e386b5a93b43cc27eeb84183aba9d10447f45bbb4e8852ae76be1d1664",
+       "b708b4e77181fda77afaa5ecbcfa48bc909cc0eab9acae09135782703d17ecbf"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:0be6f3e4752fa58e185c4f8e8ac0429d4f561463d18ac1d66460c7b211076d70",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "0030::claude-opus-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:44fa7795454cfd06174143c9eec833841273ab7ee5ceca88bf5d7138facb4b88",
+     "occurrences": [
+      {
+       "event_id": "evt:96e470a36e63eaf8db77a614add6fe7716ea4b55083d1b66fbb55359ddaf403f",
+       "byte_start": 0,
+       "byte_end": 2215,
+       "body_digest": "line:d7f5a80f68bc34c934faad9a0c058020fef6d45ba1b1846f8c3919f9fa814119"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:0030",
+    "root_digest": "74e53505dbc98d828903df864c4da159b5af1fcc4bca21a121629067497af62a",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Fable 5",
+    "verifier_observed_identity": "claude-opus-5",
+    "verifier_identity": "claude-opus-5",
+    "agent_run_occurrence": "a1153e2189d4006cc",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:79a9581bb19fd0b952341407f1be88bbdc3b425e9798f36a137cc2721301cdb0",
+     "evidence_commitment": "67dc9cc9a6aa691846b832770800483136cf6e6c289b6031d1ec6023f9f40f95",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "090f526c92e87fea77a254231b07393bfc127df6eecac10deef170764468a472",
+       "09bafd103c695d4c1e6769a4b03ad06bb912434694a4b6ea366bdcc352402bac",
+       "89c05b2e6c9b0481efb6ad76a9dff5d5b267c6c402291c022e0d29ec5867eb60"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:af429d22c34f889e9c820699aa0bce6afafd8bb65ad27000288e396e3efe0393",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "0030::claude-sonnet-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:72605c98a1c6bd9b21dd673132fbcf7a2bb6928f5922d3b0841b07aeada519ac",
+     "occurrences": [
+      {
+       "event_id": "evt:4cac36e0361d6fb4cd4dce13084d91a78c25910c421dbc620d8a8799e2400339",
+       "byte_start": 0,
+       "byte_end": 2211,
+       "body_digest": "line:3e1e87fb9bc59182e90e0c452b6d195d4b43ee27dda971d3c9b66ec3764c7588"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:0030",
+    "root_digest": "74e53505dbc98d828903df864c4da159b5af1fcc4bca21a121629067497af62a",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Sonnet 5",
+    "verifier_observed_identity": "claude-sonnet-5",
+    "verifier_identity": "claude-sonnet-5",
+    "agent_run_occurrence": "a700944565f64aed3",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:37af0d38954837689b3e2c23b27554e994719182d98c6727efdeda4286b37b3a",
+     "evidence_commitment": "af063cf281616399053a81ca46f213f21d595756e7b8b264814b39e6a3ea50ba",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "64336eb6cdf61b15ec8cf28fbd8c121219257ed60c2e9e51501a1bd3c348e15d",
+       "6bacc3743a7464964bbb5c6be0bdea6e2887ddff0cddbc84b308c09fceb15545",
+       "7cfd4f343f3e188c44f6cb4674eeb171474b790bce479f8165f0294c977bc428"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:c041a88978ab47e16072314818bd06cfd0705a8e3bfa3e6c9ac788abd8cb0892",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "FLOW15::claude-opus-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:0e25c00bffba8a5ed177b9782faf24075831a1dcff70c54282d7426811e2143c",
+     "occurrences": [
+      {
+       "event_id": "evt:9298d608a68f8fff69546b8c907ec704e4a5cda0ef13b0d0c59aba4fd4f6f2ab",
+       "byte_start": 0,
+       "byte_end": 2126,
+       "body_digest": "line:3110deb6eb432235f121cb4d8919b1fc0b69fcb4a22c86c24e247f5ed059ebc9"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:FLOW15",
+    "root_digest": "ed8719cd0adb32133911dc41299a949533ecdb713352fbef8207186e8e2b2060",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Fable 5",
+    "verifier_observed_identity": "claude-opus-5",
+    "verifier_identity": "claude-opus-5",
+    "agent_run_occurrence": "a0eda1deea730b879",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:b94aff8e72b2a24641f5014e45f333657f0439d0d65c702fc45e7fac7b9906ad",
+     "evidence_commitment": "9b2526f4def105e674adefed6efe5b4e5895eca699781679726af4f9737888a6",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "0c330cefd6235b3b23c1d70051c2e7acf8a99a5578fcbcdb4422c5d9fe4a898b",
+       "312c2a6c682d845b5cee54d69520046469d5237317713c93f2f44caf374a66ce",
+       "7cacd7264831bbab7a27292eb624dee97a799f51a8d91bc0218d10b29b5cd23b"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:b3ef2c282a85d3ba63ed998cc34e5f68b32578c74461e496899c1e95a03f1460",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "FLOW15::claude-sonnet-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:f02fb614ae6e031b481daa82fd63dfc9c41b9d8f0dc7fab335b2f1d23f119745",
+     "occurrences": [
+      {
+       "event_id": "evt:e26fc97a29d574d15dd19b190b3e30056568f300be9730aaa9720c706bf65f72",
+       "byte_start": 0,
+       "byte_end": 1956,
+       "body_digest": "line:682686d7af600ed54ccc4b52068e93c7c17324170f3df1af5cfaf34c8fe8e44c"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:FLOW15",
+    "root_digest": "ed8719cd0adb32133911dc41299a949533ecdb713352fbef8207186e8e2b2060",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Sonnet 5",
+    "verifier_observed_identity": "claude-sonnet-5",
+    "verifier_identity": "claude-sonnet-5",
+    "agent_run_occurrence": "a8b2b993190ea94ac",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:ca314b1054e50cb36bcdd5980625354e09337c0f2328c0d812963202a8ec12e2",
+     "evidence_commitment": "f54dcfed72c4a8c44a574ea546126d9779228b1bf53d33ae311dbb3e2b6bf923",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "3b298cb5237f2f18237e4768ad00bad56198280e0656c3d4d90902512ddfbdfd",
+       "3c3c360319faca2f5fc744a73fe18dec2158f367488af67aaa6ed44210071697",
+       "bd21d4f78428d2c09d767da715f005e6efcda470fcdc91a059892650dcdcdeff"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:cc61eceba1a47e3425f9193d9c4e520bff1bc51b05322ba07f216d8dd6696a47",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "FLOW17::claude-opus-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:b50c3ce254bcdc4dc991d7eef542ee42be5c8be7041634f41311b436ec9a0d0b",
+     "occurrences": [
+      {
+       "event_id": "evt:da60654d06eb5fe4bac5f2b54a487a97664fa55db7c2d4ef095951c42239bf15",
+       "byte_start": 0,
+       "byte_end": 2364,
+       "body_digest": "line:c856de7d4ed6a55650cecc4292ccf82a060f38c8e3167599ef7acf5bbea223a7"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:FLOW17",
+    "root_digest": "e43b2b860da1e9fd13cf0f1e1d812313b78a5b7d0e078874698e43b0fc780e88",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Fable 5",
+    "verifier_observed_identity": "claude-opus-5",
+    "verifier_identity": "claude-opus-5",
+    "agent_run_occurrence": "a38287b9dd6a49461",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:2f5ff1411f712c067922cb3ac5508f26a804b28cdda1acd90357bf398c5700bc",
+     "evidence_commitment": "47feb7b82222c7764cf48f9d5518ed542eb249452734c1586ea0bcfbc331b9ad",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "e1dd4e1835c79701c63a49c5cf1e0d355fe2af87355914ba5a9032987a4c3b46",
+       "f0175cc0435793271a6fb0d37ab43d2ae1a4c9dc78c655d3dca6796968641437",
+       "f2b9e314d108cd40b94bc2e50b27539e1447567c00bf9729e326aab529f13ab5"
+      ]
+     }
+    }
+   }
+  },
+  {
+   "record_id": "rec:d844d8ee4ef09befa5bc7b28ddfcc9dfcb4ddbc0d10adb4aec67ff5a2e4e63dd",
+   "body": {
+    "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117",
+    "local_ref": "FLOW17::claude-sonnet-5",
+    "final_status": "EXACT",
+    "final_faults": [],
+    "source": {
+     "blob_id": "blob:cc9999a096461f7138e5e69adb8dda26181adb6b190e98f2a0f5b13edcce2410",
+     "occurrences": [
+      {
+       "event_id": "evt:170b8d2ce143446f04a156e0f21bf533ef2ba52d919dbd1b8708f432c8a47b34",
+       "byte_start": 0,
+       "byte_end": 1935,
+       "body_digest": "line:99f69ef71b28d9216e326894c5187f384df3eca033c244d9a86a448d9755091c"
+      }
+     ]
+    },
+    "experiment_id": "EXP-RVB-1c",
+    "root_id": "root:FLOW17",
+    "root_digest": "e43b2b860da1e9fd13cf0f1e1d812313b78a5b7d0e078874698e43b0fc780e88",
+    "parent_local_ref": null,
+    "verifier_declared_identity": "Sonnet 5",
+    "verifier_observed_identity": "claude-sonnet-5",
+    "verifier_identity": "claude-sonnet-5",
+    "agent_run_occurrence": "a3432dae9930a82b3",
+    "prompt_digest": "UNKNOWN",
+    "response_digest": "UNKNOWN",
+    "offspring_before_dedup": "UNKNOWN",
+    "dedup_removal_decisions": "UNKNOWN",
+    "selected_child_refs": [],
+    "sampling": {},
+    "completeness_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "COMPLETE"
+    },
+    "publication_decision": {
+     "adjudicator_identity": "corpus-adjudicator",
+     "authority": "corpus-adjudicator@ecda7f0",
+     "decision": "CLEARED_FOR_PUBLICATION"
+    },
+    "mapping": {
+     "status": "EXACT",
+     "act_id": "act:9a88062147b20d365cb6096516140d726a6a02e41077fa7f6c1a4cac126057b9",
+     "evidence_commitment": "85a60121c98dc7391d599cb104246b1e12d70d788bdb4b15769cde7c733caa03",
+     "adjudication": {
+      "adjudicator_identity": "corpus-adjudicator",
+      "authority": "corpus-adjudicator@ecda7f0",
+      "decision": "EXACT",
+      "evidence_commitments": [
+       "15fa0b7902e66b503c96b2f6d95402d671a9564b20697d6df2c3d2d09592dd3e",
+       "3cdce509ef4e927b9b0a84fd0a0cec646584a8e1efb68308bc5691796c04310e",
+       "68e24917ed601b3d0bf83c2d8cf623b67a99cc684a054ca7e8e80c718841bd39"
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
