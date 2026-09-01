@@ -1,0 +1,14 @@
+{
+ "schema": "manifesto.corpus.activation-commit-receipt.v0.1",
+ "activation_commit": "c16936d999d261e58f222e6196baa61789850d8f",
+ "parent_commit": "5485170cce8d6a3a27c5ba61d9868f63bc331b3f",
+ "changed_paths": [
+  "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
+  "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json"
+ ],
+ "trust_root_blob_digest": "sha256:33154d779160c3c4d56046fe7d9c9abc4c9f5cd29c85e1346b52296d1547bd13",
+ "operator_act_blob_digest": "sha256:c5caae69d64f5b8fdb232b84ca49b2009faa4a3b49afa615eb4cfd735750e0ff",
+ "proposal_id": "prop:1abb685d30aee7a49b04b073844e9d14955bb4ac38625094a94156db37de1a12",
+ "activation_report_id": "arpt:9ebbee90718d49c55b723b3ac389131a217bbc9802b8e0223db1f882e8113c0e",
+ "resulting_trust_root_digest": "tr:c4f7a4284dcdac85de7e851bbe909a193cfb7321271cb702682aad883a6b27e6"
+}
