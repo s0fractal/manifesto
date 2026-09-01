@@ -32,8 +32,8 @@ decision may promote the draft to `paper.md`.
 
 | v0.1 section | disposition | why / how |
 |---|---|---|
-| Title "A Reflexive Verification Model (Conjectural)" | **rewrite** | Measurement-first title; "conjectural" applied to the *model*, not the whole result. |
-| Abstract | **rewrite (last)** | Rebuilt from the claim ledger; drop "theorem's escape", "at μ≥1 no finite budget suffices" (unqualified), "do not converge". |
+| Title "A Reflexive Verification Model (Conjectural)" | **rewrite** | Measurement-first and **scoped to the single Monday corpus** (Fable §2.4): "…on a Single LLM Monologue Corpus". No "LLM review" generalization and no "Open Queueing Problem" in the title (the queue likely reduces to a known branching-service form, §7). |
+| Abstract | **rewrite, ≤150 words, front-loaded** | Rebuilt from the ledger; drop "theorem's escape", "at μ≥1 no finite budget suffices" (unqualified), "do not converge"; the long negative-space table lives in §0, not the abstract (Fable §2.1 — the abstract was over-hedged and is now tightened to number + control + scope caveat). |
 | §1 "State the bound / phase transition at μ=1" | **rewrite** | Becomes the research question (v0.2 §1); "bound/phase transition" removed as deliverables. |
 | §2 the model, §2.1–§2.3 | **retire → v0.2 §7 (open problem)** | Not "conditional model" — the queueing question is stated as OPEN with the counterexamples (C6) that refuted the closed forms adjacent; the paper commits to no queue model. §2.2 status box content becomes constitutive. §2.3 "escape hatch" reframed as a measured intervention (§6.1), no "theorem". |
 | §3.1 protocol | **keep → v0.2 §2** | Removal test / dedup / depth policy preserved verbatim in substance; add reproducibility class. |

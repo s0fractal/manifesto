@@ -1,5 +1,5 @@
 ---
-title: "Measuring Verifier-Reported Verification Load in LLM Review: A Report, Termination Controls, and an Open Queueing Problem"
+title: "Measuring Verifier-Reported Verification Load on a Single LLM Monologue Corpus: A Report with Termination Controls"
 status: v0.2 replacement draft (rev after Codex adversarial review 2026-09-01) — NOT the canonical paper.md; not deposited; not peer-reviewed
 supersedes: paper.md (v0.1, "Every Check Spawns More: A Reflexive Verification Model (Conjectural)")
 date: draft
@@ -15,26 +15,19 @@ license: CC-BY-SA-4.0
 
 ## Abstract
 
-Automated verification of informal claims can generate new checkable obligations faster than it
-discharges them. We make this **measurable as an operational, verifier-reported quantity** — not as
-a law. Under a fixed protocol P, one strict LLM verifier per claim produced a verdict and a set of
-new claims; it also *judged* which offspring were load-bearing, applied the removal test, and
-deduplicated its own output. We call the resulting per-act count the **verifier-reported offspring
-count ô** and treat that self-adjudication as part of the construct, not a footnote. On a named
-informal corpus (the repository's *Monday* notes), ô sat near **2–3** and stayed non-zero through
-the finite depths sampled (to depth 4) — a plateau over selected paths, not an observed asymptote;
-an earlier geometric extrapolation was disconfirmed. Termination controls bound one narrow
-alternative — that the prompt *always* produces a list regardless of input: well-founded claims read
-**≈0.14** and terminated unaided (each control reported, §5). We do **not** claim a branching/queue
-theorem: §7 is an explicit, *unspecified* queueing problem, and we include an external reviewer's
-counterexamples that break the v0.1 closed forms for other schedulers. Two interventions are reported
-without claiming semantic closure: a defect-family glossary cut ô from **3.13 → 2.11** over an exact
-window (non-monotonically), and one prose claim compiled to a deterministic priced check has **zero
-emitted prose obligations for its terminal sub-act** — evidence that a closed execution terminates,
-not that compilation lowers the same ô. All verifiers are one vendor's LLMs; results are replication
-across instruments of one family, not independent validation. The contribution is a number, a
-protocol to reproduce it, the instrument's measured dependence on itself, and an honest map of what
-the number does not mean.
+Automated verification of informal claims can spawn new checkable obligations faster than it
+discharges them. We make this measurable — not as a law but as an operational quantity. Under a fixed
+protocol P, one strict LLM verifier per claim emitted a verdict and new claims, *judged* which were
+load-bearing, applied a removal test, and deduplicated its own output; we call the per-act result the
+**verifier-reported offspring count ô**, with self-adjudication part of the construct. On **one**
+named informal corpus — the repository's *Monday* notes, a single-model monologue — ô sat near
+**2–3** through the sampled depths (to 4), over selected paths, **not** an asymptote. Termination controls bound one narrow alternative (that the prompt *always*
+produces a list): well-founded claims read **≈0.14** and stopped unaided. §0 states what this does
+not establish. All verifiers are one vendor's models — within-family replication on a single corpus,
+not independent validation.
+
+*(Full negative-space table in §0; the defect-family glossary intervention (ô 3.13→2.11), the
+compiled-check separate axis, and the retired queue model are §6–§7.)*
 
 ## 0. What this paper does and does not establish
 

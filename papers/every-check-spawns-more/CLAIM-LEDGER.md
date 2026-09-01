@@ -43,6 +43,17 @@ interpretation; a clean "Fable-vs-Sonnet factor effect"; "100 acts in round 2".
 ## Open (named, not established)
 
 - the frozen act corpus and independent (out-of-lineage) re-derivation of ô;
-- any asymptotic value; any *specified* queue model;
+- any asymptotic value; any *specified* queue model (§7 likely reduces to a standard
+  branching-service queue — Crump–Mode–Jagers / Bellman–Harris — under stated assumptions; a
+  queueing-theory reviewer should confirm which citation settles it);
 - construct validity separating groundedness from complexity/familiarity/domain;
-- semantic adequacy of any compiled artifact.
+- semantic adequacy of any compiled artifact;
+- **generalization beyond the single Monday corpus** — the title and claims are scoped to it; a
+  second-genre corpus (8–10 roots from arXiv abstracts / a technical spec / a real README under the
+  same protocol P) and a **human baseline** (protocol P run by a person on ≥5 roots) are named future
+  strengthening, deliberately not fabricated here (Fable 2026-09-01 §2.4–2.5);
+- **two cheap construct-validity tests from the existing transcripts, not yet run** (Fable §2.2–2.3):
+  offspring-set overlap (Jaccard / semantic) between verifiers on the four crossed roots — low overlap
+  would mean ô measures the verifier, not the claim; and a manual paraphrase-leak audit of depth-3–4
+  offspring — a notable paraphrase fraction would mean the ≈2.1–2.25 depth-3–4 figures are inflated by
+  soft-dedup leakage. Both are blocked on exporting the frozen corpus.
