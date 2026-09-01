@@ -1,0 +1,392 @@
+{
+ "schema": "manifesto.corpus.c2-mapping.v0-DERIVED",
+ "generated": "2026-09-01",
+ "correction_point": "7b403fb",
+ "status": "DERIVED / UNREVIEWED — non-crediting. No admitted authority, no pinned manifest, no EXACT.",
+ "extraction_closure": "clo:extract:90e210ffb527cab50dbac09d732edf4f2dbeedc9e77e27c141b993f0e4795cbf",
+ "corpus_commitment": "d5fe0d7a24e0075e43d2931228f8e92467f7bbba207729eed806ee7828d86429",
+ "l2_bundle_id": "bnd:2654ab606547b03d81117fe394c783ea659e040a99be4f6f2e246ba7dc03e0b0",
+ "unit_key": [
+  "root_digest",
+  "verifier_identity(=observed model, F-C2-1)"
+ ],
+ "rows": [
+  {
+   "local_ref": "0025::claude-opus-5",
+   "blob_id": "blob:31cf712f723535364e15936d58f108d09db81eb1c787996cfca3e39491646733",
+   "event_occurrences": [
+    {
+     "event_id": "evt:365cd6017aa98823236ca2dac970e69c64c50ea5d4f32ae17529f621a3cb00ae",
+     "byte_start": 0,
+     "byte_end": 2034
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "06ad5b0da64dbb7dbc0ebe0bc993d45c163a227b08f7dcacc636ef6d42bf3d9d",
+   "verifier_identity": "claude-opus-5",
+   "agent_run_occurrence": "agent-aac209dc4cdcafae2",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:d23aeb66a61758079a9dcb2361bd4f9d8224115cc7d416a69ca55bec97553250",
+     "value_start": 19522,
+     "value_end": 19535,
+     "observed_value_digest": "d69e3000e07786186a131db33dea29deb46dc232611abb54d8a32e63731f9645"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:0025",
+   "verifier_declared_identity": "Fable 5",
+   "verifier_observed_identity": "claude-opus-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "0025::claude-sonnet-5",
+   "blob_id": "blob:faa8c74240f4a79ede8c8750bceb4e78f6292484a6f203ab92bd021f0d22231a",
+   "event_occurrences": [
+    {
+     "event_id": "evt:165f03c8d525a8aaabbc6a81ea9f6613f1650686eacef2662e0eaae9826228f3",
+     "byte_start": 0,
+     "byte_end": 2510
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "06ad5b0da64dbb7dbc0ebe0bc993d45c163a227b08f7dcacc636ef6d42bf3d9d",
+   "verifier_identity": "claude-sonnet-5",
+   "agent_run_occurrence": "agent-ab8454e235e42cc73",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:afe90566b8c4f47c2c03b0640436f1e847e7df31f451261d98fd59f44c846b9e",
+     "value_start": 19998,
+     "value_end": 20013,
+     "observed_value_digest": "7ea3a00b3718572e798697d6344b53ae72db473f163881c876c46fe9002edd9e"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:0025",
+   "verifier_declared_identity": "Sonnet 5",
+   "verifier_observed_identity": "claude-sonnet-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "0030::claude-opus-5",
+   "blob_id": "blob:44fa7795454cfd06174143c9eec833841273ab7ee5ceca88bf5d7138facb4b88",
+   "event_occurrences": [
+    {
+     "event_id": "evt:96e470a36e63eaf8db77a614add6fe7716ea4b55083d1b66fbb55359ddaf403f",
+     "byte_start": 0,
+     "byte_end": 2215
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "d53f10f5298c57aa5a5d1eab9d2c8d7e844f029f186f1e160eb79a5fdd5ea701",
+   "verifier_identity": "claude-opus-5",
+   "agent_run_occurrence": "agent-a1153e2189d4006cc",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:6aa2b34f71cd3c3adbfb9b1af8edab8f96b596fff9d5572ac6fbe4ab8338386b",
+     "value_start": 19703,
+     "value_end": 19716,
+     "observed_value_digest": "d69e3000e07786186a131db33dea29deb46dc232611abb54d8a32e63731f9645"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:0030",
+   "verifier_declared_identity": "Fable 5",
+   "verifier_observed_identity": "claude-opus-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "0030::claude-sonnet-5",
+   "blob_id": "blob:72605c98a1c6bd9b21dd673132fbcf7a2bb6928f5922d3b0841b07aeada519ac",
+   "event_occurrences": [
+    {
+     "event_id": "evt:4cac36e0361d6fb4cd4dce13084d91a78c25910c421dbc620d8a8799e2400339",
+     "byte_start": 0,
+     "byte_end": 2211
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "d53f10f5298c57aa5a5d1eab9d2c8d7e844f029f186f1e160eb79a5fdd5ea701",
+   "verifier_identity": "claude-sonnet-5",
+   "agent_run_occurrence": "agent-a700944565f64aed3",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:bd7c92f2352c56e4212c94125cf3ea5b8b3742e60d78c92324bce3b2f7eec6a5",
+     "value_start": 19699,
+     "value_end": 19714,
+     "observed_value_digest": "7ea3a00b3718572e798697d6344b53ae72db473f163881c876c46fe9002edd9e"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:0030",
+   "verifier_declared_identity": "Sonnet 5",
+   "verifier_observed_identity": "claude-sonnet-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "FLOW15::claude-opus-5",
+   "blob_id": "blob:0e25c00bffba8a5ed177b9782faf24075831a1dcff70c54282d7426811e2143c",
+   "event_occurrences": [
+    {
+     "event_id": "evt:9298d608a68f8fff69546b8c907ec704e4a5cda0ef13b0d0c59aba4fd4f6f2ab",
+     "byte_start": 0,
+     "byte_end": 2126
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "6c0578018f7cda81716253fca74395816ebc3f59762eb1af878e96aac2467fa1",
+   "verifier_identity": "claude-opus-5",
+   "agent_run_occurrence": "agent-a0eda1deea730b879",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:f8d470cb5eb7ff2e0b0a1550f9ca5c243c374a997a1934433e37a465af4448fd",
+     "value_start": 19614,
+     "value_end": 19627,
+     "observed_value_digest": "d69e3000e07786186a131db33dea29deb46dc232611abb54d8a32e63731f9645"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:FLOW15",
+   "verifier_declared_identity": "Fable 5",
+   "verifier_observed_identity": "claude-opus-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "FLOW15::claude-sonnet-5",
+   "blob_id": "blob:f02fb614ae6e031b481daa82fd63dfc9c41b9d8f0dc7fab335b2f1d23f119745",
+   "event_occurrences": [
+    {
+     "event_id": "evt:e26fc97a29d574d15dd19b190b3e30056568f300be9730aaa9720c706bf65f72",
+     "byte_start": 0,
+     "byte_end": 1956
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "6c0578018f7cda81716253fca74395816ebc3f59762eb1af878e96aac2467fa1",
+   "verifier_identity": "claude-sonnet-5",
+   "agent_run_occurrence": "agent-a8b2b993190ea94ac",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:2af70216987b7ce7db58f0fba3886e77aea435bfa9137774eae5d503329f0a67",
+     "value_start": 19444,
+     "value_end": 19459,
+     "observed_value_digest": "7ea3a00b3718572e798697d6344b53ae72db473f163881c876c46fe9002edd9e"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:FLOW15",
+   "verifier_declared_identity": "Sonnet 5",
+   "verifier_observed_identity": "claude-sonnet-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "FLOW17::claude-opus-5",
+   "blob_id": "blob:b50c3ce254bcdc4dc991d7eef542ee42be5c8be7041634f41311b436ec9a0d0b",
+   "event_occurrences": [
+    {
+     "event_id": "evt:da60654d06eb5fe4bac5f2b54a487a97664fa55db7c2d4ef095951c42239bf15",
+     "byte_start": 0,
+     "byte_end": 2364
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "ad4f52bb42b38ca1cb9d77302161391e5f211272879b26152ecb6de3588e2450",
+   "verifier_identity": "claude-opus-5",
+   "agent_run_occurrence": "agent-a38287b9dd6a49461",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:c3f66c5d68d572a0c0abd0e0f82cc1a6f0db54a27fceada77a574e53f8ca76aa",
+     "value_start": 19852,
+     "value_end": 19865,
+     "observed_value_digest": "d69e3000e07786186a131db33dea29deb46dc232611abb54d8a32e63731f9645"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:FLOW17",
+   "verifier_declared_identity": "Fable 5",
+   "verifier_observed_identity": "claude-opus-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  },
+  {
+   "local_ref": "FLOW17::claude-sonnet-5",
+   "blob_id": "blob:cc9999a096461f7138e5e69adb8dda26181adb6b190e98f2a0f5b13edcce2410",
+   "event_occurrences": [
+    {
+     "event_id": "evt:170b8d2ce143446f04a156e0f21bf533ef2ba52d919dbd1b8708f432c8a47b34",
+     "byte_start": 0,
+     "byte_end": 1935
+    }
+   ],
+   "experiment_id": "EXP-RVB-1c",
+   "root_digest": "ad4f52bb42b38ca1cb9d77302161391e5f211272879b26152ecb6de3588e2450",
+   "verifier_identity": "claude-sonnet-5",
+   "agent_run_occurrence": "agent-a3432dae9930a82b3",
+   "mapping_status": "DERIVED",
+   "mapping_evidence": [
+    {
+     "kind": "verifier_identity",
+     "event_id": "evt:7767f7511026e2b169b0ef0ad3b15461fc3f88d3d4e05fe581599ea8a3247f95",
+     "value_start": 19423,
+     "value_end": 19438,
+     "observed_value_digest": "7ea3a00b3718572e798697d6344b53ae72db473f163881c876c46fe9002edd9e"
+    }
+   ],
+   "adjudication": null,
+   "root_id": "root:FLOW17",
+   "verifier_declared_identity": "Sonnet 5",
+   "verifier_observed_identity": "claude-sonnet-5",
+   "prompt_digest": "UNKNOWN",
+   "response_digest": "UNKNOWN",
+   "offspring_before_dedup": "UNKNOWN",
+   "dedup_removal_decisions": "UNKNOWN",
+   "selected_child_refs": [],
+   "sampling": {},
+   "completeness_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "PARTIAL"
+   },
+   "publication_decision": {
+    "adjudicator_identity": "none",
+    "authority": "none",
+    "decision": "WITHHELD"
+   },
+   "parent_local_ref": null
+  }
+ ],
+ "proof": {
+  "rows": 8,
+  "structurally_mapped": true,
+  "bijection_4x2": true,
+  "verifier_evidence_spans": 8,
+  "credit_exact_acts": 0,
+  "c2_view": "REFUSED",
+  "c2_reason": "MANIFEST_NOT_PINNED"
+ }
+}
