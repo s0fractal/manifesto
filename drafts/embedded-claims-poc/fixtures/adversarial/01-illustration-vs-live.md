@@ -1,18 +1,24 @@
 # Adversarial 01 — illustration vs live claim (T1, the central threat)
 
-This document contains TWO glyph claims that look identical byte-for-byte but must
-be treated differently.
+Two glyph claims that look identical byte-for-byte, disambiguated by the live-region
+rule and by fence context — not by guessing.
 
-A live claim, in prose: the repo root holds ⟦arith: 3 + 6 = 9⟧ top-level entries.
+<!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
 
-An ILLUSTRATION of the format, fenced as an example:
+A live claim, in prose inside the region: the repo root holds ⟦arith: 3 + 6 = 9⟧
+top-level entries.
+
+An illustration, fenced even though it is inside the region — the fence makes it inert:
 
 ```text
 ⟦arith: 2 + 2 = 5⟧
 ```
 
-Expected: under the chosen live-demarcation rule (§7 of the threat model), the prose
-claim is a live obligation and the fenced one is an illustration that MUST NOT be
-settled or refuted. A parser that settles the `2+2=5` example is wrong even though it
-is "false" — it was never a claim. If no demarcation rule is active, the parser must
-REFUSE to run over this document rather than guess.
+<!-- manifesto-claims:end -->
+
+And a claim OUTSIDE any region, which is inert by construction: ⟦arith: 1 + 1 = 3⟧.
+
+Expected: exactly ONE live claim (`3+6=9`). The fenced `2+2=5` is inert (fence wins,
+even inside a region); the `1+1=3` outside the region is inert (no region). A parser
+that settles or refutes either non-live claim is wrong even though both are "false" —
+they were never claims.

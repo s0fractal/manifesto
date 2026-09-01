@@ -1,38 +1,57 @@
 # Adversarial corpus — expected parser behavior (spec before code)
 
-This manifest states what a CONFORMANT parser must do for each specimen in this
-directory. It is written BEFORE the parser exists (Codex's pressure: record the
-ambiguities first). When the parser is built (phase 2 step 3), each row becomes a test
-that must pass with a TYPED reason — never a silent skip, never a guess.
+What a CONFORMANT parser/compiler must do for each specimen. Written BEFORE the parser
+exists (Codex's pressure: record the ambiguities first). Each row becomes a test when
+the parser is built (phase 2 step 3) — passing with a TYPED reason, never a silent skip.
+
+**Layers are separated (Codex P1).** PARSE = region + block structure + claim/capsule
+recognition. COMPILE = closed-schema validation + claim↔capsule association + identity.
+A specimen that tests COMPILE uses schema-valid capsules so it actually reaches that
+layer instead of being rejected at schema first. A specimen that tests PARSE says so and
+its placeholder bodies are irrelevant to the parse verdict.
 
 The specimens are themselves format-shaped text, so they also belong to the T1
-illustration corpus: they are specimens, not live obligations, and live here under
-`fixtures/adversarial/` precisely so no repo sweep mistakes them for claims.
+illustration corpus: they live under `fixtures/adversarial/` precisely so no repo sweep
+mistakes them for claims. Live specimens carry explicit `manifesto-claims` regions.
 
-| Specimen | Threat | A conformant parser MUST |
+## Region layer (the decided §8.1 rule)
+
+| Specimen | Layer | Expected |
 |---|---|---|
-| `01-illustration-vs-live.md` | T1 | Treat the prose `3+6=9` as live; treat the fenced `2+2=5` as an illustration (never settle/refute it). With no active live-demarcation rule, REFUSE to run rather than guess. |
-| `02-multiple-claims.md` | T2 | Return all THREE claims in document order, each with its own result. Never just the first. |
-| `03-nested-fences.md` | T4 | Recognize the `json capsule` block is INSIDE an outer fence → inert. Find NO live capsule. (Regex would capture a truncated body.) |
-| `04-info-string-variants.md` | T4 | Accept only the exact frozen info string (`json capsule`) as a candidate; treat `json claim`, ` json capsule`, `JSON capsule`, `json capsule {profile}` as ordinary code. |
-| `05-unclosed-fence.md` | T4 | Emit a typed UNCLOSED_FENCE error and fail closed. Never silently drop the opened capsule. |
-| `06-glyph-in-code-fence.md` | T5 | Settle the prose glyph; treat the identical glyph inside ```` ```text ```` as inert. |
-| `07-delimiter-injection.md` | T7 | Not truncate a `cite` payload at an embedded `⟧`, nor let a capsule string's ```` ``` ```` close the fence. Absent an escaping rule, emit a typed error — never a silent truncation. |
-| `08-unicode-normalization.md` | T6 | Normalize to NFC before computing any identity, so NFC/NFD spellings share a claim_id; reject/normalize invisibles; accept only U+27E6/U+27E7 as the glyph delimiters. |
-| `09-claim-capsule-association.md` | T8 | Require an explicit claim↔capsule association (id reference or strict adjacency contract); flag ambiguous/crossed association as a typed error. |
+| `10-no-live-region.md` | PARSE | `NO_LIVE_REGION` — explicit, not a silent skip; glyphs never settled. |
+| `11-unknown-profile.md` | PARSE | `UNKNOWN_PROFILE` typed failure; no fallback profile. |
+| `12-unbalanced-region.md` | PARSE | `NESTED_OR_DUP_BEGIN` / `MISSING_END`; nothing inside settled. |
+| `13-marker-in-fence.md` | PARSE | Markers inside a fence/blockquote are inert ⇒ `NO_LIVE_REGION`. |
+
+## Claim / capsule sub-parsing (assumed inside a live region)
+
+| Specimen | Threat | Layer | Expected |
+|---|---|---|---|
+| `01-illustration-vs-live.md` | T1 | PARSE | Exactly one live claim (`3+6=9`); the fenced `2+2=5` (fence wins inside region) and the out-of-region `1+1=3` are inert. |
+| `02-multiple-claims.md` | T2 | PARSE | All THREE claims, in document order, each its own result. Never just the first. |
+| `03-nested-fences.md` | T4 | PARSE | The `json capsule` inside an outer fence is inert; NO live capsule found. |
+| `04-info-string-variants.md` | T4 | PARSE | Only the exact `json capsule` opener is a candidate; the leading-space variant (CommonMark trims it) and the others are rejected at the RAW opener-line level. |
+| `05-unclosed-fence.md` | T4 | PARSE | `UNCLOSED_FENCE` typed error (CommonMark would run it to EOF); fail closed, never silent-drop. |
+| `06-glyph-in-code-fence.md` | T5 | PARSE | Prose glyph live; identical glyph inside ```` ```text ```` inert. |
+| `07-delimiter-injection.md` | T7 | PARSE | No truncation at an embedded `⟧`; a capsule string's ```` ``` ```` does not close the fence. Absent an escaping rule, a typed error — never silent truncation. |
+| `08-unicode-normalization.md` | T6 | PARSE→ID | Default EXACT scalars; normalize a field only under its verifier profile; commit raw source occurrence separately; accept only U+27E6/U+27E7 delimiters. Global NFC is forbidden (it would alias distinct predicates). |
+| `09-claim-capsule-association.md` | T8 | COMPILE | Capsules bind by `claim_ref` (out-of-order on purpose), not adjacency; bodies are schema-valid so association is actually reached; a dangling `claim_ref` or two capsules for one local_id is a typed error. |
 
 ## Invariants across the whole corpus
 
-1. **No silent skip.** Every malformed or ambiguous construct produces a typed,
-   enumerable outcome. Silence is the one forbidden result.
-2. **No guessing liveness.** A parser never infers that an illustration is a claim.
-   Liveness is declared (§7/§8.1 of the threat model), or the parser refuses.
-3. **Structure, not regex.** Fence context, nesting, and info strings are resolved by
-   CommonMark block structure, not text patterns.
-4. **Identity after normalization.** No digest is computed over un-normalized text.
+1. **No silent skip.** Every malformed/ambiguous construct produces a typed, enumerable
+   outcome. Silence is the one forbidden result.
+2. **No guessing liveness.** Liveness is declared by an explicit region, or the parser
+   returns `NO_LIVE_REGION`. It is never inferred.
+3. **Structure, then protocol.** A pinned CommonMark pass gives block/nesting/inertness;
+   a protocol profile over the raw source spans adds exact-opener and explicit-closing
+   requirements CommonMark cannot express.
+4. **Identity after (field-scoped) normalization, with raw occurrence kept.** No digest
+   over globally-normalized text; the raw source occurrence is committed alongside the
+   semantic `claim_id`.
 
 ## Not in this step
 
 No parser, no compiler. These specimens are the pressure the parser will be built
-against. Building the parser before this corpus is agreed would be fitting the spec to
-the code instead of the code to the spec.
+against. Building the parser before this corpus is agreed would fit the spec to the code
+instead of the code to the spec.

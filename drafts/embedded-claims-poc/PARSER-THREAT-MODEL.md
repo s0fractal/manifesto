@@ -1,10 +1,13 @@
 # Parser threat model — embedded-claims phase 2 step 2 (before code)
 
 **Status:** threat model + corpus spec, written BEFORE the parser (Codex's pressure:
-don't wait, act — start from real documents and adversarial cases, not code). This
-document records the Markdown ambiguities a conformant capsule/claim parser must
-resolve, grounded in what the manifesto actually contains. The parser and the
-capsule→records compiler come after this is agreed.
+don't wait, act — start from real documents and adversarial cases, not code). Records
+the Markdown ambiguities a conformant capsule/claim parser must resolve, grounded in
+what the manifesto actually contains. Updated after a Codex review pass: the
+live-demarcation blocker is now DECIDED (explicit live regions, §1/§8), and four
+findings are folded in — global-NFC aliasing (P0), CommonMark-vs-protocol layering
+(P1), parser-vs-schema expectation split in the corpus (P1), and source-occurrence
+identity (P2). The parser and the capsule→records compiler come after this is agreed.
 
 ## 0. Evidence: real documents already carry real claims
 
@@ -46,11 +49,32 @@ NOT. They are byte-indistinguishable to a scanner.
 
 **Design consequence (the load-bearing one): "live" must be explicit, never inferred.**
 A parser must not auto-sweep a document, still less a repo, and treat every `⟦…⟧` or
-`​```json capsule` as an obligation. Options to decide (§7): a per-document opt-in
-marker (front-matter `settlement: active`), a live-region delimiter, or an inert form
-for examples (examples fenced as ```` ```text ````, live claims only in prose). Until
-one is chosen and enforced, running any parser over the manifesto would "find"
-dozens of documentation specimens and either settle or refute them meaninglessly.
+`​```json capsule` as an obligation.
+
+**DECIDED (§8.1 resolution): explicit live regions.** Live claims and capsules are
+recognized only inside an explicitly delimited region:
+
+```md
+<!-- manifesto-claims:begin profile=manifesto.embedded-claims.v0 -->
+
+…live claims and capsules…
+
+<!-- manifesto-claims:end -->
+```
+
+Rules (all typed-failure on violation, never silent):
+- the marker is an exact ASCII top-level HTML comment (fixed spelling);
+- regions are balanced and NOT nested;
+- a marker inside a code fence or blockquote activates nothing;
+- unknown `profile`, a duplicate `begin`, or a missing `end` is a typed failure;
+- a document with no region yields an explicit `NO_LIVE_REGION`, never a silent skip;
+- the parser runs only on files passed explicitly — never an automatic repo sweep.
+
+This lets one document hold both live obligations and illustrations of the format
+(the illustrations simply live outside any region), and supports gradual adoption of
+manifesto documents one region at a time. Everything outside a region — every design
+example, every fixture specimen, the architecture doc's capsule — is inert by
+construction, which dissolves T1 rather than heuristically guessing at it.
 
 ## 2. T2 — Multiple claims per document
 
@@ -88,8 +112,22 @@ mis-fires it:
 - **Fence content that contains a fence:** a capsule JSON string value containing the
   literal ```` ``` ```` closes the block early for a naive scanner.
 
-A regex cannot resolve these. The parser must consume real Markdown block structure
-(a CommonMark-aware pass), not pattern-match text.
+**CommonMark alone is necessary but NOT sufficient** (Codex P1, per
+[CommonMark 0.31.2 §fenced-code-blocks](https://spec.commonmark.org/0.31.2/#fenced-code-blocks)):
+- it TRIMS leading/trailing info-string whitespace, so ```` ``` json capsule ```` and
+  ```` ```json capsule ```` share one structural info string — the leading-space
+  variant cannot be rejected at the AST level;
+- an unclosed fence legally runs to end-of-document — CommonMark will not flag it;
+- a ```` ``` ```` inside a JSON string does not close the fence unless it stands as a
+  valid closing-fence line on its own.
+
+Therefore the parser is a **pinned CommonMark pass + a strict protocol profile over
+the raw source spans**: CommonMark gives correct block/nesting/inertness; the protocol
+profile, working on the raw bytes of the opener line and the block, additionally
+requires the EXACT opener spelling (`json capsule`, no leading space, case-sensitive,
+no trailing tokens) and an EXPLICIT closing fence (unclosed ⇒ typed `UNCLOSED_FENCE`).
+The constraints that look like "CommonMark violations" are really protocol-profile
+requirements layered on top of a conformant CommonMark parse.
 
 ## 5. T5 — Glyph claims inside code fences (inert vs live)
 
@@ -101,10 +139,17 @@ contract; §7 must make it one.
 
 ## 6. T6/T7 — Unicode and delimiter injection
 
-- **Normalization:** a payload with combining marks or NFC/NFD variance hashes
-  differently pre/post normalization; the parser must fix a normalization form before
-  any identity is computed. (The canonical layer already rejects lone surrogates; that
-  is necessary, not sufficient.)
+- **Normalization (Codex P0 — global NFC is WRONG):** a blanket "normalize to NFC
+  before identity" creates a semantic alias. `count: /é/` or an exact `cite` operate on
+  the file's actual bytes; if the parser gives an NFC and an NFD spelling the same
+  `claim_id` but the evaluator/dependency compares un-normalized bytes, two *different*
+  predicates collapse to one identity. So: **the default is exact Unicode scalar values
+  (no normalization)**; a field is normalized ONLY when its verifier profile explicitly
+  defines an equivalent normalization for that field, and then evaluator and parser must
+  use the SAME profile. Independently, the raw source occurrence (the exact bytes as
+  written) is committed separately from the semantic `claim_id`, so the two never fuse.
+  (The canonical layer already rejects lone surrogates; that is necessary, not
+  sufficient.)
 - **Homoglyphs / invisibles:** `⟦` is U+27E6; lookalike brackets, zero-width joiners,
   and RTL marks inside a payload must be handled deliberately (reject or normalize),
   not silently.
@@ -116,27 +161,52 @@ contract; §7 must make it one.
 
 The PoC assumes one claim + one capsule per file. Real documents (SSD-DEMO) have many
 claims and zero capsules; a future document may have several of each. Which capsule
-binds to which claim? Adjacency is fragile. The compiler needs an explicit association
-rule (an `id` on the claim referenced by the capsule, or a strict one-capsule-per-claim
-adjacency contract), decided before the capsule→records compiler is written.
+binds to which claim?
 
-## 8. Open decisions this model forces (operator / next reviewer)
+**Association is by explicit reference, not adjacency (Codex).** The claim carries a
+`local_id` (already in the architecture capsule shape) and the capsule names it via
+`claim_ref`. Adjacency ("nearest preceding claim") is fragile — an inserted paragraph
+silently re-binds a capsule — so it is rejected. A capsule whose `claim_ref` matches no
+claim, or two capsules claiming one `local_id`, is a typed error.
 
-1. **Live demarcation (T1) — the blocker.** Front-matter opt-in? live-region marker?
-   inert-example convention? No parser should run over the manifesto until this is set.
-2. **Info string (T4):** freeze exactly one (`json capsule`), reject all variants.
-3. **Fence engine (T4/T5):** adopt a CommonMark parser vs a hardened bespoke block
-   scanner. External dependency vs stdlib-only (the CI gate currently needs no package
-   beyond the evaluator).
-4. **Normalization form (T6):** NFC, fixed before identity.
-5. **Escaping (T7):** how a payload carries `⟧` or a fence.
-6. **Association (T8):** how a capsule names its claim.
+**Source-occurrence identity (Codex P2), separate from `claim_id`.** `claim_id` aliases
+semantic content — and correctly so: the same predicate written twice has one
+`claim_id`. But an identical normalized claim can occur twice in a document, and a
+capsule must address a SPECIFIC occurrence. So the compiler also commits a source
+occurrence — `(revision, path, byte-span)` or an equivalent source commitment —
+distinct from `claim_id`. `claim_id` says *what* is claimed; the occurrence says *where
+it was written*. The capsule binds a `(claim_id, occurrence)` pair, so two identical
+claims in one file remain individually addressable.
+
+## 8. Decisions this model forces
+
+**DECIDED:**
+1. **Live demarcation (T1)** — explicit live regions via the `manifesto-claims:begin/end`
+   markers above (§1). No repo sweep; explicit files only; no region ⇒ `NO_LIVE_REGION`.
+4. **Normalization (T6)** — default exact Unicode scalar values; per-field normalization
+   only where a verifier profile defines it, shared by parser and evaluator; raw source
+   occurrence committed separately.
+6. **Association (T8)** — explicit `local_id` on the claim + `claim_ref` on the capsule;
+   never adjacency. Capsule binds a `(claim_id, source-occurrence)` pair.
+
+**STILL OPEN (operator / next reviewer):**
+2. **Info string (T4):** confirm the exact frozen token `json capsule`, enforced by the
+   protocol profile over raw spans (CommonMark cannot, as it trims whitespace).
+3. **Fence engine (T4/T5):** which pinned CommonMark implementation, and dependency
+   posture (external lib vs hardened bespoke scanner) — the CI gate currently needs no
+   package beyond the evaluator, so a stdlib-only choice keeps that property.
+5. **Escaping (T7):** how a payload carries a literal `⟧` or a fence — an escape rule or
+   a structural/length-prefixed parse; until decided, such payloads are a typed error.
 
 ## 9. The adversarial corpus (this step's deliverable)
 
-`fixtures/adversarial/` holds one small Markdown file per threat, each paired with an
-entry in `fixtures/adversarial/EXPECTED.md` stating what a conformant parser MUST do —
+`fixtures/adversarial/` holds one small Markdown file per threat (01–09 for
+claim/capsule sub-parsing, 10–13 for the region layer), each paired with an entry in
+`fixtures/adversarial/EXPECTED.md` stating what a conformant parser MUST do —
 **a spec written before the parser, so the parser is measured against it, not the
-reverse.** No parser is implemented in this step. When the parser is built (step 3),
-these become its first failing tests, and each must pass with a typed reason, never a
-silent skip.
+reverse.** EXPECTED separates PARSE-layer from COMPILE-layer expectations (Codex P1),
+so a specimen that tests association carries schema-valid capsules and actually reaches
+the compiler instead of being rejected at schema first. Live specimens carry explicit
+`manifesto-claims` regions. No parser is implemented in this step; when it is built
+(step 3), each row becomes a test that must pass with a typed reason, never a silent
+skip.

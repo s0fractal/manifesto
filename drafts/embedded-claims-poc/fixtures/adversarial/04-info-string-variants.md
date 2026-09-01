@@ -24,7 +24,11 @@ rejected with a typed reason — never silently treated as capsules.
 {"note": "the exact frozen token"}
 ```
 
-Expected: if the frozen info string is exactly `json capsule` (no leading space, case
-sensitive, no trailing tokens), only the LAST block is a candidate. The four variants
-are ordinary code blocks, not capsules. The decision (freeze one token, reject the
-rest) is §8.2 of the threat model.
+Expected — PARSE layer only (schema/compile not yet reached, so the placeholder
+bodies are irrelevant here): only the LAST block (`json capsule`, exact) is a capsule
+candidate; the four variants are ordinary code blocks. Note the CommonMark subtlety
+(Codex P1): CommonMark TRIMS info-string whitespace, so ``` json capsule``` (leading
+space) has the same structural info string as the exact token — the AST cannot reject
+it. The protocol profile therefore rejects it at the RAW opener-line level (exact
+spelling required). Uppercase, trailing `{profile}`, and the `json claim` token are
+likewise rejected by the raw-span profile. Freezing the one token is open decision §8.2.
