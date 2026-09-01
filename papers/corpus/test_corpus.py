@@ -114,6 +114,7 @@ def corpus(pairs, drop=False):
               "corpus_commitment": commit, "event_manifest": (man[:-1] if drop else man),
               "inventory_commitment": invc}
     report["report_id"] = recompute_report_id(report)
+    report["_priv"] = private          # test-only; invisible to report_id (canonical keys only)
     return private, report
 
 
@@ -125,8 +126,12 @@ C2_MAN = {"claim": "C2", "paper_pin": "paper@x", "experiment_ids": ["EXP-RVB-1c"
 
 
 def trust(report, admit=True, pin=True):
+    prov = {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
+            "extraction_closure": report["extraction_closure"], "l2_bundle_id": "x",
+            "authorities": {"completeness": [], "publication": [], "mapping": []}, "pinned_manifests": {}}
+    fid = mint_l2_bundle(report["_priv"], report, prov)["bundle_id"]     # pin the canonical full bundle
     return {"report_id": report["report_id"], "corpus_commitment": report["corpus_commitment"],
-            "extraction_closure": report["extraction_closure"],
+            "extraction_closure": report["extraction_closure"], "l2_bundle_id": fid,
             "authorities": AUTH if admit else {"completeness": [], "publication": [], "mapping": []},
             "pinned_manifests": {"C2": manifest_id(C2_MAN)} if pin else {}}
 
@@ -193,6 +198,35 @@ expect("status flip -> BUNDLE_ID_MISMATCH", verify_bundle(flipped, tr_sub)[1] ==
 # index body tamper
 btam = {**bundle, "raw_bodies": {k: v + b"X" for k, v in bundle["raw_bodies"].items()}}
 expect("index body tamper -> INDEX_TAMPER", verify_bundle(btam, tr)[1] == "INDEX_TAMPER")
+
+# coherent subset bundle under the real report -> BUNDLE_NOT_PINNED
+sub_body = {**bundle["body"], "events": bundle["body"]["events"][:1]}
+sub_bundle = {"bundle_id": "bnd:" + ids.json_digest(sub_body), "body": sub_body, "raw_bodies": bundle["raw_bodies"]}
+expect("coherent subset bundle -> BUNDLE_NOT_PINNED", verify_bundle(sub_bundle, tr)[1] == "BUNDLE_NOT_PINNED")
+# forged expected_closure -> BUNDLE_NOT_PINNED
+fc_body = {**bundle["body"], "expected_closure": "clo:extract:FORGED"}
+fc_bundle = {"bundle_id": "bnd:" + ids.json_digest(fc_body), "body": fc_body, "raw_bodies": bundle["raw_bodies"]}
+expect("forged closure bundle -> BUNDLE_NOT_PINNED", verify_bundle(fc_bundle, tr)[1] == "BUNDLE_NOT_PINNED")
+# malformed trust root -> TRUST_ROOT_INVALID
+expect("malformed trust root -> TRUST_ROOT_INVALID", verify_bundle(bundle, {"bad": 1})[1] == "TRUST_ROOT_INVALID")
+# permuted event_index inside a real multi-event blob -> EVENT_MANIFEST_MISMATCH
+mb = "blob:multi"; b1, b2 = b"E0", b"E1"
+ld1, ld2 = ids.line_digest(b1), ids.line_digest(b2)
+e1 = ids.event_id(TCLO, mb, 0, len(b1), ld1); e2 = ids.event_id(TCLO, mb, len(b1), len(b1) + len(b2), ld2)
+man = [{"blob_id": mb, "event_index": 0, "event_id": e1, "body_digest": ld1},
+       {"blob_id": mb, "event_index": 1, "event_id": e2, "body_digest": ld2}]
+def _ev(idx, s, e, eid, ld, raw):
+    return {"event_index": idx, "blob_id": mb, "byte_start": s, "byte_end": e, "line_digest": ld,
+            "event_type": "user", "unknown_event_type": False, "event_id": eid,
+            "extraction_closure": TCLO, "raw_b64": base64.b64encode(raw).decode()}
+priv_perm = {"a": {"blob_id": mb, "events": [_ev(1, 0, len(b1), e1, ld1, b1),         # index swapped
+                                             _ev(0, len(b1), len(b1) + len(b2), e2, ld2, b2)]}}
+commit = ids.json_digest({"closure": TCLO, "inventory": [], "events": sorted(man, key=lambda x: (x["blob_id"], x["event_index"]))})
+rep_perm = {"set_status": "CLEAN", "set_faults": [], "extraction_closure": TCLO,
+            "corpus_commitment": commit, "event_manifest": man, "inventory_commitment": ids.json_digest([])}
+rep_perm["report_id"] = recompute_report_id(rep_perm); rep_perm["_priv"] = priv_perm
+bperm = mint_l2_bundle(priv_perm, rep_perm, trust(rep_perm))
+expect("permuted event_index -> EVENT_MANIFEST_MISMATCH", any(f["code"] == "EVENT_MANIFEST_MISMATCH" for f in bperm["faults"]))
 
 # DERIVED never credits
 tblD, privD, repD = full(status="DERIVED")

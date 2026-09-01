@@ -80,6 +80,29 @@ def recompute_report_id(report):
         return None
 
 
+TRUST_FIELDS = {"schema", "note", "report_id", "corpus_commitment", "extraction_closure",
+                "l2_bundle_id", "authorities", "pinned_manifests"}
+
+
+def validate_trust_root(tr):
+    """Closed schema for the operator-selected trust root (P1-5). Malformed -> TRUST_ROOT_INVALID."""
+    if not isinstance(tr, dict) or (set(tr) - TRUST_FIELDS):
+        return "TRUST_ROOT_INVALID"
+    for k in ("report_id", "corpus_commitment", "extraction_closure", "l2_bundle_id"):
+        if not isinstance(tr.get(k), str) or not tr[k]:
+            return "TRUST_ROOT_INVALID"
+    auth = tr.get("authorities")
+    if not isinstance(auth, dict) or (set(auth) - {"completeness", "publication", "mapping"}):
+        return "TRUST_ROOT_INVALID"
+    for v in auth.values():
+        if not isinstance(v, list) or len(v) != len(set(v)):
+            return "TRUST_ROOT_INVALID"
+    pin = tr.get("pinned_manifests")
+    if not isinstance(pin, dict) or not all(isinstance(x, str) for x in pin.values()):
+        return "TRUST_ROOT_INVALID"
+    return None
+
+
 def verify_report(report, trust_root):
     if not isinstance(report, dict) or not isinstance(trust_root, dict):
         return "MALFORMED_INPUT"
@@ -119,6 +142,9 @@ def mint_l2_bundle(private_l2, report, trust_root):
                 faults.append({"code": "IMPOSSIBLE_SPAN"}); continue
             if (eid, bd) not in manifest:
                 faults.append({"code": "UNKNOWN_SOURCE"}); continue
+            mrow = manifest[(eid, bd)]          # exact manifest-row equality (P0-2)
+            if mrow.get("blob_id") != ev["blob_id"] or mrow.get("event_index") != int(ev["event_index"]):
+                faults.append({"code": "EVENT_MANIFEST_MISMATCH"}); continue
             if eid in seen:
                 faults.append({"code": "DUPLICATE_L2_EVENT"}); continue
             seen[eid] = True
@@ -145,12 +171,17 @@ def verify_bundle(bundle, trust_root):
     if not isinstance(bundle, dict) or not isinstance(bundle.get("body"), dict) \
             or "bundle_id" not in bundle or "raw_bodies" not in bundle:
         return False, "MALFORMED_BUNDLE", {}
+    tr_bad = validate_trust_root(trust_root)
+    if tr_bad:
+        return False, tr_bad, {}
     body = bundle["body"]
     if "bnd:" + ids.json_digest(body) != bundle["bundle_id"]:
         return False, "BUNDLE_ID_MISMATCH", {}
     if body.get("report_id") != trust_root.get("report_id") \
             or body.get("commitment") != trust_root.get("corpus_commitment"):
         return False, "BUNDLE_NOT_COMMITTED", {}
+    if bundle["bundle_id"] != trust_root.get("l2_bundle_id"):   # pinned canonical full bundle (P0-1)
+        return False, "BUNDLE_NOT_PINNED", {}
     if body.get("status") != "CLEAN":
         return False, body.get("status", "L2_REFUSED"), {}
     # reconstruct the index from the committed events (no second mutable representation)
