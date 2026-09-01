@@ -213,6 +213,19 @@ def extract_from_quarantine(quarantine_dir, receipt: dict, inventory: dict):
     if extra_blobs:
         faults.append({"code": "EXTRA_BLOBS_IN_CAS", "count": len(extra_blobs)})
 
+    # committed event manifest (P0-1 source binding): the closed set of event ids +
+    # body digests, so a later L2 bundle can be proven to come from THIS extraction —
+    # not merely be self-consistent. Digests only; no content.
+    event_manifest = sorted(
+        ({"blob_id": e["blob_id"], "event_index": e["event_index"],
+          "event_id": e["event_id"], "body_digest": e["line_digest"]}
+         for data in private.values() for e in data["events"]),
+        key=lambda x: (x["blob_id"], x["event_index"]))
+    inv_commit = sorted(({"agent": t["agent"], "sha256": t.get("sha256")} for t in inv_list),
+                        key=lambda x: x["agent"])
+    corpus_commitment = ids.json_digest(
+        {"closure": closure, "inventory": inv_commit, "events": event_manifest})
+
     ok_states = {"EXTRACTED"}
     refused = [r for r in rows if str(r["status"]).startswith("BLOB_REFUSED")]
     drift = [r for r in rows if r["status"] in
@@ -222,6 +235,8 @@ def extract_from_quarantine(quarantine_dir, receipt: dict, inventory: dict):
     report = {
         "schema": "manifesto.corpus.extraction-report.v0",
         "extraction_closure": closure,
+        "corpus_commitment": corpus_commitment,
+        "event_manifest": event_manifest,
         "layer": "L1->L2 (mechanical; occurrence index + private canonical body)",
         "set_status": "CLEAN" if set_clean else "FAIL",
         "set_faults": faults,

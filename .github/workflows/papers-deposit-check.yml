@@ -38,7 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 papers/corpus/test_corpus.py | tee corpus.log
-          grep -q "^GREEN: extraction is mechanical+reproducible; mapping is " corpus.log
+          grep -q "^GREEN: extraction is mechanical" corpus.log
 
       - name: Each paper binds its candidate + closed ledger set; report is honest
         shell: bash

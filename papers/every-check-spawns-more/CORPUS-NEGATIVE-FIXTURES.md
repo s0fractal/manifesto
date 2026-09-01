@@ -42,6 +42,29 @@ The `a690789`→`57d41e5` review showed the eight literal mutations were closed 
 | **G7** | malformed sampling / manifest / inventory / receipt | typed fault (`BAD_SAMPLING` / `MALFORMED_MANIFEST` / `MALFORMED_OPERAND`), never an uncaught exception |
 | **G8** | schema/id/code byte change | the relevant closure (`clo:extract` / `clo:map`) rotates; ids derive from it |
 
+## Source-authentication fixtures added after the 3rd review (9e50479)
+
+The word *authenticated* previously meant only internal self-consistency. These fixtures bind L2 to
+the **frozen extraction** (a committed `corpus_commitment` + `event_manifest`) and content-address the
+credit path. All executable in `test_corpus.py`:
+
+| id | fixture | required outcome |
+|---|---|---|
+| **H1** | coherent invented L2 event not in the extraction's `event_manifest` | `UNKNOWN_SOURCE`; bundle not `CLEAN`; every view `REFUSED` |
+| **H2** | caller-minted `{status:CLEAN, index:…}` | `MALFORMED_BUNDLE` (build_l3 recomputes the bundle id, never trusts a supplied one) |
+| **H3** | wrong `corpus_commitment` | `BUNDLE_NOT_COMMITTED` |
+| **H4** | post-mint mutation of a committed event / of an index body | `BUNDLE_ID_MISMATCH` / `INDEX_TAMPER` before mapping |
+| **H5** | duplicate L2 event / impossible span (`byte_end−byte_start ≠ len`) / index gap | typed L2 refusal (`DUPLICATE_L2_EVENT` / `IMPOSSIBLE_SPAN` / `INDEX_GAP`) |
+| **H6** | `PARTIAL/WITHHELD → COMPLETE/CLEARED` | the `completeness`/`publication` *decisions* are in the ActRecord body, so `record_id` (and the view `evaluation_id`) rotate |
+| **H7** | a required ActRecord field is `None` | `SCHEMA_INVALID` → not `EXACT` (presence is not enough; null is rejected) |
+| **H8** | adjudication commitment ≠ the exact value-validated evidence-record digests | `ADJUDICATION_MISMATCH` → `AMBIGUOUS` |
+| **H9** | one-unit replacement manifest / claim mismatch | `manifest_id` changes (visible in the view) and the view binds `manifest_id`+`paper_pin`+`l2_bundle_id`; claim mismatch → `MANIFEST_CLAIM_MISMATCH` |
+| **H10** | actual schema-byte change | `extraction_closure` rotates (the closure hashes the real `CORPUS-SCHEMA-0.1.md` bytes) |
+
+A COMPLETE view now emits an `evaluation_id` binding `manifest_id`, `l2_bundle_id`, `corpus_commitment`,
+and the sorted `record_id`s — so credit is content-addressed to the exact obligation set, corpus, and
+records, not a bare status word.
+
 ## Notes binding the oracle to the pipeline
 
 - Only `EXACT` (adjudicated + fully value-evidenced + fault-free + `COMPLETE` + `CLEARED_FOR_PUBLICATION`)
