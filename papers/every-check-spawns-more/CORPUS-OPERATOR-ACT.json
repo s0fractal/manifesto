@@ -1,0 +1,16 @@
+{
+ "schema": "manifesto.corpus.operator-act.v0.1",
+ "base_trust_root_digest": "tr:723fb49b2492fa9b26b811271e7aae0bff927bd9dfc56c37fbbd801e7859325a",
+ "proposal_id": "prop:1abb685d30aee7a49b04b073844e9d14955bb4ac38625094a94156db37de1a12",
+ "activation_report_id": "arpt:9ebbee90718d49c55b723b3ac389131a217bbc9802b8e0223db1f882e8113c0e",
+ "diff_digest": "diff:b26055df408313e5c8a6003769eac275d82848ba7bbf6ebe5f4bea6f417d24c1",
+ "resulting_trust_root_digest": "tr:c4f7a4284dcdac85de7e851bbe909a193cfb7321271cb702682aad883a6b27e6",
+ "operator_identity": "operator:s0fractal",
+ "authority": "repo-write:github.com/s0fractal/manifesto",
+ "act_status": "ACTIVATED",
+ "authorized_paths": [
+  "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json",
+  "papers/every-check-spawns-more/CORPUS-OPERATOR-ACT.json"
+ ],
+ "parent_commit": "5485170cce8d6a3a27c5ba61d9868f63bc331b3f"
+}

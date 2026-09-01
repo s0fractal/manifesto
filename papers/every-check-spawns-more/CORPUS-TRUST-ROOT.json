@@ -1,15 +1,49 @@
 {
-  "schema": "manifesto.corpus.trust-root.v0",
-  "note": "External, reviewed trust root. Empty authorities + pinned_manifests = the honest pre-governance state: no authority is admitted and no required-unit manifest is pinned, so every claim view is REFUSED. l2_bundle_id pins the exact canonical full 1239-event bundle. Establishing authorities and pinning manifests is a separate, reviewed governance act. decision_register is empty: no completeness/publication/mapping decision-record id is pinned, so no EXACT credit even if an authority label is admitted (P0-3).",
-  "report_id": "erpt:8c75976037006f862410d3d2aa57c4702dd26a3da36c7814a58153ceb8bbf811",
-  "corpus_commitment": "d5fe0d7a24e0075e43d2931228f8e92467f7bbba207729eed806ee7828d86429",
-  "extraction_closure": "clo:extract:90e210ffb527cab50dbac09d732edf4f2dbeedc9e77e27c141b993f0e4795cbf",
-  "l2_bundle_id": "bnd:2654ab606547b03d81117fe394c783ea659e040a99be4f6f2e246ba7dc03e0b0",
-  "authorities": {
-    "completeness": [],
-    "publication": [],
-    "mapping": []
-  },
-  "pinned_manifests": {},
-  "decision_register": []
+ "schema": "manifesto.corpus.trust-root.v0",
+ "note": "External, reviewed trust root. Empty authorities + pinned_manifests = the honest pre-governance state: no authority is admitted and no required-unit manifest is pinned, so every claim view is REFUSED. l2_bundle_id pins the exact canonical full 1239-event bundle. Establishing authorities and pinning manifests is a separate, reviewed governance act. decision_register is empty: no completeness/publication/mapping decision-record id is pinned, so no EXACT credit even if an authority label is admitted (P0-3).",
+ "report_id": "erpt:8c75976037006f862410d3d2aa57c4702dd26a3da36c7814a58153ceb8bbf811",
+ "corpus_commitment": "d5fe0d7a24e0075e43d2931228f8e92467f7bbba207729eed806ee7828d86429",
+ "extraction_closure": "clo:extract:90e210ffb527cab50dbac09d732edf4f2dbeedc9e77e27c141b993f0e4795cbf",
+ "l2_bundle_id": "bnd:2654ab606547b03d81117fe394c783ea659e040a99be4f6f2e246ba7dc03e0b0",
+ "authorities": {
+  "completeness": [
+   "corpus-adjudicator@ecda7f0"
+  ],
+  "publication": [
+   "corpus-adjudicator@ecda7f0"
+  ],
+  "mapping": [
+   "corpus-adjudicator@ecda7f0"
+  ]
+ },
+ "pinned_manifests": {
+  "C2-MAP": "man:d91472741099e2832828e9b6d0fec431c35915f14ef01b5812a81316d887ead5"
+ },
+ "decision_register": [
+  "dec:2b3c11a527d71542bbebc13df93d734d338290a65e3262d4fda941755e3c9d68",
+  "dec:585162c5d1151c4082133536df1f6523948a2869748e5b7afb93ff42178c3bbe",
+  "dec:54189361b9d934aa38148cf4a1829be631faabb644237a07d178cb643ec4f411",
+  "dec:cc5923b211a2b4923a500795c12fb7d8cbdc737d1e6a314d78426549f044ec4f",
+  "dec:e44b63ed77d54b8889119995eded669f1a51eef8e6b9f02a33ca4aacf5f3b6c4",
+  "dec:9f0e30f726897c15f566b18b1ee29ad1cc19af12ebc91ef7dbfbb5439911ce03",
+  "dec:b1a0355b11b477f00894d0a487d458593042684793d71eb04826e33a3fbaa04f",
+  "dec:6a293fd1dec8ba3fc12c24089f1f0f02a8ca2f6026935725a9237f4cf8171dd5",
+  "dec:6f4157ef1a8288d84a3228fb04d4e636c81c511cd2e561d4e1358126742b84d2",
+  "dec:c72b5a6cf80839dd2823b74227c7268f59b78a24cc66df42d952d814a9f407ab",
+  "dec:3562547c8a978f95a48fbdb7f2bffb7d24fe0e8c135d5f678540067d1313b0fc",
+  "dec:08d83818dcdc62c0cf86ced21d0229108785b20d3063f748106963106af1eab7",
+  "dec:b8846ff00dd251731acbe27bc3d4cf4338c5c1849cc024f1f0cd1b548185277d",
+  "dec:e579b597c600bbfb7213a8ce87e9c06550a7280f3c3a0de7b44c97ed31615ba2",
+  "dec:d67e2e6bb1c0ba3975a1751e5c55cf8da68c61d47916ae08e300a0cedb95e2e3",
+  "dec:3b7bc7aaca20c40fdb98f55e2975ef3158e5f14558ea7bee404953d6c39ebbc1",
+  "dec:cb0f35bc77b92cceee9f8f3e549d7ab0c324e1b6dc4a30619badea58d006175a",
+  "dec:ed578d0c48cb1fc66e82541e33a7cc335654ed9b1321d8eb286085ccdae9ab93",
+  "dec:48ceda6eeffc61fc36a848ff1172a7ec12616901ad301245deaf2b5b9e2a6e54",
+  "dec:087a62a313f23677cbcf2c58e6a52035cd3aef3312500d87d82064e798c68049",
+  "dec:b5cd3ec044b1e8af798a23b5b333d10a2e8c395e32154f46624ac9147c0d414b",
+  "dec:e24a90d13f5f48e592871ddd73cba29b34ea37037124666bd36fabeb07db0b4b",
+  "dec:4720f3e8f14d92b69e51c6d1274885c81700060c039c148f2a0158a56a2fbecb",
+  "dec:72ebbca9487ec028a3e31fec4a428fb8a87db30ee6795b713a9c2e93f0ac90a8"
+ ],
+ "mapper_closure": "clo:map:e012ae27041cae4115f4ffce5a5a0155c1d3321967398e734d7cbfcda7d57117"
 }
