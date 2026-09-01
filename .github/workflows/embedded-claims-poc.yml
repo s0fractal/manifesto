@@ -58,3 +58,14 @@ jobs:
           python3 -c "import markdown_it; assert markdown_it.__version__=='4.2.0'; print('markdown-it-py', markdown_it.__version__)"
           python3 drafts/embedded-claims-poc/test_parser.py | tee parse.log
           grep -q "ALL PASS (13 PARSE specimens + 4 invariants)" parse.log
+
+      # The COMPILE layer (phase 2 step 3c) is STRUCTURAL only — VALID ParseReport →
+      # strict JSON → capsule.v2 → canonical records/IDs. It settles nothing (that is
+      # 3d); COMPILED does not mean REPLAYED. A parser report with status != VALID is
+      # REFUSED as a whole.
+      - name: Compiler COMPILE-layer oracle (structural, no settlement)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 drafts/embedded-claims-poc/test_compiler.py | tee compile.log
+          grep -q "ALL PASS (13 COMPILE specimens + 3 invariants)" compile.log

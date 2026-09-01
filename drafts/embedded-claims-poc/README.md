@@ -171,7 +171,9 @@ schema.py       closed capsule schema (additionalProperties:false), stdlib-only
 parser.py       PARSE layer (step 3b): pinned CommonMark + protocol profile over raw spans
 requirements-parser.lock   hash-locked markdown-it-py==4.2.0 + mdurl==0.1.2
 test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
-test_parser.py  13 PARSE specimens + 4 invariants (capsule-only: status, capsule count/local_id/span)
+test_parser.py  13 PARSE specimens + 4 invariants (capsule-only: status, count, local_id, span, CRLF)
+compiler.py     COMPILE layer (step 3c): VALID ParseReport → strict JSON → capsule.v2 → canonical records (structural, no settlement)
+test_compiler.py 13 COMPILE specimens + 3 invariants (REFUSED precondition, content-addressed ids)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,

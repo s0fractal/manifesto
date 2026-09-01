@@ -53,8 +53,25 @@ capsule + settlement of the contained claim.
    identically with byte-faithful spans; mixed or lone-CR endings are a typed
    `UNSUPPORTED_LINE_ENDING`, never a silent `NO_LIVE_REGION`.
 
+## Compile layer (3c — structural, `compiler.py`)
+
+`VALID ParseReport → strict JSON → capsule.v2 → canonical records/IDs`. STRUCTURAL only:
+no settlement is run (that is 3d; `COMPILED` ≠ `REPLAYED`). The precondition is
+`parser.status == VALID`; a non-VALID report is REFUSED as a whole (zero records), even
+if it diagnostically carried a candidate capsule. An INVALID compile emits no records
+either — records are handed forward only from a `COMPILED` report.
+
+| Specimen | Compile expected |
+|---|---|
+| `01`, `02`, `09`, `03`, `17` | COMPILED — records with content-addressed `claim_id`/`plan_id`/`dependency_id`/`capsule_id` + source occurrence span (0 records for the empty regions 03/17). |
+| `05`, `10`, `11`, `13`, `14` | REFUSED, `PRECONDITION_NOT_VALID` — parser status was INVALID/INERT. |
+| `21-capsule-bad-json.md` | INVALID, `CAPSULE_NOT_STRICT_JSON`. |
+| `22-capsule-schema-invalid.md` | INVALID, `CAPSULE_SCHEMA_INVALID` (unknown claim.class). |
+| `23-duplicate-local-id.md` | INVALID, `DUPLICATE_LOCAL_ID`. |
+
 ## Status
 
-PARSE layer implemented and green (`parser.py`, pinned markdown-it-py==4.2.0). COMPILE
-(schema v2 + settlement of the contained claim) is the 3c compiler. The old inline
-`settle_gate` form and the SSD demos remain legacy authoring, not auto-migrated.
+PARSE (`parser.py`, pinned markdown-it-py==4.2.0) and COMPILE (`compiler.py`, structural)
+are implemented and green. **Settlement of the contained claim + the two-axis REPORT is
+3d** — not yet built; `COMPILED` is not `REPLAYED`. The old inline `settle_gate` form and
+the SSD demos remain legacy authoring, not auto-migrated.
