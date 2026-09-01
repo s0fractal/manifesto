@@ -4,6 +4,11 @@ What a CONFORMANT parser/compiler must do for each specimen. Written BEFORE the 
 exists (Codex's pressure: record the ambiguities first). Each row becomes a test when
 the parser is built (phase 2 step 3) — passing with a TYPED reason, never a silent skip.
 
+**Report-level status (Codex P0).** Every parse returns `status ∈ {VALID, INVALID,
+INERT}`: any fatal parse error ⇒ INVALID (candidates kept for diagnostics only, never
+for compile); a document with no live region ⇒ INERT; live regions with no fatal error
+⇒ VALID. The compiler precondition is `status == VALID`.
+
 **Layers are separated (Codex P1).** PARSE = region + block structure + claim/capsule
 recognition. COMPILE = closed-schema validation + claim↔capsule association + identity.
 A specimen that tests COMPILE uses schema-valid capsules so it actually reaches that
@@ -35,6 +40,9 @@ mistakes them for claims. Live specimens carry explicit `manifesto-claims` regio
 | `04-info-string-variants.md` | T4 | PARSE | Only the exact `json capsule` opener is a candidate; the leading-space variant (CommonMark trims it) and the others are rejected at the RAW opener-line level. |
 | `05-unclosed-fence.md` | T4 | PARSE | `UNCLOSED_FENCE` typed error (CommonMark would run it to EOF); fail closed, never silent-drop. |
 | `06-glyph-in-code-fence.md` | T5 | PARSE | Prose glyph live; identical glyph inside ```` ```text ```` inert. |
+| `18-inline-code-and-html.md` | T5 | PARSE | VALID, one prose claim; glyphs in inline code / inline HTML inert; a `⟧` in a code span is not a delimiter error (claims come from TEXT nodes only). |
+| `19-malformed-claim-open.md` | — | PARSE | INVALID, `MALFORMED_CLAIM_OPEN` — an unmatched `⟦` fails closed instead of silently vanishing. |
+| `20-noncloser-line.md` | T4 | PARSE | INVALID, `UNCLOSED_FENCE` (+`MISSING_END`) — ```` ```not-a-closer ```` is not a valid closing fence; the exact closer rule rejects it. |
 | `07-delimiter-injection.md` | T7 | PARSE | No truncation at an embedded `⟧`; a capsule string's ```` ``` ```` does not close the fence. Absent an escaping rule, a typed error — never silent truncation. |
 | `08-unicode-normalization.md` | T6 | PARSE→ID | Default EXACT scalars; normalize a field only under its verifier profile; commit raw source occurrence separately; accept only U+27E6/U+27E7 delimiters. Global NFC is forbidden (it would alias distinct predicates). |
 | `09-claim-capsule-association.md` | T8 | COMPILE | Capsules bind by `claim_ref` (out-of-order on purpose), not adjacency; bodies are schema-valid (`manifesto.capsule.v1`) so association is actually reached; both capsules validate and carry claim_ref A/B (this is now an executable suite invariant). |

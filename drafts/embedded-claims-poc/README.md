@@ -100,7 +100,7 @@ property, deliberately, for the parser):
 
 ```sh
 .venv/bin/pip install --require-hashes -r drafts/embedded-claims-poc/requirements-parser.lock
-../../.venv/bin/python test_parser.py     # 17 PARSE specimens over fixtures/adversarial/
+../../.venv/bin/python test_parser.py     # 20 PARSE specimens over fixtures/adversarial/
 ../../.venv/bin/python parser.py fixtures/adversarial/02-multiple-claims.md   # one file
 ```
 
@@ -166,7 +166,7 @@ schema.py       closed capsule schema (additionalProperties:false), stdlib-only
 parser.py       PARSE layer (step 3b): pinned CommonMark + protocol profile over raw spans
 requirements-parser.lock   hash-locked markdown-it-py==4.2.0 + mdurl==0.1.2
 test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
-test_parser.py  17 PARSE specimens + determinism (region/fence/claim structure)
+test_parser.py  20 PARSE specimens + 2 invariants (status, golden claims/refs/spans, x-proc determinism)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,
