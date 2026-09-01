@@ -408,9 +408,12 @@ try:
                == {"root_digest", "verifier_identity", "agent_run_occurrence"} for r in rows_))
     expect("activation proposal binds the exact operand digest",
            pr["operand_digest"] == "sha256:" + hashlib.sha256(opf.read_bytes()).hexdigest())
-    expect("activation proposal_id recomputes",
-           pr["proposal_id"] == "prop:" + ids.json_digest(
-               {k: pr[k] for k in ("operand_digest", "manifest", "overlay_rows", "trust_root_diff")}))
+    from corpus_map import proposal_identity  # noqa: E402
+    expect("activation proposal_id recomputes (CLOSED body: schema+for included, P1-6)",
+           pr["proposal_id"] == proposal_identity(pr))
+    expect("proposal_id rotates on a schema/for mutation (P1-6)",
+           proposal_identity({**pr, "for": "C2-MEAS"}) != pr["proposal_id"]
+           and proposal_identity({**pr, "schema": "x"}) != pr["proposal_id"])
     expect("proposal overlay is 8 EXACT rows over the same units",
            len(pr["overlay_rows"]) == 8
            and all(o["mapping_status"] == "EXACT" for o in pr["overlay_rows"])
@@ -432,6 +435,78 @@ try:
            and ar["result_vector"]["baseline"]["C2-MAP"] == "REFUSED")
     expect("activation report: trust root still unchanged (empty)",
            ar["assertions"]["trust_root_unchanged"] and json.loads((PAPER / "CORPUS-TRUST-ROOT.json").read_text())["decision_register"] == [])
+    # P0-1: the engine's ACTUAL reason is preserved, NOT overwritten by the authored projection
+    meas = ar["result_vector"]["C2-MEAS"]
+    expect("activation report: C2-MEAS keeps the engine reason (P0-1)",
+           meas["engine_reason"] == "REQUIRED_UNITS_UNSPECIFIED"
+           and meas["engine_reason"] != "MEASUREMENT_NOT_REPLAYED"
+           and meas["policy_projection"] == "MEASUREMENT_NOT_REPLAYED")
+    # P1-5: the applied vector discloses the exact L3 + 8 record ids
+    app = ar["result_vector"]["applied"]
+    expect("activation report: applied vector discloses l3 + 8 record ids (P1-5)",
+           app["l3_bundle_id"].startswith("l3:") and len(app["record_ids"]) == 8
+           and len(set(app["record_ids"])) == 8)
+
+    # ============ P0-2: INDEPENDENT report verification + coherent-forge regression ============
+    from corpus_activation_report import verify_activation_report  # noqa: E402
+    vok, vf = verify_activation_report(PAPER)
+    expect("independent verify_activation_report PASSES on the committed report", vok)
+    if not vok:
+        print("   faults:", vf)
+    # a COHERENT single-file re-forge (forged l2 + emptied registers, only report_id recomputed)
+    # must FAIL the independent verifier even though its own booleans stay green.
+    import tempfile, shutil  # noqa: E402
+    forged_dir = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
+    shutil.copytree(PAPER, forged_dir)
+    fdoc = json.loads((forged_dir / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
+    fdoc["provenance"]["l2_bundle_id"] = "bnd:FORGED"
+    fdoc["activation"]["decision_register"] = []
+    fdoc["activation"]["trust_root_diff"]["decision_register"] = []
+    fbody = {k: v for k, v in fdoc.items() if k != "report_id"}
+    fdoc["report_id"] = "arpt:" + ids.json_digest(fbody)      # re-forge ONLY the self-hash
+    (forged_dir / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").write_text(json.dumps(fdoc, indent=1))
+    fok, ff = verify_activation_report(forged_dir)
+    expect("coherent-forged report (self-hash recomputed) FAILS independent verify (P0-2)", not fok)
+    expect("forge is caught by cross-checking l2 pin + register vs proposal",
+           any(c in ff for c in ("L2_NOT_PINNED_TO_TRUST_ROOT", "REGISTER_MISMATCH", "REGISTER_NOT_24")))
+    shutil.rmtree(forged_dir.parent)
+
+    # ============ P0-3: C2-MAP / C2-MEAS as canonical deposit claims ============
+    import importlib  # noqa: E402
+    dc = importlib.import_module("deposit_check") if "deposit_check" in sys.modules else None
+    if dc is None:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        import deposit_check as dc  # noqa: E402
+    rep = dc.evaluate(PAPER / "claim-manifest.json")
+    expect("deposit engine binds candidate + closed ledger incl. C2-MAP/C2-MEAS", rep["engine"] == "OK")
+    byid = {c["id"]: c for c in rep["claims"]}
+    expect("C2-MAP + C2-MEAS are registered canonical claims",
+           "C2-MAP" in byid and "C2-MEAS" in byid)
+    # before activation (trust root empty): C2-MAP is refused ACTIVATION_NOT_APPLIED
+    expect("C2-MAP REFUSED: ACTIVATION_NOT_APPLIED (trust root still empty)",
+           byid["C2-MAP"]["status"] == "REFUSED" and byid["C2-MAP"]["reason"] == "ACTIVATION_NOT_APPLIED")
+    expect("C2-MEAS REFUSED: MEASUREMENT_NOT_REPLAYED (permanent, separate claim)",
+           byid["C2-MEAS"]["status"] == "REFUSED" and byid["C2-MEAS"]["reason"] == "MEASUREMENT_NOT_REPLAYED")
+    # positive path: SIMULATE the operator applying the diff into a temp corpus -> CHECKED,
+    # while C2-MEAS stays refused (no laundering). The committed root is untouched.
+    from corpus_operator_readback import applied_trust_root  # noqa: E402
+    sim_dir = Path(tempfile.mkdtemp()) / "every-check-spawns-more"
+    shutil.copytree(PAPER, sim_dir)
+    base_tr = json.loads((sim_dir / "CORPUS-TRUST-ROOT.json").read_text())
+    prop_s = json.loads((sim_dir / "CORPUS-C2-MAP-ACTIVATION-0.1.json").read_text())
+    (sim_dir / "CORPUS-TRUST-ROOT.json").write_text(
+        json.dumps(applied_trust_root(base_tr, prop_s["trust_root_diff"]), indent=1))
+    repo_root = Path(__file__).resolve().parents[2]
+    st, rs, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(sim_dir)})  # abs path -> temp
+    expect("SIMULATED activation -> C2-MAP CHECKED (live-activated root + verified report)",
+           st == "CHECKED")
+    if st != "CHECKED":
+        print("   got:", st, rs)
+    # C2-MEAS must STILL be refused under the same activated root (composition-laundering guard)
+    st2, rs2, _ = dc.strat_refused(sim_dir, {"reason": "MEASUREMENT_NOT_REPLAYED"})
+    expect("under activation, C2-MEAS STILL REFUSED (no composition laundering)",
+           st2 == "REFUSED" and rs2 == "MEASUREMENT_NOT_REPLAYED")
+    shutil.rmtree(sim_dir.parent)
 except FileNotFoundError as e:
     expect(f"production operand/proposal/report present: {e}", False)
 

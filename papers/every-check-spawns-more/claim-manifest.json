@@ -7,7 +7,7 @@
   },
   "ledger": {
     "path": "papers/every-check-spawns-more/CLAIM-LEDGER.md",
-    "closed_ids": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8"]
+    "closed_ids": ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C2-MAP", "C2-MEAS"]
   },
   "claims": {
     "C1": {
@@ -64,6 +64,26 @@
          "field": "tally.refuted", "expected": 28}
       ],
       "operands": ["drafts/SSD-DEMO-0.1.md", "drafts/SSD-INDEX-AUDIT.md"]
+    },
+    "C2-MAP": {
+      "strategy": "corpus_activation",
+      "class": "address_map",
+      "title": "the 8 crossed transcripts form an addressable 4x2 observed-model cohort (root_digest x verifier_identity), byte-mapped to the frozen corpus",
+      "corpus_dir": "papers/every-check-spawns-more",
+      "definition": "papers/every-check-spawns-more/CORPUS-C2-MAP-CLAIM-0.1.md",
+      "operands": [
+        "papers/every-check-spawns-more/CORPUS-C2-MAPPING-0.2.json",
+        "papers/every-check-spawns-more/CORPUS-C2-MAP-ACTIVATION-0.1.json",
+        "papers/every-check-spawns-more/CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json",
+        "papers/every-check-spawns-more/CORPUS-TRUST-ROOT.json"
+      ]
+    },
+    "C2-MEAS": {
+      "strategy": "refused", "reason": "MEASUREMENT_NOT_REPLAYED",
+      "class": "measurement",
+      "title": "offspring / dedup / o-hat per act (the measurement of C2) — NOT replayed by the address map; permanently refused until measurement evidence is extracted and adjudicated",
+      "definition": "papers/every-check-spawns-more/CORPUS-C2-MAP-CLAIM-0.1.md",
+      "operands": ["drafts/EXP-RVB-1-RESULTS.md#crossed"]
     }
   }
 }

@@ -31,7 +31,8 @@ import sys
 from pathlib import Path
 
 CHECKED, EXCLUDED, REFUSED = "CHECKED", "EXCLUDED", "REFUSED"
-LEDGER_ID_RE = re.compile(r"^\|\s*([A-Z]+\d+)\s*\|")
+# claim ids are `C1`..`C8` and address-scoped sub-claims `C2-MAP` / `C2-MEAS`.
+LEDGER_ID_RE = re.compile(r"^\|\s*([A-Z]+\d+(?:-[A-Z]+)?)\s*\|")
 
 
 def sha256_file(p: Path) -> str:
@@ -242,6 +243,55 @@ def strat_evaluator_replay(base, spec):
     raise ValueError(f"unknown runner {runner!r}")
 
 
+def strat_corpus_activation(base, spec):
+    """C2-MAP (cohort addressability) at the deposit boundary.
+
+    Consumes the LIVE committed trust root plus the independently-verified activation report.
+    The report's raw-span truth is machine-local; here we (a) re-verify every recomputable
+    relation via verify_activation_report (a coherent single-file re-forge fails), and (b) check
+    whether the LIVE trust root actually applies the proposal's activation. Before the operator
+    applies the diff the trust root is empty -> REFUSED: ACTIVATION_NOT_APPLIED. After it is
+    applied -> CHECKED. This NEVER touches C2-MEAS, which is a separate refused claim."""
+    corpus_dir = (base / spec["corpus_dir"]).resolve()
+    corpus_code = (base / "papers" / "corpus").resolve()
+    if str(corpus_code) not in sys.path:
+        sys.path.insert(0, str(corpus_code))
+    try:
+        from corpus_activation_report import verify_activation_report
+        from corpus_map import load_strict_json, validate_trust_root
+    except Exception as e:  # noqa
+        return REFUSED, "CORPUS_ENGINE_UNAVAILABLE", {"detail": repr(e)}
+
+    ok, faults = verify_activation_report(corpus_dir)
+    if not ok:
+        return REFUSED, "REPORT_UNVERIFIED", {"faults": faults}
+    try:
+        tr = load_strict_json(corpus_dir / "CORPUS-TRUST-ROOT.json")
+        prop = load_strict_json(corpus_dir / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
+        ar = load_strict_json(corpus_dir / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json")
+    except ValueError as e:
+        return REFUSED, "STRICT_JSON", {"detail": str(e)}
+    if validate_trust_root(tr) is not None:
+        return REFUSED, "TRUST_ROOT_INVALID", {}
+
+    diff = prop["trust_root_diff"]
+    tr_auth = tr.get("authorities") or {}
+    applied = (
+        (tr.get("pinned_manifests") or {}).get("C2-MAP") == diff["pinned_manifests"]["C2-MAP"]
+        and tr.get("mapper_closure") == diff["mapper_closure"]
+        and set(diff["decision_register"]) <= set(tr.get("decision_register") or [])
+        and all(set(diff["authorities"][k]) <= set(tr_auth.get(k, [])) for k in diff["authorities"]))
+    ev = {"report_id": ar["report_id"], "proposal_id": prop["proposal_id"],
+          "l2_bundle_id": tr.get("l2_bundle_id"),
+          "evaluation_id": ar["result_vector"]["applied"].get("evaluation_id")}
+    if not applied:
+        return REFUSED, "ACTIVATION_NOT_APPLIED", ev
+    # live trust root activates C2-MAP AND the verified report attests the applied COMPLETE vector
+    if ar["result_vector"]["applied"].get("C2-MAP") != "COMPLETE":
+        return REFUSED, "REPORT_NOT_COMPLETE", ev
+    return CHECKED, None, ev
+
+
 STRATEGIES = {
     "refused": strat_refused,
     "excluded": strat_excluded,
@@ -250,6 +300,7 @@ STRATEGIES = {
     "vendored_profile": strat_vendored_profile,
     "command": strat_command,
     "evaluator_replay": strat_evaluator_replay,
+    "corpus_activation": strat_corpus_activation,
 }
 
 

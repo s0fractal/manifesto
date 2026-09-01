@@ -26,7 +26,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import corpus_ids as ids
 from corpus_extract import extract_from_quarantine
 from corpus_map import (mint_l2_bundle, verify_bundle, build_l3, manifest_id, mapper_closure_id,
-                        _content_subject, _mapping_subject, decision_record_id)
+                        _content_subject, _mapping_subject, decision_record_id,
+                        load_strict_json, proposal_identity, recompute_report_id, validate_manifest)
 from corpus_l4 import l4_evaluate
 
 REPO = Path(__file__).resolve().parents[2]
@@ -51,11 +52,11 @@ def _generator_closure():
 
 
 def generate():
-    report = json.loads((PAPER / "CORPUS-EXTRACTION-REPORT.json").read_text())
-    tr = json.loads((PAPER / "CORPUS-TRUST-ROOT.json").read_text())
-    operand = json.loads((PAPER / "CORPUS-C2-MAPPING-0.2.json").read_text())
-    proposal = json.loads((PAPER / "CORPUS-C2-MAP-ACTIVATION-0.1.json").read_text())
-    inventory = json.loads((PAPER / "CORPUS-SOURCE-INVENTORY.json").read_text())
+    report = load_strict_json(PAPER / "CORPUS-EXTRACTION-REPORT.json")
+    tr = load_strict_json(PAPER / "CORPUS-TRUST-ROOT.json")
+    operand = load_strict_json(PAPER / "CORPUS-C2-MAPPING-0.2.json")
+    proposal = load_strict_json(PAPER / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
+    inventory = load_strict_json(PAPER / "CORPUS-SOURCE-INVENTORY.json")
     receipt = json.loads((PAPER / "CORPUS-QUARANTINE-RECEIPT.json").read_text())
     rows, overlay = operand["rows"], proposal["overlay_rows"]
     man = proposal["manifest"]
@@ -102,9 +103,14 @@ def generate():
     act_view = act["metadata_report"]["views"]["C2-MAP"]
     act_exact = sum(a["status"] == "EXACT" for a in act["metadata_report"]["acts"])
     l4 = l4_evaluate(act["private_l3"], {"C2-MAP": man}, act_tr)["views"]["C2-MAP"]
+    applied_l3_id = act["private_l3"]["l3_bundle_id"]
+    applied_record_ids = [r["record_id"] for r in act["private_l3"]["records"]]
 
-    # mandatory: C2-MEAS is not claimed by this path
+    # mandatory: C2-MEAS is not claimed by this path. Record the engine's ACTUAL typed result
+    # (do NOT overwrite it with a stronger authored reason — P0-1); the normative reading is a
+    # SEPARATE, explicitly-authored policy_projection field.
     meas = build_l3(bundle, overlay, {}, act_tr)["metadata_report"]["views"]["C2"]
+    meas_engine_reason = meas.get("reason")
 
     body = {
         "schema": "manifesto.corpus.c2-map-activation-report.v0.1",
@@ -115,7 +121,8 @@ def generate():
         "proposal": {"file": "CORPUS-C2-MAP-ACTIVATION-0.1.json",
                      "proposal_id": proposal["proposal_id"],
                      "digest": _sha(PAPER / "CORPUS-C2-MAP-ACTIVATION-0.1.json"),
-                     "operand_digest_bound": proposal["operand_digest"] == _sha(PAPER / "CORPUS-C2-MAPPING-0.2.json")},
+                     "operand_digest_bound": proposal["operand_digest"] == _sha(PAPER / "CORPUS-C2-MAPPING-0.2.json"),
+                     "proposal_identity_recomputes": proposal_identity(proposal) == proposal["proposal_id"]},
         "provenance": {"extraction_report_id": report["report_id"],
                        "corpus_commitment": report["corpus_commitment"],
                        "inventory_commitment": report["inventory_commitment"],
@@ -133,16 +140,24 @@ def generate():
             "baseline": {"C2-MAP": base_view["status"], "exact_acts": base_exact},
             "applied": {"C2-MAP": act_view["status"], "exact_acts": act_exact,
                         "evaluation_id": act_view.get("evaluation_id"),
+                        "l3_bundle_id": applied_l3_id, "record_ids": applied_record_ids,
                         "l4_C2-MAP": l4["status"], "l4_evaluation_id_matches": l4.get("evaluation_id") == act_view.get("evaluation_id")},
-            "C2-MEAS": {"status": meas["status"], "reason": "MEASUREMENT_NOT_REPLAYED",
-                        "note": "offspring/dedup/o-hat are not extracted or derived by this path; "
-                                "greening C2-MEAS from C2-MAP would be composition laundering."}},
+            "C2-MEAS": {"status": meas["status"], "engine_reason": meas_engine_reason,
+                        "policy_projection": "MEASUREMENT_NOT_REPLAYED",
+                        "note": "engine_reason is the engine's ACTUAL typed result for the unclaimed "
+                                "measurement view (no C2-MEAS manifest); policy_projection is the "
+                                "authored normative reading, kept SEPARATE (P0-1). offspring/dedup/o-hat "
+                                "are not extracted or derived by this path; greening C2-MEAS from "
+                                "C2-MAP would be composition laundering."}},
         "assertions": {
             "all_24_spans_verified": all_spans_ok and len(span_results) == 24,
             "baseline_refused_zero_exact": base_view["status"] == "REFUSED" and base_exact == 0,
             "applied_complete_eight_exact": act_view["status"] == "COMPLETE" and act_exact == 8,
             "l4_reproduces": l4["status"] == "COMPLETE" and l4.get("evaluation_id") == act_view.get("evaluation_id"),
             "c2_meas_refused": meas["status"] == "REFUSED",
+            "c2_meas_engine_reason_preserved": meas_engine_reason is not None
+                and meas_engine_reason != "MEASUREMENT_NOT_REPLAYED",
+            "proposal_identity_recomputes": proposal_identity(proposal) == proposal["proposal_id"],
             "committed_operand_stays_derived": all(r["mapping_status"] == "DERIVED" for r in rows),
             "trust_root_unchanged": tr.get("decision_register") == [] and not tr.get("authorities", {}).get("mapping")},
     }
@@ -154,6 +169,95 @@ def generate():
     return out
 
 
+def verify_activation_report(paper=PAPER):
+    """Independent, quarantine-FREE verification of the committed activation report (P0-2).
+
+    RECOMPUTES every non-raw relation and cross-checks it against the OTHER committed artifacts
+    (proposal, operand, extraction report, committed trust root, receipt) — it never trusts the
+    report's own stored booleans. A coherent single-file re-forge (e.g. forged l2_bundle_id +
+    emptied registers with only report_id recomputed) fails here, because the forged field no
+    longer matches the independently-recomputed value or the other pinned artifact.
+
+    Raw-byte SPAN truth stays machine-local (revalidated by generate() against the quarantine);
+    this function checks that the report's span SET equals the operand's exact closed set and that
+    every recomputable id/commitment/relation holds. Returns (ok, faults)."""
+    F = []
+
+    def need(cond, code):
+        if not cond:
+            F.append(code)
+        return cond
+    try:
+        ar = load_strict_json(paper / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json")
+        prop = load_strict_json(paper / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
+        operand = load_strict_json(paper / "CORPUS-C2-MAPPING-0.2.json")
+        tr = load_strict_json(paper / "CORPUS-TRUST-ROOT.json")
+        erpt = load_strict_json(paper / "CORPUS-EXTRACTION-REPORT.json")
+    except (ValueError, FileNotFoundError) as e:
+        return False, [f"STRICT_JSON:{e}"]
+
+    # 1. report identity recomputes over its own body (necessary, NOT sufficient on its own)
+    body = {k: v for k, v in ar.items() if k != "report_id"}
+    need(ar.get("report_id") == "arpt:" + ids.json_digest(body), "REPORT_ID_MISMATCH")
+    need(ar.get("generator_closure") == _generator_closure(), "GENERATOR_CLOSURE_MISMATCH")
+    need(ar.get("metadata_only") is True, "NOT_METADATA_ONLY")
+
+    # 2. operand + proposal digests and CLOSED proposal identity (P1-6)
+    op_sha = _sha(paper / "CORPUS-C2-MAPPING-0.2.json")
+    pr_sha = _sha(paper / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
+    need(ar.get("operand", {}).get("digest") == op_sha == prop.get("operand_digest"), "OPERAND_DIGEST_MISMATCH")
+    need(ar.get("proposal", {}).get("digest") == pr_sha, "PROPOSAL_DIGEST_MISMATCH")
+    need(proposal_identity(prop) == prop.get("proposal_id")
+         == ar.get("proposal", {}).get("proposal_id"), "PROPOSAL_ID_MISMATCH")
+
+    # 3. activation binds the proposal EXACTLY (manifest, diff, register, mapper)
+    diff = prop.get("trust_root_diff", {})
+    man = prop.get("manifest", {})
+    act = ar.get("activation", {})
+    need(act.get("manifest") == man, "MANIFEST_MISMATCH")
+    need(validate_manifest(man) is None, "MANIFEST_INVALID")
+    need(act.get("manifest_id") == manifest_id(man)
+         == (diff.get("pinned_manifests") or {}).get("C2-MAP"), "MANIFEST_ID_MISMATCH")
+    need(act.get("trust_root_diff") == diff, "DIFF_MISMATCH")
+    reg = diff.get("decision_register", [])
+    need(act.get("decision_register") == reg, "REGISTER_MISMATCH")
+    need(len(reg) == 24 and len(set(reg)) == 24, "REGISTER_NOT_24")
+    need(act.get("mapper_closure") == diff.get("mapper_closure") == mapper_closure_id(), "MAPPER_MISMATCH")
+
+    # 4. provenance is pinned to the committed extraction report + trust root + receipt
+    prov = ar.get("provenance", {})
+    need(recompute_report_id(erpt) == erpt.get("report_id") == prov.get("extraction_report_id"), "EXTRACTION_ID_MISMATCH")
+    need(prov.get("corpus_commitment") == erpt.get("corpus_commitment"), "CORPUS_COMMITMENT_MISMATCH")
+    need(prov.get("inventory_commitment") == erpt.get("inventory_commitment"), "INVENTORY_COMMITMENT_MISMATCH")
+    need(prov.get("l2_bundle_id") == tr.get("l2_bundle_id"), "L2_NOT_PINNED_TO_TRUST_ROOT")
+    need(prov.get("quarantine_receipt_digest") == _sha(paper / "CORPUS-QUARANTINE-RECEIPT.json"), "RECEIPT_DIGEST_MISMATCH")
+
+    # 5. the evidence-span SET equals the operand's exact closed 24-set (raw truth is machine-local)
+    want = {(r["local_ref"], e["kind"], e["event_id"], e["value_start"], e["value_end"],
+             e["observed_value_digest"]) for r in operand.get("rows", []) for e in r["mapping_evidence"]}
+    got = {(s["local_ref"], s["kind"], s["event_id"], s["byte_span"][0], s["byte_span"][1],
+            s["observed_value_digest"]) for s in ar.get("evidence", {}).get("spans", [])}
+    need(len(want) == 24 and want == got, "EVIDENCE_SPAN_SET_MISMATCH")
+
+    # 6. C2-MEAS keeps the engine's ACTUAL reason (P0-1); no laundering
+    meas = ar.get("result_vector", {}).get("C2-MEAS", {})
+    need(meas.get("status") == "REFUSED", "C2_MEAS_NOT_REFUSED")
+    need(meas.get("engine_reason") and meas.get("engine_reason") != "MEASUREMENT_NOT_REPLAYED"
+         and meas.get("policy_projection") == "MEASUREMENT_NOT_REPLAYED", "ENGINE_REASON_NOT_PRESERVED")
+
+    # 7. applied vector is internally coherent (COMPLETE / 8 EXACT / 8 record ids / L4 match)
+    rv = ar.get("result_vector", {})
+    base_v, app = rv.get("baseline", {}), rv.get("applied", {})
+    need(base_v.get("C2-MAP") == "REFUSED" and base_v.get("exact_acts") == 0, "BASELINE_NOT_REFUSED")
+    need(app.get("C2-MAP") == "COMPLETE" and app.get("exact_acts") == 8, "APPLIED_NOT_COMPLETE")
+    need(app.get("l4_C2-MAP") == "COMPLETE" and app.get("l4_evaluation_id_matches") is True, "L4_NOT_REPRODUCED")
+    rids = app.get("record_ids") or []
+    need(isinstance(app.get("l3_bundle_id"), str) and app["l3_bundle_id"].startswith("l3:"), "L3_ID_MISSING")
+    need(len(rids) == 8 and len(set(rids)) == 8, "RECORD_IDS_NOT_8")
+    need(bool(app.get("evaluation_id")), "EVALUATION_ID_MISSING")
+    return len(F) == 0, F
+
+
 if __name__ == "__main__":
     r = generate()
     a = r["assertions"]
@@ -161,6 +265,8 @@ if __name__ == "__main__":
     for k, v in a.items():
         print(f"  {'ok ' if v else 'XX '} {k}")
     print("metadata_only:", r["metadata_only"])
-    ok_all = all(a.values()) and r["metadata_only"]
+    vok, vf = verify_activation_report()
+    print("independent verify_activation_report:", "PASS" if vok else f"FAIL {vf}")
+    ok_all = all(a.values()) and r["metadata_only"] and vok
     print("ACTIVATION-REPORT:", "COMPLETE PROOF (machine-local; trust root unchanged)" if ok_all else "INCOMPLETE")
     sys.exit(0 if ok_all else 1)

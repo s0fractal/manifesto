@@ -28,8 +28,39 @@ real view is REFUSED — the honest state until governance is established.
 from collections import defaultdict
 from pathlib import Path
 import base64
+import json
 
 import corpus_ids as ids
+
+
+def _reject_dupes(pairs):
+    d = {}
+    for k, v in pairs:
+        if k in d:
+            raise ValueError(f"DUPLICATE_KEY:{k}")
+        d[k] = v
+    return d
+
+
+def load_strict_json(path):
+    """Governance operands (proposal, report, trust root) use the SAME strict profile as
+    extraction: duplicate keys and non-finite constants are rejected (P1-6). A malformed
+    operand raises ValueError — never a silent permissive parse."""
+    def _no_const(tok):
+        raise ValueError(f"NON_FINITE_CONSTANT:{tok}")
+    return json.loads(Path(path).read_text(), object_pairs_hook=_reject_dupes, parse_constant=_no_const)
+
+
+PROPOSAL_NONSEMANTIC = {"proposal_id", "generated", "note"}
+
+
+def proposal_identity(proposal):
+    """Closed semantic identity of an activation proposal (P1-6): hashes the WHOLE body —
+    schema, for, operand, operand_digest, manifest, overlay_rows, trust_root_diff — excluding
+    only the explicitly non-semantic commentary/time fields. A schema/for/profile mutation
+    rotates the id."""
+    return "prop:" + ids.json_digest({k: v for k, v in proposal.items()
+                                      if k not in PROPOSAL_NONSEMANTIC})
 
 # experiment_id (EXP-RVB-1c) is not present in the raw transcripts and cannot be evidenced;
 # per the governance narrowing (operator, 2026-09-02) C2 is the OBSERVED-MODEL 4x2 unit, so the
