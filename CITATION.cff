@@ -14,11 +14,10 @@ abstract: >-
   recount their figures from the repository.
 message: "If you use or evaluate this work, please cite it."
 type: software
-# LICENSE NOT YET FINALIZED (flagged by Codex review 2026-08): README says
-# "Ліцензія: Ваш вибір", there is no LICENSE file, and this field previously
-# asserted CC-BY-4.0 — a contradiction. Left unset pending the operator's
-# explicit decision (a class-(c) mandate under OAH); a LICENSE file is the
-# single source of truth once chosen.
+license: AGPL-3.0-only
+# This CFF record is typed as software, so the field names the software
+# license. Papers, specifications, manifesto text, and other documentary
+# research artifacts are CC-BY-SA-4.0. LICENSE is the path-scoped authority.
 repository-code: "https://github.com/s0fractal/manifesto"
 url: "https://github.com/s0fractal/manifesto"
 authors:

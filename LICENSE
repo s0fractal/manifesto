@@ -1,0 +1,85 @@
+# Licensing
+
+Copyright (c) 2026 Serhii Glova (s0fractal)
+
+This repository deliberately separates software from research and documentary
+content. Unless a file contains a more specific notice, the following terms
+apply.
+
+## Software: GNU AGPL v3.0 only
+
+Software is licensed under the **GNU Affero General Public License, version 3
+only** (SPDX: `AGPL-3.0-only`). The complete text is in
+[`LICENSES/AGPL-3.0-only.txt`](LICENSES/AGPL-3.0-only.txt).
+
+This includes executable source and implementation material such as Python,
+shell, Lean and WPL files; tests; schemas; CI workflows; executable policies;
+software configuration; and dependency lock files.
+
+AGPL does not prohibit commercial use. It requires covered source to remain
+available under its terms, including the corresponding source of modified
+network-interactive versions offered to remote users.
+
+## Text and research artifacts: CC BY-SA 4.0
+
+Documentation, manifesto and mission text, papers, specifications, diagrams,
+bibliographies, non-executable research data, evidence records, reports and
+other documentary artifacts are licensed under the **Creative Commons
+Attribution-ShareAlike 4.0 International License** (SPDX:
+`CC-BY-SA-4.0`). The complete text is in
+[`LICENSES/CC-BY-SA-4.0.txt`](LICENSES/CC-BY-SA-4.0.txt).
+
+Substantial executable code embedded in documentation remains software and is
+licensed under AGPL-3.0-only unless it is explicitly marked otherwise.
+Generated paper formats carry the same CC BY-SA 4.0 terms as their source.
+
+## Alternative commercial terms
+
+The public software license is AGPL-3.0-only. A copyright holder may separately
+offer paid alternative terms for proprietary embedding, closed managed
+services, support, certification work, or other deployments that cannot comply
+with AGPL. No alternative license is granted merely by this notice; it requires
+a separate signed agreement.
+
+Future third-party code contributions may limit the ability to offer such terms
+unless appropriate contributor agreements are established. This repository
+does not claim a right to relicense contributions it does not own.
+
+## Third-party material
+
+Third-party dependencies and any material carrying its own notice remain under
+their respective licenses. This policy does not relicense them. In particular,
+runtime dependencies installed from other projects are not copied into this
+repository merely because the software invokes them.
+
+## Names, marks, certification and endorsement
+
+These copyright licenses do not grant trademark, certification, endorsement or
+governance authority. Descriptive reference to the project is allowed by
+applicable law, but a fork, service, paper or deployment must not claim to be
+canonical, certified, settled, endorsed, or adopted by this project solely
+because it uses unchanged names, hashes, receipts, badges or code.
+
+## What the licenses do not establish
+
+A license grants copyright permissions. It does not establish semantic
+adequacy, factual truth, safety, ethical acceptability, protocol conformance,
+normative adoption, or fitness for a particular use.
+
+A content hash can identify bytes under stated assumptions. It cannot prevent a
+faithful copy from being used harmfully and does not authorize an action. A
+receipt can make provenance or replay inspectable; it is not moral or legal
+permission.
+
+No field-of-use restriction is added to the public licenses. Such a restriction
+would make the software non-open-source while offering little protection
+against an adversary willing to ignore it. Harm resistance must also be built
+through capability boundaries, explicit trust and governance profiles,
+least-authority deployment, appeal and retirement paths, independent review,
+and refusal to turn local verification into a global badge.
+
+## Contact
+
+Questions about scope, attribution, or separate commercial terms may be sent to
+`sergey.glova@gmail.com`.
+

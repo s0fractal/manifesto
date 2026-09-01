@@ -18,6 +18,11 @@ warrant; no arXiv endorsement is sought): a DOI buys a permanent address and
 a frozen artifact — no venue, no peer review — and this README will record
 which commit each deposit froze.
 
+Paper source, generated paper formats, bibliographies, and documentary
+evidence are licensed CC BY-SA 4.0. Executable checkers and other software are
+AGPL-3.0-only. The repository-root [`LICENSE`](../LICENSE) is the path-scoped
+authority; every deposit manifest includes it and both complete license texts.
+
 Candidate companions, mined from material already in this repository (listed
 so the flagship does not silently absorb their scope):
 
