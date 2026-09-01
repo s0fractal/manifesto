@@ -158,15 +158,32 @@ def verify_activation_commit_core(repo_root, commit, act, live_root_bytes, act_b
     return len(F) == 0, F
 
 
+def _normalize_repo(s):
+    """Canonical `owner/repo` (last two path segments, `.git` and scheme/host/`:` stripped). Exact
+    normalized identity beats substring matching, which would accept lookalike URLs that merely
+    *contain* the pinned selector (e.g. `.../s0fractal/manifesto-attacker`)."""
+    if not isinstance(s, str) or not s.strip():
+        return None
+    s = s.strip()
+    if s.endswith(".git"):
+        s = s[:-4]
+    parts = [p for p in s.replace(":", "/").split("/") if p]
+    return "/".join(parts[-2:]) if len(parts) >= 2 else None
+
+
 def _authority_ok(repo_root, commits, trust_anchor):
-    """EXPLICIT authority contract (P0-2). Local reachability is NOT authority. Credit requires a
-    declared external trust anchor: the given commits must be ancestors of the PINNED repository's
-    fetched remote-tracking ref (a declared policy input — the fetched ref of the pinned remote — NOT
-    cryptographic proof). Absent/attacker-local `.git` with no matching remote fails closed."""
+    """EXPLICIT, honestly-limited authority contract (P0-2). Local reachability is NOT authority.
+    Credit requires a declared external trust anchor: the given commits must be members of (ancestors
+    of) the PINNED repository's remote-tracking ref, whose configured origin identity EXACTLY matches
+    the manifest selector. This proves membership in a locally-available, declared-trusted remote ref
+    — a policy input — NOT a verified network push nor the operator's identity (a signed tag/commit or
+    a GitHub attestation is the correct later authenticity upgrade). Absent anchor / mismatched
+    origin / missing ref / non-member commit all fail closed."""
     if not (isinstance(trust_anchor, dict) and trust_anchor.get("repo") and trust_anchor.get("ref")):
         return False, ["AUTHORITY_ANCHOR_REQUIRED"]
     rc, url = _git(repo_root, "config", "--get", "remote.origin.url")
-    if rc != 0 or trust_anchor["repo"] not in url.decode().strip():
+    if rc != 0 or _normalize_repo(url.decode()) is None \
+            or _normalize_repo(url.decode()) != _normalize_repo(trust_anchor["repo"]):
         return False, ["AUTHORITY_REMOTE_MISMATCH"]
     rc, _ = _git(repo_root, "rev-parse", "--verify", trust_anchor["ref"])
     if rc != 0:
@@ -174,7 +191,7 @@ def _authority_ok(repo_root, commits, trust_anchor):
     for c in commits:
         rc, _ = _git(repo_root, "merge-base", "--is-ancestor", c, trust_anchor["ref"])
         if rc != 0:
-            return False, ["AUTHORITY_COMMIT_NOT_PUSHED"]
+            return False, ["AUTHORITY_COMMIT_NOT_IN_DECLARED_REF"]
     return True, []
 
 
@@ -226,7 +243,8 @@ def verify_activation_commit(repo_root, corpus_dir, act, receipt, live_root_byte
     if F:
         return False, F
 
-    # P0-2: explicit external authority anchor — both commits pushed to the pinned repository.
+    # P0-2: explicit external authority anchor — both commits are members of the pinned repository's
+    # declared-trusted remote-tracking ref (a policy input, not a proven network push or operator id).
     auth_ok, auth_f = _authority_ok(repo_root, [commit, R], trust_anchor)
     if not auth_ok:
         return False, auth_f

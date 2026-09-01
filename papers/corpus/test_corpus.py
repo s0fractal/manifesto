@@ -624,13 +624,39 @@ try:
            stP == "REFUSED" and "ACTIVATION_COMMIT_WRONG_PARENT" in (evP.get("faults") or []))
     shutil.rmtree(trP)
 
-    # P0-2: coherent local two-commit act but NOT pushed to the anchor -> REFUSED (no authority)
+    # P0-2: coherent local two-commit act but NOT in the declared remote ref -> REFUSED (no authority)
     trN, cN, _, aN = build_repo(push=False)
     stN, rsN, evN = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cN), "trust_anchor": aN})
-    expect("valid local commits but not pushed to the pinned remote -> REFUSED (authority)",
+    expect("valid local commits but not in the pinned remote ref -> REFUSED (authority)",
            stN == "REFUSED" and any(c in (evN.get("faults") or [])
-                                    for c in ("AUTHORITY_REF_UNAVAILABLE", "AUTHORITY_COMMIT_NOT_PUSHED")))
+                                    for c in ("AUTHORITY_REF_UNAVAILABLE", "AUTHORITY_COMMIT_NOT_IN_DECLARED_REF")))
     shutil.rmtree(trN)
+
+    # hardening: an origin URL that merely CONTAINS the pinned selector as a substring
+    # (`.../s0fractal/manifesto-attacker`) must NOT pass exact-normalized identity matching.
+    trL, cL, _, aL = build_repo()
+    _git(trL, "remote", "set-url", "origin", "https://github.com/s0fractal/manifesto-attacker.git")
+    stL, rsL, evL = dc.strat_corpus_activation(
+        repo_root, {"corpus_dir": str(cL), "trust_anchor": {"repo": "s0fractal/manifesto",
+                    "ref": "refs/remotes/origin/main"}})
+    expect("lookalike substring origin -> REFUSED (exact identity, AUTHORITY_REMOTE_MISMATCH)",
+           stL == "REFUSED" and "AUTHORITY_REMOTE_MISMATCH" in (evL.get("faults") or []))
+    shutil.rmtree(trL)
+
+    # P1-1 topology: a SHALLOW (depth-1) checkout of the activated history lacks the activation
+    # commit + parent -> fail-closed ACTIVATION_COMMIT_MISSING. This is why the deposit workflow must
+    # use fetch-depth: 0 before the operator act (safe refusal, not a bypass).
+    trS, cS, cactS, aS = build_repo()
+    bareS = aS["repo"]
+    shallow = Path(tempfile.mkdtemp()) / "shallow"
+    _git(Path("."), "clone", "-q", "--depth", "1", "file://" + str(bareS), str(shallow))
+    _git(shallow, "config", "user.email", "t@t"); _git(shallow, "config", "user.name", "t")
+    cShallow = shallow / "papers" / "every-check-spawns-more"
+    stSh, rsSh, evSh = dc.strat_corpus_activation(
+        repo_root, {"corpus_dir": str(cShallow), "trust_anchor": {"repo": bareS, "ref": "refs/remotes/origin/main"}})
+    expect("SHALLOW depth-1 checkout of activated history -> REFUSED (ACTIVATION_COMMIT_MISSING)",
+           stSh == "REFUSED" and "ACTIVATION_COMMIT_MISSING" in (evSh.get("faults") or []))
+    shutil.rmtree(trS); shutil.rmtree(shallow.parent)
 except FileNotFoundError as e:
     expect(f"production operand/proposal/report present: {e}", False)
 
