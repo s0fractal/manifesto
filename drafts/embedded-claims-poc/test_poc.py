@@ -35,6 +35,8 @@ CASES = {
     "fixtures/invalid/combined-verifier-stale-mismatch.md": ("UNVERIFIED", "UNTIED", ["VERIFIER_MISMATCH", "DEPENDENCY_STALE", "RESULT_MISMATCH"], None),
     "fixtures/invalid/stdout-same-effect-different.md": ("MISMATCH",   "UNTIED",   ["RESULT_MISMATCH"], "stdout-only digest WOULD have matched"),
     "fixtures/invalid/effect-short-digest.md":          ("UNVERIFIED", "UNTIED",   ["RESULT_UNSETTLED"], "malformed effect"),
+    "fixtures/invalid/capsule-unknown-field.md":        ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], "unknown field capsule.surprise"),
+    "fixtures/invalid/capsule-dup-key.md":              ("UNVERIFIED", "UNTIED",   ["CAPSULE_INVALID"], "duplicate object key"),
     "fixtures/limits/effect-invisible-effect.md":       ("REPLAYED",   "UNTIED",   ["RESULT_MATCH"], None),
 }
 
@@ -114,8 +116,23 @@ def main():
           + "effect path is Sigma-independent (runs under python -S)")
     failures += 0 if indep_ok else 1
 
+    # phase 2: canonicalization is deterministic, domain-separated, fail-closed
+    import canonical as C
+    b = {"a": 1, "b": [2, 3], "t": True}
+    canon_ok = (C.record_id("claim", b) == C.record_id("claim", b)
+                and C.record_id("claim", b) != C.record_id("plan", b))
+    for bad in (lambda: C.canonicalize({"x": 1.0}),
+                lambda: C.loads_strict('{"a":1,"a":2}')):
+        try:
+            bad(); canon_ok = False
+        except C.CanonicalError:
+            pass
+    print(("ok   " if canon_ok else "FAIL ")
+          + "canonical: deterministic + domain-separated + rejects float/dup-key")
+    failures += 0 if canon_ok else 1
+
     print(f"\n{'ALL PASS' if failures == 0 else str(failures) + ' FAILED'} "
-          f"({len(CASES)} fixtures + 4 invariants)")
+          f"({len(CASES)} fixtures + 5 invariants)")
     return 0 if failures == 0 else 1
 
 

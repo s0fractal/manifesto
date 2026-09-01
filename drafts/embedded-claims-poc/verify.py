@@ -28,6 +28,13 @@ missing/wrong pin ⇒ UNVERIFIED; independent execution facts; binding clamped t
 ASSERTED; distinct claim/plan/result identities; REPORT (not receipt) with a body
 commitment; effect settles on observed post-state, not stdout.
 
+PHASE 2 (step 1): the capsule is parsed by canonical.loads_strict (duplicate keys
+rejected) and validated against a CLOSED schema (schema.validate_capsule) — an
+unknown field or bad shape is CAPSULE_INVALID and fails closed, never ignored. The
+body commitment is taken through the single canonicalization authority
+(canonical.canonicalize). Canonicalization/hash decisions (§17 #1/#2) are pinned in
+canonical.py.
+
 A fixture is Markdown with one inline claim ⟦class: payload⟧ and an optional fenced
 ```json capsule of AUTHOR ASSERTIONS (pinned verifier, dependency for freshness,
 the evaluation_id the author bets on, a semantic binding). Assertions are claims,
@@ -46,7 +53,10 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOOLS = os.path.normpath(os.path.join(HERE, "..", "..", "tools"))
 sys.path.insert(0, TOOLS)
+sys.path.insert(0, HERE)
 from sigma_boundary import sigma    # noqa: E402  (import is safe; sigma() resolves lazily)
+import canonical                     # noqa: E402  (closed canonicalization + record IDs)
+import schema                        # noqa: E402  (closed capsule schema)
 # settle_gate is imported LAZILY inside verify_file: importing it pulls glyphlib,
 # whose module-level `sg = sigma()` would resolve the evaluator for EVERY class.
 # The effect path must not depend on Sigma, so it never imports settle_gate.
@@ -225,7 +235,15 @@ def verify_file(path):
         return {"error": "no inline ⟦class: payload⟧ claim found"}
     cls, payload = cm.group(1), cm.group(2).strip()
     capm = CAPSULE.search(text)
-    capsule = json.loads(capm.group(1)) if capm else {}
+    capsule, capsule_errors = {}, []
+    if capm:
+        try:
+            parsed = canonical.loads_strict(capm.group(1))   # rejects duplicate keys
+            capsule_errors = schema.validate_capsule(parsed)  # closed schema
+            if not capsule_errors:
+                capsule = parsed                              # trust only a clean capsule
+        except canonical.CanonicalError as e:
+            capsule_errors = [str(e)]
 
     if cls == "effect":
         res = settle_effect(payload)               # no settle_gate, no Sigma
@@ -238,6 +256,10 @@ def verify_file(path):
 
     # --- P1-4: independent facts, computed unconditionally, hidden by nothing --
     facts, notes = [], []
+    if capsule_errors:
+        facts.append("CAPSULE_INVALID")
+        for e in capsule_errors:
+            notes.append("capsule schema: " + e)
     pin = capsule.get("verifier")
     if not pin:
         facts.append("VERIFIER_MISSING")
@@ -279,7 +301,7 @@ def verify_file(path):
     # summary over the facts, fail-closed, highest severity first
     verifier_bad = {"VERIFIER_MISSING", "VERIFIER_MISMATCH"} & set(facts)
     dep_hard = {"DEPENDENCY_MISSING", "DEPENDENCY_PATH_MISMATCH"} & set(facts)
-    if verifier_bad or dep_hard:
+    if verifier_bad or dep_hard or "CAPSULE_INVALID" in facts:
         execution = "UNVERIFIED"
     elif "RESULT_UNSETTLED" in facts:
         execution = "DECLARED"
@@ -328,9 +350,7 @@ def commit(body):
     with `commitment` excluded. Not yet a receipt — no replay-verifier — but field
     mutation is now detectable."""
     core = {k: v for k, v in body.items() if k != "commitment"}
-    return "sha256:" + hashlib.sha256(
-        json.dumps(core, ensure_ascii=False, sort_keys=True,
-                   separators=(",", ":")).encode()).hexdigest()
+    return "sha256:" + hashlib.sha256(canonical.canonicalize(core)).hexdigest()
 
 
 def render(report):

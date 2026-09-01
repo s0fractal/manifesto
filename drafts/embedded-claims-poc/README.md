@@ -1,21 +1,23 @@
-# embedded-claims PoC — phase 1 (rev 3)
+# embedded-claims PoC — phase 1 (rev 3) + phase 2 step 1
 
 A working core for the embedded-claims design
 ([ARCHITECTURE-0.1](../EMBEDDED-CLAIMS-ARCHITECTURE-0.1.md) +
 [REVIEW-0.1](../EMBEDDED-CLAIMS-REVIEW-0.1.md)). Working-core-first, not a full
 ontology: it exercises the accepted review deltas on real fixtures and stops.
 
-**Status:** phase-1 PoC, rev 3 after two Codex review passes. Rev 2 closed two P0
-identity bugs; rev 3 closes a third P0 (world claims must pin their dependency)
-plus verifier-closure, effect-digest, and result-identity findings. NOT a spec,
-NOT a conformance certificate, NOT a claim of full closure. Passing fixtures show
-the deltas behave as intended on these cases — nothing more.
+**Status:** phase-1 PoC (rev 3, after two Codex review passes) plus phase-2 step 1
+(closed canonicalization + closed capsule schema). Rev 2 closed two P0 identity
+bugs; rev 3 closed a third P0 (world claims must pin their dependency) plus
+verifier-closure, effect-digest, and result-identity findings; phase-2 step 1 adds
+fail-closed capsule parsing and pinned record identities. NOT a spec, NOT a
+conformance certificate, NOT a claim of full closure. Passing fixtures show the
+deltas behave as intended on these cases — nothing more.
 
 ## What it demonstrates
 
 A fixture is Markdown with one inline claim `⟦class: payload⟧` and an optional
 fenced ` ```json capsule ` of AUTHOR ASSERTIONS: the pinned verifier, a dependency
-for freshness, the `result_id` the author bets on, a semantic binding. Assertions
+for freshness, the `evaluation_id` the author bets on, a semantic binding. Assertions
 are **claims, not verdicts**. `verify.py` recomputes and reports on two axes:
 
 ```
@@ -36,6 +38,15 @@ Identity is split so no field carries two meanings: `claim_id` (predicate),
 `plan_id` (claim+verifier), `dependency_id` (world bytes read — freshness, not an
 address), `result_value_id` (the canonical result value), and `evaluation_id`
 (claim-bound: claim+plan+dependency+value+verdict — the address the author pins).
+
+**Phase 2 step 1 (canonicalization + closed schema).** The capsule is parsed by
+`canonical.loads_strict` (duplicate keys rejected) and validated against a **closed
+schema** (`schema.py`, `additionalProperties: false`): an unknown field or bad shape
+is `CAPSULE_INVALID` and fails closed. `canonical.py` pins the §17 decisions —
+a closed custom JSON profile (sorted keys, `(",",":")`, UTF-8, no floats/dup-keys),
+SHA-256, domain-separated record IDs (§8.1). JCS/RFC 8785 stays a later, reversible
+choice; not adopted. Both modules are stdlib-only, so the CI gate needs no package
+beyond the evaluator.
 
 `verify.py` is a thin layer over the existing engine (`tools/settle_gate.py`,
 `glyphlib.py`, and the real Σ-GLYPH runtime) — no new runtime.
@@ -80,14 +91,16 @@ Then:
 
 ```sh
 cd drafts/embedded-claims-poc
-../../.venv/bin/python test_poc.py                       # 17 fixtures + 4 invariants
+../../.venv/bin/python test_poc.py                       # 19 fixtures + 5 invariants
 ../../.venv/bin/python verify.py fixtures/valid/arith-self.md   # one fixture, human report
 ```
 
 `test_poc.py` exits 0 iff every fixture lands on its exact `(execution, binding)`
-and required facts, AND three invariants hold: identity does not alias
-(world-same-input), the report is byte-deterministic across runs, and the body
-commitment detects field mutation.
+and required facts, AND five invariants hold: identity does not alias
+(world-same-input), the report is byte-deterministic across runs, the body
+commitment detects field mutation, the effect path is Sigma-independent (runs under
+`python -S`), and canonicalization is deterministic + domain-separated + rejects
+floats/duplicate-keys.
 
 ## What actually stood up (verified)
 
@@ -108,10 +121,12 @@ commitment detects field mutation.
   write-then-delete side effect, because nothing survives in the observed tree —
   and writes outside the dir, network calls, and metadata changes are equally
   invisible. The credit is "observed post-state differs", never "effects enforced".
-- **No canonicalization / hash / info-string pinned** (§17 #1/#2/#4). Phase 1 uses
-  the runtime's native hashing and hand-written capsules. A general Markdown
-  parser + closed schema + canonical record IDs is phase 2, and every `record_id`
-  depends on those three decisions — the current shapes are NOT stable.
+- **Canonicalization + hash pinned (phase 2 step 1); full parser still pending.**
+  `canonical.py` fixes the closed JSON profile and SHA-256 domain-separated record
+  IDs (§17 #1/#2); the info-string stays `json capsule` (#4). What remains: a
+  general Markdown parser that finds capsules structurally (not by regex), the
+  capsule→records compiler, and conformance vectors. Record shapes are stabilizing
+  but not frozen.
 - **Verifier closure is code, not environment.** The identities digest the `.py`
   files on the settlement path — dispatch/renderer (`verify.py`), gate, glyphlib,
   resolver (`sigma_boundary.py`), and evaluator — but NOT the interpreter build,
@@ -133,12 +148,14 @@ commitment detects field mutation.
 ```
 verify.py       thin verifier: 2 axes + facts + identity block + verifier closure
                 + freshness + binding clamp + D6 effect (observed post-state)
-test_poc.py     16 fixtures + 3 invariants (aliasing, determinism, mutation)
+canonical.py    closed JSON canonicalization + domain-separated record IDs (§17 #1/#2)
+schema.py       closed capsule schema (additionalProperties:false), stdlib-only
+test_poc.py     19 fixtures + 5 invariants (aliasing, determinism, mutation, -S, canonical)
 fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
 fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
                     world-path-mismatch, wrong-verifier, missing-verifier,
                     wrong-binding, self-declared-reviewed, mismatch-result-address,
                     combined-verifier-stale-mismatch, stdout-same-effect-different,
-                    effect-short-digest
+                    effect-short-digest, capsule-unknown-field, capsule-dup-key
 fixtures/limits/    effect-invisible-effect   (a demonstrated blind spot)
 ```
