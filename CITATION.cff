@@ -1,17 +1,23 @@
 cff-version: 1.2.0
-title: "Manifesto: protocols for digital existence — with a measured reflexive verification bound"
+title: "Manifesto: protocols for digital existence — with a measured verifier-reported verification load"
 abstract: >-
   An open ontology for digital entities (experience, responsibility,
-  identity) that grew a measured research line: the reflexive verification
-  bound (health condition λ_G < (1−μ)λ_V; phase transition at μ = 1;
-  delegation-invariant anchor), the coefficient μ measured for LLM
-  verifiers (≈2–3 on informal claims at every depth probed, ≈0.14 on
-  well-founded controls, 0 for claims compiled to deterministic checks), a
-  settlement gate that catches and repairs generator hallucinations with
-  priced receipts, an evidence pack sealing the episode as re-executable
-  decision records, and the addressing-is-equality idiom with its measured
-  five-orders cost asymmetry. Papers in papers/ carry claims checkers that
-  recount their figures from the repository.
+  identity) that grew a measured research line. The earlier "reflexive
+  verification bound" (a stability condition λ_G < (1−μ)λ_V with a phase
+  transition at μ = 1) is RETIRED: its closed forms are refuted by scheduler
+  counterexamples (papers/every-check-spawns-more, claim C6) and it is not a
+  claim of this work. What is measured is ô, the verifier-reported offspring
+  count per verification act, on a single LLM monologue corpus: ≈2–3 over
+  sampled paths to depth 4 (finite-depth, not asymptotic) and ≈0.14 on
+  termination controls; one claim compiled to a deterministic, budget-priced
+  check has a terminal sub-act with zero emitted prose obligations, on a
+  separate axis from ô (not "μ = 0"). Also: a settlement gate that catches
+  generator hallucinations with priced receipts; an evidence pack; and the
+  addressing-is-equality incident-and-repair note (a measured cost gap plus an
+  executable soundness counterexample; equality by address holds only on an
+  admitted profile, and the draft profile refuses the motivating case). Papers
+  in papers/ carry claim ledgers with typed falsifiers and checkers that
+  recount their figures from the repository. Nothing is deposited yet.
 message: "If you use or evaluate this work, please cite it."
 type: software
 license: AGPL-3.0-only
@@ -27,7 +33,7 @@ authors:
 keywords:
   - verification
   - LLM agents
-  - reflexive verification bound
+  - verifier-reported verification load
   - settlement
   - content-addressed computation
   - digital ontology
