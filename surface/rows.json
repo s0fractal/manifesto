@@ -1,46 +1,82 @@
-[
-  {
-    "id": "badge-addresses-recomputed",
-    "class": "operational",
-    "statement": "The addresses pinned by ts-sigma/replayable-badge.html are reproduced by an independent Python route from the node layout, not from the page's own JavaScript.",
-    "check": ["python3", "tools/badge_addresses_check.py"],
-    "falsifier": "a pinned address the Python route does not reproduce"
-  },
-  {
-    "id": "mission-accepted-2026-08-30",
-    "class": "normative",
-    "statement": "MISSION.md is the operator-accepted direction, decomposed by typology 0041; the Purpose slot belongs to the operator alone.",
-    "authority": "MISSION.settled.md",
-    "scope": "project direction only; not a gate for any other repository",
-    "revocation": "the operator rewrites MISSION.md as a new class-(c) act"
-  },
-  {
-    "id": "mission-receipt-resettle",
-    "class": "intent",
-    "statement": "MISSION.receipt.json is stale against current README.md (receipt_freshness 0/1 fresh on 2026-09-03); re-settle it.",
-    "review_trigger": "before MISSION.settled.md is cited for README wording",
-    "expiry": null
-  },
-  {
-    "id": "sev-loss-manifest-needs-home",
-    "class": "intent",
-    "statement": "The loss_manifest invariant (a projection states what it cannot express or verify) has no live home after SEV's archival; census 09, row sev.",
-    "review_trigger": "before any further archive act, or when the next projection artifact appears",
-    "expiry": "2026-12-31"
-  },
-  {
-    "id": "multi-model-raid-promised",
-    "class": "intent",
-    "statement": "A multi-model raid on the manifesto attack surface was promised (MISSION Obligations, 2026-08-30) and has not been run.",
-    "review_trigger": null,
-    "expiry": "2026-10-31"
-  },
-  {
-    "id": "sev-projection-repo",
-    "class": "retired",
-    "statement": "SEV repository archived 2026-09-02 (RETIREMENT.md, protocol-ecosystem historical row).",
-    "mode": "ARCHIVED",
-    "loss": "the loss_manifest invariant has no live home with its falsifier",
-    "successor": "sev-loss-manifest-needs-home"
-  }
-]
+{
+  "profile": "manifesto.active-surface@v0.1",
+  "as_of": "2026-09-03",
+  "rows": [
+    {
+      "id": "badge-addresses-recomputed",
+      "class": "operational",
+      "statement": "The addresses pinned by ts-sigma/replayable-badge.html are reproduced by an independent Python route from the node layout, not from the page's own JavaScript.",
+      "sources": [
+        {"path": "ts-sigma/replayable-badge.html", "sha256": "ac89f65df55c076286de7007632e16866fe4c4bad7b020659278c74373bfc9ef"},
+        {"path": "tools/badge_addresses_check.py", "sha256": "7513a04a6c6631f35bd6e8cecc9b47c2ed70dc710e377a6f087435de977ba635"}
+      ],
+      "check": {
+        "argv": ["python3", "tools/badge_addresses_check.py"],
+        "entrypoint": {"path": "tools/badge_addresses_check.py", "sha256": "7513a04a6c6631f35bd6e8cecc9b47c2ed70dc710e377a6f087435de977ba635"}
+      },
+      "falsifier": "a pinned address the Python route does not reproduce"
+    },
+    {
+      "id": "mission-accepted-2026-08-30",
+      "class": "normative",
+      "statement": "MISSION.md is the operator-accepted direction, decomposed by typology 0041; the Purpose slot belongs to the operator alone.",
+      "sources": [
+        {"path": "MISSION.md", "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"},
+        {"path": "MISSION.receipt.json", "sha256": "4bf9310690b0b382498c9cdc36712d6667b8189e08c1bbdd7edaefa5df517ce4"}
+      ],
+      "authority": {"path": "MISSION.settled.md", "sha256": "222fe6b87e6a38c4d5c0bc54e7fdc0cc3a60b58fc33bd1f24bb315ed655a8ec3"},
+      "scope": "project direction only; not a gate for any other repository",
+      "revocation": "the operator rewrites MISSION.md as a new class-(c) act",
+      "adopted": "2026-08-30",
+      "by": "s0fractal (operator), recorded class-(c) act"
+    },
+    {
+      "id": "mission-receipt-resettle",
+      "class": "intent",
+      "statement": "MISSION.receipt.json is stale against current README.md (receipt_freshness 0/1 fresh on 2026-09-03); re-settle it.",
+      "sources": [
+        {"path": "MISSION.receipt.json", "sha256": "4bf9310690b0b382498c9cdc36712d6667b8189e08c1bbdd7edaefa5df517ce4"},
+        {"path": "tools/receipt_freshness.py", "sha256": "bc4fd5d39c624bb4fbbafbcb95b17c5ee1de2bce1d960727ca51adc6a32106b6"}
+      ],
+      "origin": "python3 tools/receipt_freshness.py MISSION.receipt.json on 2026-09-03",
+      "review_trigger": "before MISSION.settled.md is cited for README wording",
+      "expiry": null
+    },
+    {
+      "id": "sev-loss-manifest-needs-home",
+      "class": "intent",
+      "statement": "The loss_manifest invariant has no live home after SEV's archival.",
+      "sources": [
+        {"locator": "trajectory-audit-fable-5.1-2026-09/09-INVARIANT-CENSUS.md, row sev", "note": "outside this repository; address only, not verified evidence"}
+      ],
+      "origin": "trajectory audit invariant census 09, first pass",
+      "review_trigger": "before another portfolio archive act or the next projection artifact",
+      "expiry": "2026-12-31"
+    },
+    {
+      "id": "multi-model-raid-promised",
+      "class": "intent",
+      "statement": "A multi-model raid on the manifesto attack surface was promised and has not been run.",
+      "sources": [
+        {"path": "MISSION.md", "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"}
+      ],
+      "origin": "MISSION.md Obligations, 2026-08-30",
+      "review_trigger": null,
+      "expiry": "2026-10-31"
+    },
+    {
+      "id": "sev-projection-repo",
+      "class": "retired",
+      "statement": "SEV repository was archived on 2026-09-02 and removed from the active project surface.",
+      "sources": [
+        {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external historical locator; not verified by this repository"},
+        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "1c9669627e94a4623f0c173d3d12001eaf9f1e3b308babd66b8dc715b8856d31"}
+      ],
+      "mode": "ARCHIVED",
+      "retired_on": "2026-09-02",
+      "loss": "the loss_manifest invariant has no live home with its falsifier",
+      "successor": "sev-loss-manifest-needs-home",
+      "record": {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external retirement record; address only"}
+    }
+  ]
+}

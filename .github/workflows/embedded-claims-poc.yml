@@ -39,6 +39,14 @@ jobs:
           python3 tools/embedded_claims_surface_check.py --selftest
           python3 tools/embedded_claims_surface_check.py
 
+      # This is a small orientation surface, not a document truth badge. Each
+      # row carries one typed predicate; exact in-repo operands are digest-bound,
+      # intent/retirement carry no credit, and output stays a per-row vector.
+      - name: Declared active surface (typed evidence, no semantic badge)
+        run: |
+          python3 tools/active_surface.py --selftest
+          python3 tools/active_surface.py
+
       # The explicitly legacy inline harness remains as negative evidence. Its
       # 22 fixtures + 5 invariants reproduce from a clean installation. This is
       # not an alternative authoring route: canonical authoring is capsule-only.
