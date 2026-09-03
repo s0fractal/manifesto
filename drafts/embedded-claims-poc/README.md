@@ -1,201 +1,154 @@
-# embedded-claims PoC — phase 1 (rev 3) + phase 2 step 1
+# Embedded claims — current operational surface
 
-A working core for the embedded-claims design
-([ARCHITECTURE-0.1](../EMBEDDED-CLAIMS-ARCHITECTURE-0.1.md) +
-[REVIEW-0.1](../EMBEDDED-CLAIMS-REVIEW-0.1.md)). Working-core-first, not a full
-ontology: it exercises the accepted review deltas on real fixtures and stops.
+**Status:** implemented research pipeline, capsule-only. This is the current
+operational description of the code in this directory. It is not a protocol
+standard, a proof of semantic adequacy, or a document-level truth badge.
 
-**Status:** phase-1 PoC (rev 3, after two Codex review passes) plus phase-2 step 1
-(closed canonicalization + closed capsule schema). Rev 2 closed two P0 identity
-bugs; rev 3 closed a third P0 (world claims must pin their dependency) plus
-verifier-closure, effect-digest, and result-identity findings; phase-2 step 1 adds
-fail-closed capsule parsing and pinned record identities. NOT a spec, NOT a
-conformance certificate, NOT a claim of full closure. Passing fixtures show the
-deltas behave as intended on these cases — nothing more.
+Historical design drafts and the pre-pivot parser threat model were removed from
+the default surface by the bounded retirement recorded in
+[`../EMBEDDED-CLAIMS-RETIREMENT-0.1.md`](../EMBEDDED-CLAIMS-RETIREMENT-0.1.md).
+They remain retrievable from Git with their retirement status.
 
-## What it demonstrates
+## Canonical route
 
-A fixture is Markdown with one inline claim `⟦class: payload⟧` and an optional
-fenced ` ```json capsule ` of AUTHOR ASSERTIONS: the pinned verifier, a dependency
-for freshness, the `evaluation_id` the author bets on, a semantic binding. Assertions
-are **claims, not verdicts**. `verify.py` recomputes and reports on two axes:
-
-```
-execution ∈ {REPLAYED, MISMATCH, STALE, UNVERIFIED, DECLARED}
-binding   ∈ {UNTIED, ASSERTED}          (REVIEWED/CONTESTED need a review record)
+```text
+explicit document
+  → exact live region
+  → fenced json capsule.v2 containing its claim
+  → PARSE
+  → COMPILE into a self-contained addressed bundle
+  ── epistemic membrane ──
+  → RUN each record
+  → vector REPORT
 ```
 
-Execution is a **summary over independent facts** (`execution_facts`), so several
-faults at once are all visible, not hidden by which check fired first:
+The canonical route is **CAPSULE-ONLY**:
 
-```
-VERIFIER_MISSING · VERIFIER_MISMATCH
-DEPENDENCY_MISSING · DEPENDENCY_PATH_MISMATCH · DEPENDENCY_STALE
-RESULT_MATCH · RESULT_MISMATCH · RESULT_UNSETTLED · ADDRESS_MISMATCH
-```
+- a file is processed only when explicitly named; there is no repository sweep;
+- machine eligibility exists only inside exact
+  `manifesto-claims:begin/end` markers;
+- the exact fence opener is ` ```json capsule `;
+- the closed `manifesto.capsule.v2` body contains `claim.local_id`,
+  `claim.class`, and `claim.payload`;
+- prose outside a live capsule is inert, including claims, metaphors, examples,
+  values, and marketing language;
+- an inline `⟦class: payload⟧` expression is **LEGACY-NONCANONICAL** and never
+  receives credit through this route.
 
-Identity is split so no field carries two meanings: `claim_id` (predicate),
-`plan_id` (claim+verifier), `dependency_id` (world bytes read — freshness, not an
-address), `result_value_id` (the canonical result value), and `evaluation_id`
-(claim-bound: claim+plan+dependency+value+verdict — the address the author pins).
+The format makes an authorial verification request explicit. It does not infer
+what surrounding prose “really claims”.
 
-**Phase 2 step 1 (canonicalization + closed schema).** The capsule is parsed by
-`canonical.loads_strict` (duplicate keys rejected) and validated against a **closed
-schema** (`schema.py`, `additionalProperties: false`): an unknown field or bad shape
-is `CAPSULE_INVALID` and fails closed. `canonical.py` pins the §17 decisions —
-a closed custom JSON profile (sorted keys, `(",",":")`, UTF-8, no floats/dup-keys),
-SHA-256, domain-separated record IDs (§8.1). JCS/RFC 8785 stays a later, reversible
-choice; not adopted. Both modules are stdlib-only, so the CI gate needs no package
-beyond the evaluator.
+## Layer boundaries
 
-`verify.py` is a thin layer over the existing engine (`tools/settle_gate.py`,
-`glyphlib.py`, and the real Σ-GLYPH runtime) — no new runtime.
-
-| Δ / property | what | fixture |
+| Layer | Input → output | What it cannot claim |
 |---|---|---|
-| D1 | self-contained inline claim, address = result_id, **no CAS** | `valid/arith-self.md` |
-| D2 | execution never upgrades binding | `invalid/wrong-binding.md` |
-| D3 / P0-1 | verifier identity is a **per-class code closure** (dispatch + resolver included); missing OR wrong pin ⇒ no replay credit | `invalid/missing-verifier.md`, `invalid/wrong-verifier.md` |
-| P0 (rev 3) | world classes **require** an exact `path`+`digest` dependency pin; missing/wrong path ⇒ no replay credit | `invalid/world-missing-dep.md`, `invalid/world-path-mismatch.md` |
-| P0-2 / P2 | input digest is `dependency_id`, not an address; `result_value_id` (value) and `evaluation_id` (claim-bound) are separate; distinct predicates get distinct `claim_id`/`evaluation_id` | `valid/world-claim-a.md` + `-b.md` |
-| P1-4 | raw capsule may only `ASSERTED`; self-declared `REVIEWED` is clamped | `invalid/self-declared-reviewed.md` |
-| P1-4 | independent facts, nothing hidden by if-order | `invalid/combined-verifier-stale-mismatch.md` |
-| P2-6 | false claim cannot borrow a true claim's address (evaluation_id binds verdict + both normal forms via result_value_id) | `invalid/mismatch-result-address.md` |
-| D6 | effects settle on observed post-state, not stdout | `invalid/stdout-same-effect-different.md` |
-| P1-5 | …and post-state observation is NOT enforcement (blind spot) | `limits/effect-invisible-effect.md` |
-| freshness | pinned dependency changed ⇒ STALE, never silent green | `invalid/stale-dependency.md` |
-| — | false claim caught (raw→MISMATCH) | `invalid/expected-mismatch.md` |
-| — | world claim + semantic binding, replayable | `valid/repo-count.md` |
+| `parser.py` | named Markdown bytes → regions, capsule spans, `VALID/INVALID/INERT` | schema validity, execution |
+| `compiler.py` | `VALID` parse report → strict capsule.v2 → addressed, self-contained records | replay or truth |
+| `runner.py` | `COMPILED` bundle → one execution result per record | document-level verdict |
+| `claims.py` | orchestration of parse → compile → run | new verification semantics |
+
+The runner rechecks every record identity and link before invoking an evaluator.
+A malformed or incoherently mutated bundle is refused before execution. A
+coherently rebuilt schema-valid bundle is a new bundle; authenticity requires an
+external commitment or receipt and is not claimed here.
+
+## Status and credit boundary
+
+Execution results are per-record:
+
+```text
+REPLAYED | MISMATCH | STALE | UNVERIFIED | DECLARED
+```
+
+Binding remains separate:
+
+```text
+UNTIED | ASSERTED
+```
+
+Execution never upgrades a binding. A document receives **NO DOCUMENT-LEVEL
+VERDICT**: several `REPLAYED` records do not make their composition true, safe,
+legal, complete, or semantically adequate. `--strict` is only an exit-code policy
+over a non-empty vector; the JSON output remains per-record.
+
+## Canonicalization and identities
+
+`canonical.py` pins the implemented closed JSON profile:
+
+- sorted Unicode-code-point keys and compact separators;
+- UTF-8 without BOM;
+- duplicate keys, floats, lone surrogates, and out-of-range integers refused;
+- SHA-256 record IDs with domain separation.
+
+The compiler separates claim, plan, dependency, binding, occurrence, capsule,
+result-value, and evaluation identities. In particular:
+
+- changing dependency bytes rotates the dependency and plan;
+- identical values may share a value identity;
+- distinct predicates cannot share an evaluation identity merely because their
+  observed value is equal;
+- occurrence identity binds document digest plus exact source span;
+- binding identity is claim-bound.
+
+The parser identity binds the installed `markdown-it-py==4.2.0` and
+`mdurl==0.1.2` package bytes plus the hash-locked dependency file. Settlement
+verifier identities bind the verdict-determining Python closure and the released
+`sigma-glyph==0.6.7` evaluator bytes. They do not bind the interpreter build or
+operating system.
 
 ## Run
 
-The Σ-GLYPH runtime is consumed as a **version-pinned released package**. The
-fixture verifier-identities are a code closure that includes the evaluator's
-bytes, so they are pinned against `sigma-glyph==0.6.7` — the same version the CI
-gate (`.github/workflows/embedded-claims-poc.yml`) installs. One-time setup (the
-venv is gitignored):
+From the repository root:
 
 ```sh
-# from the manifesto repo root
 python3 -m venv .venv
-.venv/bin/pip install "sigma-glyph==0.6.7"          # the pinned, reproducible evaluator
+.venv/bin/pip install "sigma-glyph==0.6.7"
+.venv/bin/pip install --require-hashes \
+  -r drafts/embedded-claims-poc/requirements-parser.lock
+
+.venv/bin/python drafts/embedded-claims-poc/claims.py run \
+  drafts/EMBEDDED-CLAIMS-E2E-0.1.md
+.venv/bin/python drafts/embedded-claims-poc/claims.py run --strict \
+  drafts/EMBEDDED-CLAIMS-E2E-0.1.md
 ```
 
-Bumping Sigma is deliberate: a different evaluator changes the closure digest, so
-the glyph/settle-gate fixtures go UNVERIFIED until the pins are recomputed. That
-is the closure discipline working, not a flake. Verifier ids are **path-independent**
-(the closure is sorted by content digest, not by file path), so any 0.6.7 install
-— any venv, any machine, CI — reproduces the same ids.
+The live specimen contains one world claim that counts a pinned snapshot of the
+root README headings. `REPLAYED` establishes only that count under that regex,
+dependency snapshot, and verifier closure.
 
-Then:
+The executable oracles are:
 
 ```sh
-cd drafts/embedded-claims-poc
-../../.venv/bin/python test_poc.py                       # 22 fixtures + 5 invariants
-../../.venv/bin/python verify.py fixtures/valid/arith-self.md   # one fixture, human report
+.venv/bin/python tools/embedded_claims_surface_check.py
+.venv/bin/python tools/embedded_claims_surface_check.py --selftest
+.venv/bin/python drafts/embedded-claims-poc/test_poc.py
+.venv/bin/python drafts/embedded-claims-poc/test_parser.py
+.venv/bin/python drafts/embedded-claims-poc/test_compiler.py
+.venv/bin/python drafts/embedded-claims-poc/test_runner.py
+.venv/bin/python drafts/embedded-claims-poc/test_cli.py
 ```
 
-**Pivot (step 3b):** the canonical pipeline is **capsule-only** — the parser grants
-machine credit only to an explicit `json capsule` inside a live region, and the capsule
-CONTAINS its claim. The inline `⟦…⟧` form above (`verify.py`, the 22 fixtures) is now
-LEGACY authoring / the settlement core, not the canonical extraction path; it is not
-auto-migrated. See `PARSER-THREAT-MODEL.md` and `fixtures/adversarial/EXPECTED.md`.
+The CI workflow runs the same layers against a clean installation and requires a
+non-empty exact-scope end-to-end result.
 
-The PARSE layer (step 3b) needs pinned Markdown deps (this ends the stdlib-only
-property, deliberately, for the parser):
+## Preserved legacy substrate
 
-```sh
-.venv/bin/pip install --require-hashes -r drafts/embedded-claims-poc/requirements-parser.lock
-../../.venv/bin/python test_parser.py     # 13 PARSE specimens (capsule-only) over fixtures/adversarial/
-../../.venv/bin/python parser.py fixtures/adversarial/02-multiple-claims.md   # one file
-```
+`verify.py`, `settle_core.py`, `schema.py`, and `fixtures/{valid,invalid,limits}`
+form the earlier inline phase-1 harness. It remains executable because it carries
+useful negative evidence: freshness, wrong binding, verifier mismatch, state
+observation, and the demonstrated write-then-delete blind spot. It is not an
+alternative authoring standard and does not feed the capsule-only parser.
 
-End-to-end on a real document — the whole chain in one command:
+This boundary is deliberate: preserving a falsifier is not the same as admitting
+its old syntax as current precedent.
 
-```sh
-../../.venv/bin/python claims.py run ../EMBEDDED-CLAIMS-E2E-0.1.md          # JSON vector REPORT
-../../.venv/bin/python claims.py run --strict ../EMBEDDED-CLAIMS-E2E-0.1.md # exit 0 iff all REPLAYED
-```
+## Honest limits
 
-`drafts/EMBEDDED-CLAIMS-E2E-0.1.md` carries one world capsule (count of README thesis
-headings, pinned to a README snapshot). Its `REPLAYED` addresses only the heading count
-for that regex + snapshot — it does not green the theses or README, and the document gets
-no global verdict. Deliberately NOT placed inside README.md (a capsule pinning README's
-own digest would be self-hash recursion).
-
-`test_poc.py` exits 0 iff every fixture lands on its exact `(execution, binding)`
-and required facts, AND five invariants hold: identity does not alias
-(world-same-input), the report is byte-deterministic across runs, the body
-commitment detects field mutation, the effect path is Sigma-independent (runs under
-`python -S`), and canonicalization rejects floats/dup-keys/surrogates/big-ints.
-
-## What actually stood up (verified)
-
-- Σ-GLYPH really reduces `74+1=75 → e0419…`; the self-contained address recomputes.
-- A stale dependency is never silently green.
-- A correct execution does not upgrade a wrong binding.
-- The post-state fixture shows convincingly why stdout is insufficient.
-- Distinct predicates over one file no longer alias to one address.
-- Reports are byte-deterministic; the commitment catches mutation.
-
-## What this PoC does NOT establish (honest boundary)
-
-- **`REPORT`, not a receipt.** The printout carries a body commitment (mutation is
-  detectable), but there is no replay-verifier, no committed capsule bytes, no
-  gate/profile version binding. It is called `REPORT` on purpose.
-- **Effects are OBSERVED, not enforced (P1-5).** A `TemporaryDirectory` is not a
-  sandbox. `limits/effect-invisible-effect.md` settles REPLAYED despite a real
-  write-then-delete side effect, because nothing survives in the observed tree —
-  and writes outside the dir, network calls, and metadata changes are equally
-  invisible. The credit is "observed post-state differs", never "effects enforced".
-- **Canonicalization + hash pinned (phase 2 step 1); full parser still pending.**
-  `canonical.py` fixes the closed JSON profile and SHA-256 domain-separated record
-  IDs (§17 #1/#2); the info-string stays `json capsule` (#4). What remains: a
-  general Markdown parser that finds capsules structurally (not by regex), the
-  capsule→records compiler, and conformance vectors. Record shapes are stabilizing
-  but not frozen.
-- **Verifier closure is code, not environment.** The identities digest the `.py`
-  files that determine a verdict — the verdict core (`settle_core.py`),
-  `canonical.py`, `schema.py`, gate, glyphlib, resolver (`sigma_boundary.py`), and
-  evaluator. `verify.py` (CLI + renderer) is deliberately **out** of the closure, so
-  editing a docstring or a print never rotates a verifier id. The closure omits the
-  interpreter build,
-  OS, or editable-package/import state. That closure is deliberately open, and the
-  identity claim is scoped to code accordingly. The engine is **lazy-loaded**: the
-  effect path imports neither `settle_gate` nor Sigma (`effect-sandbox://` runs
-  under `python -S` with no Sigma package — a suite invariant); every non-effect
-  class shares one bootstrap import, and its whole closure is bound into the ID.
-- **Effect address is display-strict but not enforced.** An identity-bearing
-  effect commitment now requires a full 64-hex digest (an 8-hex prefix no longer
-  earns credit), but see the enforcement limit above.
-- **Semantic adequacy is open.** REPLAYED establishes only the content-address,
-  never that the claim supports the prose. `binding` stays separate by construction.
-- **Not a distributed-trust system.** Single operator, deterministic runtimes.
-- **Does not certify its own design.** These fixtures are not independent validation.
-
-## Files
-
-```
-verify.py       CLI + renderer (OUT of the verifier closure)
-settle_core.py  the verdict core: parse/schema/dispatch/identities/facts (IN closure)
-                + freshness + binding clamp + D6 effect (observed post-state)
-canonical.py    closed JSON canonicalization + domain-separated record IDs (§17 #1/#2)
-schema.py       closed capsule schema (additionalProperties:false), stdlib-only
-parser.py       PARSE layer (step 3b): pinned CommonMark + protocol profile over raw spans
-requirements-parser.lock   hash-locked markdown-it-py==4.2.0 + mdurl==0.1.2
-test_poc.py     22 fixtures + 6 invariants (aliasing, determinism, mutation, -S, canonical)
-test_parser.py  13 PARSE specimens + 4 invariants (capsule-only: status, count, local_id, span, CRLF)
-compiler.py     COMPILE layer (3c/3c.1): VALID ParseReport → self-contained bundle of canonical records (id+body), claim-bound binding, occurrence w/ doc digest
-runner.py       RUN layer (3d): COMPILED bundle → re-verify every id/link → settle → vector REPORT (no Markdown; no document-level MATCH; binding never raised)
-test_runner.py  runner-boundary checks (tamper→0 evaluator calls, vector, serialized bundle, typed result per class)
-claims.py       orchestration CLI: `claims run [--strict] <doc.md>` = parse→compile→run→JSON vector REPORT (no new verification code, no file writes, no badge)
-test_compiler.py 14 COMPILE specimens + 9 invariants (bundle, claim-bound binding, plan-inputs, source-occurrence)
-fixtures/valid/     arith-self, repo-count, world-claim-a, world-claim-b
-fixtures/invalid/   expected-mismatch, stale-dependency, world-missing-dep,
-                    world-path-mismatch, wrong-verifier, missing-verifier,
-                    wrong-binding, self-declared-reviewed, mismatch-result-address,
-                    combined-verifier-stale-mismatch, stdout-same-effect-different,
-                    effect-short-digest, capsule-unknown-field, capsule-dup-key,
-                    capsule-malformed-json, capsule-bad-binding-type, capsule-lone-surrogate
-fixtures/limits/    effect-invisible-effect   (a demonstrated blind spot)
-```
+- A `REPORT` is not an authenticity receipt.
+- Effects are observed, not sandbox-enforced; transient or external effects may
+  be invisible.
+- Semantic adequacy and prose binding remain open.
+- The implementation is single-operator and not a distributed trust system.
+- Passing its own fixtures is not independent validation.
+- `sigma-glyph==0.6.7` is a deliberate evaluator pin; changing it rotates the
+  verifier identities and requires an explicit re-pin.

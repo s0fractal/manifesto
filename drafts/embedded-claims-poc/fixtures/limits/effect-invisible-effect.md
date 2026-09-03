@@ -14,7 +14,7 @@ effect runtime needs OS-level confinement, not a TemporaryDirectory.
 
 ```json capsule
 {
-  "verifier": "effect-sandbox://sha256:d36ea017c1564ec924c5d05316549e2ffab5f91911ebbcffb6075f76c10c0915"
+  "verifier": "effect-sandbox://sha256:63a1fd4fd3bba376d6a2720e158f89cf1a69b844eadcd9861114880e259e94b3"
 }
 ```
 
