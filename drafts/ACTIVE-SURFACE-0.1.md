@@ -13,7 +13,7 @@ each classification carry?** It does not prove the prose in `statement` true.
 | `operational` | closed argv; exact in-repo entrypoint digest; exit 0 now; falsifier named | execution of that check only |
 | `normative` | exact authority bytes; scope, revocation, date and actor declaration | repository-declared authority only |
 | `intent` | origin plus trigger or unexpired date; closed shape excludes a check | none |
-| `retired` | CONTROLLED-FORGETTING mode, date, loss and resolving successor | none |
+| `retired` | CONTROLLED-FORGETTING mode, date, loss, and a successor that resolves to a live non-retired row or is explicitly `null` | none |
 
 Every in-repo source is SHA-256 pinned. External locators are address-only and
 cannot earn credit. The profile is non-empty, contains all four classes, rejects
