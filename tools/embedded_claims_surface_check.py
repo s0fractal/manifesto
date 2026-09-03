@@ -26,6 +26,9 @@ README = "drafts/embedded-claims-poc/README.md"
 TOMBSTONE = "drafts/EMBEDDED-CLAIMS-RETIREMENT-0.1.md"
 WORKFLOW = ".github/workflows/embedded-claims-poc.yml"
 SELF = "tools/embedded_claims_surface_check.py"
+BEFORE_COMMIT = "2a6e54d81a493623a32521ead5850e3ff7d8b92f"
+APPLY_COMMIT = "b2c0a1573be5fcaff8d188befd52abc446c91f6b"
+APPLY_TREE = "09ad6e546a5623ccbc617bcd6e4396dab9205de4"
 
 REQUIRED = {
     README: (
@@ -58,6 +61,13 @@ def tracked_paths(root: Path) -> list[str]:
         ["git", "-C", str(root), "ls-files", "-z"],
     )
     return [p.decode("utf-8") for p in out.split(b"\0") if p]
+
+
+def git_text(root: Path, *args: str) -> str:
+    return subprocess.check_output(
+        ["git", "-C", str(root), *args], stderr=subprocess.STDOUT,
+        text=True,
+    ).strip()
 
 
 def check(root: Path, paths: list[str] | None = None) -> list[str]:
@@ -108,6 +118,27 @@ def check(root: Path, paths: list[str] | None = None) -> list[str]:
         for rel, digest in RETIRED.items():
             if rel not in text or digest not in text:
                 errors.append(f"TOMBSTONE_SUBJECT_UNBOUND:{rel}")
+
+    # The live repository verifies the recorded transition from Git objects.
+    # Synthetic mutation tests pass an explicit path set and exercise only the
+    # surface rules above.
+    if paths is None:
+        try:
+            if git_text(root, "rev-parse", f"{APPLY_COMMIT}^{{tree}}") != APPLY_TREE:
+                errors.append("RETIREMENT_APPLY_TREE_MISMATCH")
+            parents = git_text(root, "show", "-s", "--format=%P", APPLY_COMMIT).split()
+            if parents != [BEFORE_COMMIT]:
+                errors.append("RETIREMENT_APPLY_PARENT_MISMATCH")
+            for rel in RETIRED:
+                exists = subprocess.run(
+                    ["git", "-C", str(root), "cat-file", "-e",
+                     f"{APPLY_COMMIT}:{rel}"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                ).returncode == 0
+                if exists:
+                    errors.append(f"RETIRED_SUBJECT_IN_APPLY_TREE:{rel}")
+        except (subprocess.CalledProcessError, OSError):
+            errors.append("RETIREMENT_GIT_PROVENANCE_UNAVAILABLE")
 
     return sorted(set(errors))
 

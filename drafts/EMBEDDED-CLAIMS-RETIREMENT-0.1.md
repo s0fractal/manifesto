@@ -78,20 +78,23 @@ Git availability is best-effort; this record does not promise permanent storage.
 ## Applied transition
 
 - exact before revision: `2a6e54d81a493623a32521ead5850e3ff7d8b92f`
-- apply commit: `PENDING-RECEIPT-COMMIT`
-- apply tree: `PENDING-RECEIPT-TREE`
+- apply commit: `b2c0a1573be5fcaff8d188befd52abc446c91f6b`
+- apply tree: `09ad6e546a5623ccbc617bcd6e4396dab9205de4`
 - authority: repository owner instruction in the working session
 - changed scope: the five retired subjects, the operational README, its active
   references, the bounded falling consumer, and verifier pins rotated only if
   closure bytes changed
 
-The apply commit and tree are filled by a separate receipt commit so this record
-does not attempt to contain its own commit identity.
+The receipt is recorded by the child commit containing this update. It addresses
+the completed parent transition rather than attempting to contain its own commit
+identity.
 
 ## Executable postconditions
 
 `tools/embedded_claims_surface_check.py` verifies that:
 
+- the recorded apply commit descends directly from the exact before revision and
+  resolves to the recorded apply tree;
 - all five retired paths are absent;
 - no non-historical tracked file cites them as current;
 - the replacement declares capsule-only eligibility, the legacy boundary, and no
