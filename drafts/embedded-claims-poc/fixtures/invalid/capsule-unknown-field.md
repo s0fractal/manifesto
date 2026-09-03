@@ -9,7 +9,7 @@ field that changes meaning is exactly the unknown-field downgrade threat.
 
 ```json capsule
 {
-  "verifier": "glyph://sha256:45395bf77f4d731565b47a5845853928a4625f20bea439e489863c152817eaa4",
+  "verifier": "glyph://sha256:52800283f80b20eb10db18503676301b8d4f104436ee1b00b9f0a309bb90045c",
   "surprise": "should fail closed"
 }
 ```

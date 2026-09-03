@@ -6,7 +6,7 @@ The closed canonicalization + record-identity profile the fixtures are addressed
 under. Phase 1 hashed capsule bodies with an ad-hoc domain-separated helper; this
 pins the profile so two implementations agree on record IDs.
 
-DECISIONS (drafts/EMBEDDED-CLAIMS-ARCHITECTURE-0.1.md §17, operator defaults):
+IMPLEMENTED PROFILE (current operational boundary: this directory's README.md):
   #1 canonicalization — a CLOSED custom JSON profile, NOT JCS yet:
        * keys sorted by Unicode code point (json sort_keys)
        * separators (",", ":"), no insignificant whitespace
@@ -15,7 +15,7 @@ DECISIONS (drafts/EMBEDDED-CLAIMS-ARCHITECTURE-0.1.md §17, operator defaults):
        * duplicate object keys FORBIDDEN (rejected at parse time)
      JCS/RFC 8785 is a later, reversible choice if cross-impl interop is needed;
      it is not adopted here.
-  #2 hash — SHA-256, domain-separated per §8.1.
+  #2 hash — SHA-256, domain-separated by record kind.
 
 record_id = "sha256:" + SHA256( domain_separator || 0x00 || canonical(body) )
 
@@ -25,7 +25,7 @@ beyond the evaluator.
 import hashlib
 import json
 
-# §8.1 domain separators — one per record kind, so a claim body and a plan body
+# Domain separators — one per record kind, so a claim body and a plan body
 # with identical bytes never collide.
 DOMAINS = {
     "claim": "manifesto.claim.v0",

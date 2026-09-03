@@ -1,9 +1,8 @@
 name: embedded-claims-poc
 
-# A green board must mean a check ran. This gate reproduces the embedded-claims
-# phase-1 PoC (drafts/embedded-claims-poc/) against a version-pinned RELEASED
-# evaluator, so a change that made a fixture stop reproducing fails here rather
-# than leaving the PoC quietly describing an older tree.
+# A green board must mean a check ran. This gate preserves the capsule-only
+# parse → compile → run route, its non-empty real-document specimen, and the
+# explicitly legacy phase-1 falsifiers against a version-pinned evaluator.
 on: [push, pull_request]
 
 jobs:
@@ -11,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        # The bounded retirement consumer verifies the apply commit, its exact
+        # parent, and its tree from Git objects. A shallow checkout must refuse;
+        # CI therefore supplies the history the declared receipt requires.
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with: { python-version: '3.12' }
 
@@ -27,14 +31,20 @@ jobs:
       - name: Install the version-pinned released evaluator (no source checkout)
         run: pip install "sigma-glyph==0.6.7"
 
-      # What a green job establishes: 17 fixtures + 4 invariants reproduce from a
-      # clean install of the released package. What it does NOT establish (by
-      # design, see the PoC README): this is a REPORT not a receipt; effects are
-      # OBSERVED post-state, not enforced; canonicalization and the interpreter/
-      # environment closure are deferred to phase 2. The identity is over CODE
-      # bytes, path-independent (sorted by content digest), but not over the
-      # interpreter build or OS.
-      - name: PoC fixtures + invariants reproduce against released 0.6.7
+      # Controlled-forgetting is useful only if an active consumer falls when a
+      # retired draft or zombie reference returns. The selftest proves the check
+      # can fail; the live invocation binds the current tree.
+      - name: Embedded-claims active-surface retirement boundary
+        run: |
+          python3 tools/embedded_claims_surface_check.py --selftest
+          python3 tools/embedded_claims_surface_check.py
+
+      # The explicitly legacy inline harness remains as negative evidence. Its
+      # 22 fixtures + 5 invariants reproduce from a clean installation. This is
+      # not an alternative authoring route: canonical authoring is capsule-only.
+      # Effects are OBSERVED post-state, not sandbox-enforced, and the verifier
+      # identity binds code bytes but not the interpreter build or OS.
+      - name: Legacy falsifiers reproduce against released 0.6.7
         shell: bash
         env:
           SIGMA_GLYPH: /nonexistent-on-purpose
@@ -44,7 +54,7 @@ jobs:
           python3 drafts/embedded-claims-poc/test_poc.py | tee poc.log
           grep -q "ALL PASS (22 fixtures + 5 invariants)" poc.log
 
-      # The PARSE layer (phase 2 step 3b) uses a PINNED markdown-it-py + mdurl, both
+      # The current PARSE layer uses a PINNED markdown-it-py + mdurl, both
       # with wheel hashes, installed via --require-hashes (a bare version pin would
       # leave mdurl transitively unpinned — Codex). The parser identity closure
       # references this lock, so a drifting dependency fails loudly.
@@ -59,9 +69,9 @@ jobs:
           python3 drafts/embedded-claims-poc/test_parser.py | tee parse.log
           grep -q "ALL PASS (13 PARSE specimens + 4 invariants)" parse.log
 
-      # The COMPILE layer (phase 2 step 3c) is STRUCTURAL only — VALID ParseReport →
+      # The COMPILE layer is STRUCTURAL only — VALID ParseReport →
       # strict JSON → capsule.v2 → canonical records/IDs. It settles nothing (that is
-      # 3d); COMPILED does not mean REPLAYED. A parser report with status != VALID is
+      # RUN); COMPILED does not mean REPLAYED. A parser report with status != VALID is
       # REFUSED as a whole.
       - name: Compiler COMPILE-layer oracle (structural, no settlement)
         shell: bash
@@ -70,7 +80,7 @@ jobs:
           python3 drafts/embedded-claims-poc/test_compiler.py | tee compile.log
           grep -q "ALL PASS (14 COMPILE specimens + 9 invariants)" compile.log
 
-      # The RUN layer (phase 2 step 3d) crosses the epistemic membrane: a COMPILED
+      # The RUN layer crosses the epistemic membrane: a COMPILED
       # bundle → EXECUTE → vector REPORT. It reads no Markdown, re-verifies every id/link
       # before any evaluator call (a mutation ⇒ 0 evaluator invocations), gives one
       # result per record with NO document-level MATCH, and never raises binding above

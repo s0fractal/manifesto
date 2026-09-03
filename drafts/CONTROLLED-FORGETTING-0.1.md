@@ -582,7 +582,7 @@ Retirement може зменшувати генеративний backlog і con
 tombstone/receipt сам додає records. Якщо протокол забуття породжує більше
 мета-зобов'язань, ніж прибирає, він програє власній меті.
 
-### [Embedded claims](EMBEDDED-CLAIMS-ARCHITECTURE-0.1.md)
+### [Embedded claims](embedded-claims-poc/README.md)
 
 Retirement status, execution receipt і truth status не зливаються. Green
 retirement recipe доводить лише, що exact transition відбувся. Він не доводить,
