@@ -1,7 +1,7 @@
 {
   "claims": [],
   "deps": {},
-  "gate_version": "settle_gate/0.3+deps",
+  "gate_version": "settle_gate/0.4+deps+observed",
   "source_sha256": "60ea6fc1f452804f9fcc1cdaac0744beefa93b4947ed8d52d0ff7a79c16357d8",
   "tally": {
     "atp_total": 0,
@@ -11,4 +11,4 @@
     "unsettled": 0
   }
 }
-RECEIPT_SHA256: c6729986aa26d30398a0d87cdbfe4c73c00ccfa205105848f578b3911e89bcc9
+RECEIPT_SHA256: 9ba181b8f135357f18057ba454a3c4017e2616059185b32a6bfbf6660ca8b353

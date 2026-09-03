@@ -91,22 +91,11 @@ TOOLS = [
 
 
 def build_receipt(text, results):
-    tally = {"claims": len(results),
-             "settled_true": sum(r["verdict"] == "PASS" for r in results),
-             "refuted": sum(r["verdict"] == "REFUTED" for r in results),
-             "unsettled": sum(r["verdict"] == "UNSETTLED" for r in results),
-             "atp_total": sum(r.get("atp") or 0 for r in results)}
-    deps = {}
-    for r in results:
-        d = r.get("dep")
-        if d:
-            deps.setdefault(d["path"], set()).add(d["sha256"])
-    deps = {p: sorted(v) for p, v in sorted(deps.items())}
-    receipt = {"source_sha256": hashlib.sha256(text.encode()).hexdigest(),
-               "gate_version": settle_gate.GATE_VERSION, "deps": deps,
-               "tally": tally, "claims": results}
-    body = json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2)
-    return body + "\nRECEIPT_SHA256: " + hashlib.sha256(body.encode()).hexdigest() + "\n"
+    """Delegate to the gate's own minter. This used to be a second copy of that
+    block, which is how the 0.3/0.4 shape rule could have been installed in one
+    producer and missed in the other."""
+    body, receipt_sha, _ = settle_gate.build_receipt(text, results)
+    return body + "\nRECEIPT_SHA256: " + receipt_sha + "\n"
 
 
 def tool_settle_text(args):

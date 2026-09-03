@@ -6,7 +6,7 @@ Answers Codex findings F3/F4: a receipt that commits only to its source text
 goes stale silently the moment any file it read changes, and a checker that
 compares against a frozen tally stays green while a live re-run would be red.
 
-A receipt written by settle_gate/0.3+deps records `deps`: {path: [sha256,...]}
+A receipt written by settle_gate/0.3+deps or later records `deps`: {path: [sha256,...]}
 — the digest of every file each claim actually read. This tool recomputes
 those digests against the repository NOW and reports, per dependency, FRESH /
 STALE / MISSING, plus which claims are affected — WITHOUT re-running the gate,

@@ -21,6 +21,7 @@ Badges: ⚓ settled-true, ✗ REFUTED (caught before publication), ◇ unsettled
 
 Deterministic: same input bytes + same repo state -> same output bytes.
 """
+import copy
 import hashlib
 import json
 import os
@@ -83,7 +84,14 @@ MONO = re.compile(r"^([\d,\s]+?)(?:\s+ev\s+([\d,\s]+))?$")
 
 MACHINE_MAX = 400   # arith via hash-equality of normal forms: linear cost
 CMP_MAX = 12        # cmp needs Church SUB/LEQ: expensive, small values only
-GATE_VERSION = "settle_gate/0.3+deps"  # dependency-bound receipts (Codex F3/F4)
+GATE_VERSION = "settle_gate/0.4+deps+observed"
+# The version string is the receipt's contract with its readers, not a changelog
+# line. 0.3+deps promised dependency binding (Codex F3/F4). f875588 then added a
+# typed observed_value to every settled class and left this string untouched, so
+# two machine-significant shapes shipped under one identifier and a consumer
+# reading gate_version could not tell them apart. 0.4 names the shape actually
+# emitted; receipt_profile_refusal below is what makes the name mean something.
+OBSERVED_REQUIRED = ("PASS", "REFUTED")
 
 def _dep(path, content):
     """A dependency record: the path a claim read and the digest of what it
@@ -288,33 +296,50 @@ def badge(res, cls, payload):
     return f"{p} ◇unsettled⟨{res['detail']}⟩"
 
 
-def gate(text):
-    results = []
-    env = {}   # binding environment, populated left-to-right as claims settle
+def receipt_profile_refusal(receipt):
+    """Refusal string if `receipt` breaks the profile its own gate_version names,
+    else None.
 
-    def repl(m):
-        cls, payload = m.group(1), m.group(2)
-        res = settle(cls, payload, env)
-        results.append({"class": cls, "payload": payload.strip(), **res})
-        return badge(res, cls, payload)
+    The 0.4 rule and the whole of it: a claim that SETTLED -- PASS or REFUTED --
+    carries a typed `observed_value`, an object with a non-empty string `kind`
+    naming what was looked at. UNSETTLED is exempt by construction: there was no
+    observation to type, and requiring one there would invite a fabricated value
+    exactly where the honest answer is nothing.
 
-    return CLAIM.sub(repl, text), results
+    Receipts stamped with any other version are not judged. 0.3 stays a
+    historical artifact; this is a new profile, not a migration.
+    """
+    version = receipt.get("gate_version")
+    if not isinstance(version, str) or not version.startswith("settle_gate/0.4"):
+        return None
+    claims = receipt.get("claims")
+    if not isinstance(claims, list):
+        return "PROFILE:CLAIMS_NOT_A_LIST"
+    for i, claim in enumerate(claims):
+        if not isinstance(claim, dict):
+            return f"PROFILE:CLAIM_NOT_AN_OBJECT:{i}"
+        if claim.get("verdict") not in OBSERVED_REQUIRED:
+            continue
+        observed = claim.get("observed_value")
+        if observed is None:
+            return f"PROFILE:OBSERVED_VALUE_MISSING:{i}:{claim.get('verdict')}"
+        if not isinstance(observed, dict):
+            return f"PROFILE:OBSERVED_VALUE_NOT_TYPED:{i}"
+        kind = observed.get("kind")
+        if not isinstance(kind, str) or not kind.strip():
+            return f"PROFILE:OBSERVED_VALUE_UNKIND:{i}"
+    return None
 
 
-def main():
-    args = [a for a in sys.argv[1:] if a not in ("--strict", "--no-write")]
-    strict = "--strict" in sys.argv   # P1 fix (Codex): fail-closed on ANY non-PASS
-    # --no-write: diagnostic run, print the tally/receipt digest but write no files.
-    # Default remains write-on (the .settled.md / .receipt.json artifacts are canonical
-    # evidence and stay tracked); --no-write is for read-only inspection.
-    nowrite = "--no-write" in sys.argv
-    if len(args) != 1:
-        print("usage: settle_gate.py [--strict] [--no-write] <file.md>", file=sys.stderr)
-        return 2
-    src = args[0]
-    with open(src, encoding="utf-8") as f:
-        text = f.read()
-    settled_text, results = gate(text)
+def build_receipt(text, results):
+    """The one place a receipt is minted. settle_mcp.py used to carry a second
+    copy of this block; two producers of one format is one producer too many,
+    and a shape rule installed in only one of them is not a rule.
+
+    Returns (body, receipt_sha256, tally). Refuses to mint a receipt that breaks
+    its own declared profile -- the gate does not get to ship what it would
+    reject from anyone else.
+    """
     tally = {"claims": len(results),
              "settled_true": sum(r["verdict"] == "PASS" for r in results),
              "refuted": sum(r["verdict"] == "REFUTED" for r in results),
@@ -333,8 +358,106 @@ def main():
     receipt = {"source_sha256": hashlib.sha256(text.encode()).hexdigest(),
                "gate_version": GATE_VERSION, "deps": deps,
                "tally": tally, "claims": results}
+    refusal = receipt_profile_refusal(receipt)
+    if refusal:
+        raise AssertionError(f"gate emitted a receipt breaking its own profile: {refusal}")
     body = json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2)
-    receipt_sha = hashlib.sha256(body.encode()).hexdigest()
+    return body, hashlib.sha256(body.encode()).hexdigest(), tally
+
+
+def gate(text):
+    results = []
+    env = {}   # binding environment, populated left-to-right as claims settle
+
+    def repl(m):
+        cls, payload = m.group(1), m.group(2)
+        res = settle(cls, payload, env)
+        results.append({"class": cls, "payload": payload.strip(), **res})
+        return badge(res, cls, payload)
+
+    return CLAIM.sub(repl, text), results
+
+
+def selftest():
+    """Burn the 0.4 profile rule. A rule nothing can go red against is a wish.
+
+    The subject is a receipt minted by the real producer over real repository
+    bytes, not a hand-written fixture: a fixture proves the checker reads JSON,
+    while this proves the gate actually emits what its version now promises.
+    """
+    controls = []
+
+    def refuses(name, receipt, expected):
+        refusal = receipt_profile_refusal(receipt)
+        if refusal is None:
+            raise AssertionError(f"{name}: mutation survived")
+        if expected not in refusal:
+            raise AssertionError(f"{name}: wrong refusal {refusal}")
+        controls.append(name)
+
+    def admits(name, receipt):
+        refusal = receipt_profile_refusal(receipt)
+        if refusal is not None:
+            raise AssertionError(f"{name}: legitimate receipt refused ({refusal})")
+        controls.append(name)
+
+    probe = ('\u27e6cite: "# Reviews" in reviews/README.md\u27e7 '
+             '\u27e6cite: "xyzzy-absent-from-this-file" in reviews/README.md\u27e7 '
+             '\u27e6nosuchclass: nothing settles this\u27e7')
+    _, results = gate(probe)
+    verdicts = [r["verdict"] for r in results]
+    if verdicts != ["PASS", "REFUTED", "UNSETTLED"]:
+        raise AssertionError(f"probe did not produce one of each verdict: {verdicts}")
+    body, _, _ = build_receipt(probe, results)
+    live = json.loads(body)
+    admits("producer-emits-observed", live)
+
+    for index, verdict in ((0, "PASS"), (1, "REFUTED")):
+        mutant = copy.deepcopy(live); del mutant["claims"][index]["observed_value"]
+        refuses(f"observed-value-missing-{verdict.lower()}", mutant, "OBSERVED_VALUE_MISSING")
+    mutant = copy.deepcopy(live); mutant["claims"][0]["observed_value"] = "citation"
+    refuses("observed-value-untyped", mutant, "OBSERVED_VALUE_NOT_TYPED")
+    mutant = copy.deepcopy(live); mutant["claims"][0]["observed_value"] = {"kind": "   "}
+    refuses("observed-value-unkind", mutant, "OBSERVED_VALUE_UNKIND")
+    mutant = copy.deepcopy(live); mutant["claims"] = "not a list"
+    refuses("claims-not-a-list", mutant, "CLAIMS_NOT_A_LIST")
+
+    # The exemption is part of the rule, so it is burned too: an UNSETTLED claim
+    # carries no observed_value and must stay admitted. Without this control the
+    # requirement could quietly widen to every claim and nothing would notice.
+    if "observed_value" in live["claims"][2]:
+        raise AssertionError("unsettled-exempt: probe's UNSETTLED claim carries an observed_value")
+    admits("unsettled-exempt", live)
+
+    # 0.3 receipts are historical, not migration targets: the rule does not
+    # reach back and judge them.
+    legacy = copy.deepcopy(live)
+    legacy["gate_version"] = "settle_gate/0.3+deps"
+    for claim in legacy["claims"]:
+        claim.pop("observed_value", None)
+    admits("legacy-not-judged", legacy)
+
+    print(f"ALL PASS ({len(controls)} settle-gate profile controls, {GATE_VERSION})")
+
+
+def main():
+    args = [a for a in sys.argv[1:] if a not in ("--strict", "--no-write", "--selftest")]
+    if "--selftest" in sys.argv:
+        selftest()
+        return 0
+    strict = "--strict" in sys.argv   # P1 fix (Codex): fail-closed on ANY non-PASS
+    # --no-write: diagnostic run, print the tally/receipt digest but write no files.
+    # Default remains write-on (the .settled.md / .receipt.json artifacts are canonical
+    # evidence and stay tracked); --no-write is for read-only inspection.
+    nowrite = "--no-write" in sys.argv
+    if len(args) != 1:
+        print("usage: settle_gate.py [--strict] [--no-write] <file.md> | --selftest", file=sys.stderr)
+        return 2
+    src = args[0]
+    with open(src, encoding="utf-8") as f:
+        text = f.read()
+    settled_text, results = gate(text)
+    body, receipt_sha, tally = build_receipt(text, results)
     print(json.dumps(tally, sort_keys=True))
     if nowrite:
         print("RECEIPT_SHA256:", receipt_sha, "(--no-write: nothing written)")
