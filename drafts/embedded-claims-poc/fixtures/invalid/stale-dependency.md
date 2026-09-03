@@ -8,7 +8,7 @@ green result against a changed world is a lie.
 
 ```json capsule
 {
-  "verifier": "settle-gate://sha256:52800283f80b20eb10db18503676301b8d4f104436ee1b00b9f0a309bb90045c",
+  "verifier": "settle-gate://sha256:dfd20c29d6366da6e78ae6ef5639d2ff7cf343e6eebaca7ac8a6af3ab955feb0",
   "dep": {"path": "README.md", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}
 }
 ```
