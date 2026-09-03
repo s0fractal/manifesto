@@ -1,0 +1,175 @@
+{
+  "as_of": "2026-09-03",
+  "classes": {
+    "intent": [
+      {
+        "class": "intent",
+        "credit": "none",
+        "expiry": null,
+        "id": "mission-receipt-resettle",
+        "origin": "python3 tools/receipt_freshness.py MISSION.receipt.json, run 2026-09-03 while building this surface",
+        "review_trigger": "before MISSION.settled.md is cited as evidence for any claim about README.md wording",
+        "sources": [
+          {
+            "binding": "sha256",
+            "path": "MISSION.receipt.json",
+            "sha256": "4bf9310690b0b382498c9cdc36712d6667b8189e08c1bbdd7edaefa5df517ce4"
+          },
+          {
+            "binding": "sha256",
+            "path": "tools/receipt_freshness.py",
+            "sha256": "bc4fd5d39c624bb4fbbafbcb95b17c5ee1de2bce1d960727ca51adc6a32106b6"
+          }
+        ],
+        "statement": "MISSION.receipt.json is re-settled against the current README.md bytes. tools/receipt_freshness.py reports it stale as of 2026-09-03 (0/1 fresh): README changed after the 2026-08-30 settlement."
+      },
+      {
+        "class": "intent",
+        "credit": "none",
+        "expiry": "2026-10-31",
+        "id": "multi-model-raid-promised",
+        "origin": "MISSION.md Obligations (open edges as of 2026-08-30)",
+        "review_trigger": null,
+        "sources": [
+          {
+            "binding": "sha256",
+            "note": "Obligations section, 2026-08-30",
+            "path": "MISSION.md",
+            "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"
+          }
+        ],
+        "statement": "A multi-model raid on the manifesto attack surface was promised; the surface stands ready and the raid has not been run."
+      },
+      {
+        "class": "intent",
+        "credit": "none",
+        "expiry": "2026-12-31",
+        "id": "sev-loss-manifest-needs-home",
+        "origin": "invariant census 09 (2026-09-02 evening, draft), first pass — each row to be re-verified before it drives an act",
+        "review_trigger": "before any further archive act in the portfolio, or when the next projection artifact appears (a DA case dossier or a warrant evidence-pack field)",
+        "sources": [
+          {
+            "binding": "locator-only",
+            "locator": "trajectory-audit-fable-5.1-2026-09/09-INVARIANT-CENSUS.md, row sev",
+            "note": "outside this repository; not verified by this surface"
+          }
+        ],
+        "statement": "The invariant 'a projection ships a loss_manifest of what it cannot express or verify; PROV is a readable shadow, never a trust boundary' has no live home in the active stack after SEV's archival."
+      }
+    ],
+    "normative": [
+      {
+        "adopted": "2026-08-30",
+        "authority": {
+          "binding": "sha256",
+          "path": "MISSION.settled.md",
+          "sha256": "222fe6b87e6a38c4d5c0bc54e7fdc0cc3a60b58fc33bd1f24bb315ed655a8ec3"
+        },
+        "by": "s0fractal (operator), class-(c) act under OPERATOR-AS-HYPOTHESIS",
+        "class": "normative",
+        "credit": "authority",
+        "id": "mission-accepted-2026-08-30",
+        "revocation": "the operator rewrites MISSION.md; a rewrite is a new class-(c) act under OAH, never an in-place edit of the accepted text",
+        "scope": "project direction: Desire, Values, Obligations, Goals, Purpose, Meaning as stated; not a release, conformance or governance gate for any other repository",
+        "sources": [
+          {
+            "binding": "sha256",
+            "path": "MISSION.md",
+            "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"
+          },
+          {
+            "binding": "sha256",
+            "note": "settlement receipt of the accepted text; see intent mission-receipt-resettle for its freshness",
+            "path": "MISSION.receipt.json",
+            "sha256": "4bf9310690b0b382498c9cdc36712d6667b8189e08c1bbdd7edaefa5df517ce4"
+          }
+        ],
+        "statement": "MISSION.md is the operator-accepted direction of the project, decomposed by typology 0041; the Purpose slot is open by design and belongs to the operator alone."
+      }
+    ],
+    "operational": [
+      {
+        "check": {
+          "argv": [
+            "python3",
+            "tools/badge_addresses_check.py"
+          ],
+          "exit": 0,
+          "script": {
+            "binding": "sha256",
+            "path": "tools/badge_addresses_check.py",
+            "sha256": "7513a04a6c6631f35bd6e8cecc9b47c2ed70dc710e377a6f087435de977ba635"
+          }
+        },
+        "class": "operational",
+        "credit": "validation",
+        "falsifier": "a pinned address that the independent Python route does not reproduce byte-for-byte",
+        "id": "badge-addresses-recomputed",
+        "sources": [
+          {
+            "binding": "sha256",
+            "path": "ts-sigma/replayable-badge.html",
+            "sha256": "ac89f65df55c076286de7007632e16866fe4c4bad7b020659278c74373bfc9ef"
+          },
+          {
+            "binding": "sha256",
+            "path": "tools/badge_addresses_check.py",
+            "sha256": "7513a04a6c6631f35bd6e8cecc9b47c2ed70dc710e377a6f087435de977ba635"
+          }
+        ],
+        "statement": "The addresses pinned by ts-sigma/replayable-badge.html are reproduced by an independent Python route from the node layout (Book I §3.2), not from the page's own JavaScript."
+      }
+    ],
+    "retired": [
+      {
+        "class": "retired",
+        "credit": "retired",
+        "id": "sev-projection-repo",
+        "loss": "the loss_manifest invariant has no live home with its falsifier (a projection reported complete because it verified); the retirement envelope did not say so at the time",
+        "mode": "ARCHIVED",
+        "record": {
+          "binding": "locator-only",
+          "locator": "protocol-ecosystem: historical row + tombstone section for sev",
+          "note": "outside this repository; not verified by this surface"
+        },
+        "retired_on": "2026-09-02",
+        "sources": [
+          {
+            "binding": "locator-only",
+            "locator": "sev repository, RETIREMENT.md (owner + Codex, 2026-09-02)",
+            "note": "outside this repository; not verified by this surface"
+          }
+        ],
+        "statement": "The SEV repository (projection of settlement evidence into PROV-shaped shadows) was removed from the default surface and kept for historical reading.",
+        "successor": "sev-loss-manifest-needs-home"
+      }
+    ]
+  },
+  "credit": {
+    "authority": [
+      "mission-accepted-2026-08-30"
+    ],
+    "none": [
+      "mission-receipt-resettle",
+      "multi-model-raid-promised",
+      "sev-loss-manifest-needs-home"
+    ],
+    "retired": [
+      "sev-projection-repo"
+    ],
+    "validation": [
+      "badge-addresses-recomputed"
+    ]
+  },
+  "generated_from": {
+    "generator": {
+      "path": "tools/active_surface.py",
+      "sha256": "435132e064e13f03fcd28bd3bba1a26579b2946cb5cbbd600824331b042096bd"
+    },
+    "rows": {
+      "path": "surface/rows.json",
+      "sha256": "74314698d2f64453f771585ed31df44df363ea323d5f4bbafb6be67ff41b5d07"
+    }
+  },
+  "tag": "manifesto.active-surface@v0.1"
+}
