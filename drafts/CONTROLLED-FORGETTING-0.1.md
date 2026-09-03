@@ -201,6 +201,20 @@ revision, path та content digest. Інакше між review та apply мож
 `SUPERSEDED` не заявляє безвтратну заміну. Known loss, unmapped concepts,
 зламані workflows та несумісні assumptions записуються до apply.
 
+Це не привілей `SUPERSEDED`. Кожен mode — `WITHDRAWN`, `REFUTED`, `ARCHIVED`,
+`ABANDONED`, `QUARANTINED`, `REDACTED` — несе непорожній loss, і retirement без
+названого replacement втрачає радше більше, ніж менше: там нема наступника, на
+якого можна списати роль. Порожній loss читається не як «втрат нема», а як
+невиміряна втрата; `null` для `replacement` легальний, `null` для loss — ні.
+
+**Фальсифікатор I4:** retirement будь-якого mode, прийнятий із порожнім або
+відсутнім loss. Один живий consumer уже так падає: `tools/active_surface.py`
+відмовляє `LOSS_EMPTY:<row>` для кожного рядка класу `retired` у
+`surface/rows.json`, а контроль `empty-loss` у його selftest спалює саме цю
+відмову мутацією. Межа цього burn названа точно: він накриває рядки одного
+файла, не RetirementRecord взагалі. Поки цей документ — draft, записи поза
+`surface/rows.json` мають лише цю prose-вимогу і жодного falling consumer.
+
 ### I5. Retirement is not refutation
 
 Вилучення з active surface не змінює truth value claim'ів автоматично. Якщо є
@@ -533,7 +547,7 @@ Owner authority технічно дозволяє retirement, але стира�
 
 - active index посилається на retired subject як current;
 - tombstone не має exact subject/reason/admission;
-- `SUPERSEDED` не має replacement або loss;
+- retirement будь-якого mode не має loss, або `SUPERSEDED` не має replacement;
 - historical artifact імпортується без status envelope;
 - test scope став порожнім після cleanup.
 

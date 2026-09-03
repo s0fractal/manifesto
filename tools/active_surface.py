@@ -237,20 +237,38 @@ def selftest(doc, today: dt.date) -> None:
     else:
         raise AssertionError("duplicate-json-key: mutation survived")
 
+    def pick(cls: str, want=None) -> int:
+        """Address the row to mutate by class, never by position: ordinary
+        surface acts reorder and retype rows, and a stale index mutates a row
+        the control was not written for -- which passes, silently, for the
+        wrong reason."""
+        for index, row in enumerate(doc["rows"]):
+            if row["class"] == cls and (want is None or want(row)):
+                return index
+        raise AssertionError(f"selftest needs a {cls} row it can mutate")
+
+    byte_pinned = lambda row: any(set(item) == {"path", "sha256"} for item in row["sources"])
+
     mutant = copy.deepcopy(doc); mutant["rows"] = []
     refuses("empty-vector", mutant, "ROWS_EMPTY")
-    mutant = copy.deepcopy(doc); mutant["rows"][0]["sources"][0]["sha256"] = "0" * 64
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("operational", byte_pinned)]["sources"][0]["sha256"] = "0" * 64
     refuses("source-drift", mutant, "DIGEST_MISMATCH")
-    mutant = copy.deepcopy(doc); mutant["rows"][1]["authority"]["sha256"] = "0" * 64
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["authority"]["sha256"] = "0" * 64
     refuses("authority-drift", mutant, "DIGEST_MISMATCH")
-    mutant = copy.deepcopy(doc); mutant["rows"][2]["review_trigger"] = None; mutant["rows"][2]["expiry"] = None
+    mutant = copy.deepcopy(doc); intent = pick("intent")
+    mutant["rows"][intent]["review_trigger"] = None; mutant["rows"][intent]["expiry"] = None
     refuses("unbounded-intent", mutant, "INTENT_UNBOUNDED")
-    mutant = copy.deepcopy(doc); mutant["rows"][5]["successor"] = "missing-row"
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("retired")]["successor"] = "missing-row"
     refuses("dangling-successor", mutant, "SUCCESSOR_UNKNOWN")
-    mutant = copy.deepcopy(doc); mutant["rows"][0]["class"] = []
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("operational")]["class"] = []
     refuses("malformed-class", mutant, "ROW_CLASS_UNKNOWN")
-    mutant = copy.deepcopy(doc); mutant["rows"][5]["mode"] = "REDACTED"
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("retired", byte_pinned)]["mode"] = "REDACTED"
     refuses("redacted-byte-oracle", mutant, "REDACTED_CARRIES_BYTE_PIN")
+    # CONTROLLED-FORGETTING-0.1 I4: loss is first-class for EVERY mode, not just
+    # SUPERSEDED. The refusal existed unburned; without this control the
+    # invariant was prose that happened to be enforced.
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("retired")]["loss"] = "   "
+    refuses("empty-loss", mutant, "LOSS_EMPTY")
     rows = validate_profile(ROOT, doc, today)
     with mock.patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 1)):
         try:

@@ -18,8 +18,9 @@ each classification carry?** It does not prove the prose in `statement` true.
 Every in-repo source is SHA-256 pinned. External locators are address-only and
 cannot earn credit. The profile is non-empty, contains all four classes, rejects
 duplicate JSON keys and IDs, and refuses source drift, authority drift, expired
-intent, dangling successor, a red operational check, or a `REDACTED` row that
-keeps an in-repo byte pin (a digest of secret bytes may itself be an oracle).
+intent, dangling successor, an empty loss on a retired row of any mode, a red
+operational check, or a `REDACTED` row that keeps an in-repo byte pin (a digest
+of secret bytes may itself be an oracle).
 
 The output is a per-row vector. `CHECKED` means only that row's typed predicate
 held; it never means the statement, the file, or Manifesto as a whole is true.
