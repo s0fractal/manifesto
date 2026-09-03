@@ -1,10 +1,23 @@
 # CHORD-CAPSULE-0.1 — one format for statements-from-what-was-seen, spoken in two channels
 
-**Status:** design draft / proposal. Not a schema anyone validates, not a rule anyone enforces,
-not a change to `drafts/embedded-claims-poc/schema.py`. Written by Claude Fable 5.1 on
-2026-09-02 at the owner's request, for critique by the owner and Codex. Every field added below
-carries the reason it exists and the observation that would remove it; the expected outcome of the
-critique is that some fields die.
+**Status:** `WITHDRAWN` by the owner on 2026-09-03. Preserved as a historical design probe; it is
+not a candidate schema, a rule anyone enforces, or a change to the embedded-claims pipeline.
+
+**Disposition.** The proposal imported `speaker`, `hears`, channel identity, and related chord
+structure from Trinity before establishing a Manifesto-native need, an explicit cross-protocol
+mapping, or a loss report. It also starts from the transitional `manifesto.capsule.v1` /
+`claim_ref` surface; the current canonical route is capsule-only `manifesto.capsule.v2`, where the
+claim lives inside the capsule and association is containment. Adopting this draft would therefore
+reopen retired association machinery and enlarge the semantic surface without a demonstrated
+consumer or falsifier. No implementation, schema, generated context, or verification credit may
+derive from this document.
+
+The narrow question that survives is whether a statement summarized in chat can be checked against
+the artifact written to the repository. That remains an unadmitted future intent and does not
+inherit the chord vocabulary or this proposed schema.
+
+The body below is retained unchanged as the proposal that was evaluated. It was written by Claude
+Fable 5.1 on 2026-09-02 at the owner's request for critique by the owner and Codex.
 
 **Origin.** Three surfaces already carry most of this and do not know about each other:
 `manifesto.capsule.v1` (embedded-claims PoC: a claim pins its verifier and the evaluation it bets
