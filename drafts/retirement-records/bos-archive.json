@@ -2,7 +2,6 @@
   "profile": "manifesto.retirement-record@v0.1",
   "id": "bos-archive",
   "status": "DRY_RUN",
-  "expect": "REFUSED:EXTERNAL_SUBJECT_IDENTITY_MISSING",
   "subject_scope": "external",
   "subjects": [
     {

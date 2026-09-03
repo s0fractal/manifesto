@@ -50,7 +50,7 @@
       "statement": "loss_manifest is enforced for this repository's own surface \u2014 every retired row carries a non-empty loss, refused as LOSS_EMPTY by tools/active_surface.py and burned by its empty-loss control \u2014 but no falling consumer covers a retirement record outside surface/rows.json; CONTROLLED-FORGETTING-0.1 I4 now states the requirement for every mode as draft prose only.",
       "sources": [
         {"locator": "trajectory-audit-fable-5.1-2026-09/09-INVARIANT-CENSUS.md, row sev", "note": "outside this repository; address only, not verified evidence"},
-        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "fd98d931e94bf8fe5267ee17bd739c9095e33815df3ae15d9da7d19264d9dfc9"},
+        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "6c23a61af86bf7fcba024da7c5b50c82d0c957baf4a126f4dff24416439b5852"},
         {"path": "tools/active_surface.py", "sha256": "5e6097554c90624684e23208a5358e52e92408c638e6c4483a544f3c3dbf7b4e"}
       ],
       "origin": "trajectory audit invariant census 09, first pass; narrowed 2026-09-03 after reading CONTROLLED-FORGETTING-0.1 and INTENT-VOCABULARY-EVOLUTION-0.1 for existing loss-manifest form",
@@ -77,7 +77,7 @@
       "statement": "SEV repository was archived on 2026-09-02 and removed from the active project surface.",
       "sources": [
         {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external historical locator; not verified by this repository"},
-        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "fd98d931e94bf8fe5267ee17bd739c9095e33815df3ae15d9da7d19264d9dfc9"}
+        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "6c23a61af86bf7fcba024da7c5b50c82d0c957baf4a126f4dff24416439b5852"}
       ],
       "mode": "ARCHIVED",
       "retired_on": "2026-09-02",

@@ -95,7 +95,11 @@ def check(root: Path, paths: list[str] | None = None) -> list[str]:
                 errors.append(f"STALE_CURRENT_CLAIM:{README}:{marker}")
 
     candidates = paths if paths is not None else tracked_paths(root)
-    ignored_prefixes = ("reviews/", ".git/")
+    # drafts/retirement-records/ is tombstone-class, exactly like TOMBSTONE: a
+    # retirement record's job is to name the subjects it retired, by path and
+    # digest. Its own consumer holds that directory to a closed manifest, so
+    # this exclusion cannot become a parking space for current claims.
+    ignored_prefixes = ("reviews/", ".git/", "drafts/retirement-records/")
     ignored_exact = {TOMBSTONE, SELF}
     retired_names = tuple(Path(p).name for p in RETIRED)
     for rel in candidates:
