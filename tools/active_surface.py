@@ -76,27 +76,43 @@ def nonempty(value, code: str) -> str:
     return value
 
 
-def stamp(value, code: str) -> dt.datetime:
-    """Parse a date LABEL and return the instant it denotes, for projections
-    only. Two shapes are accepted:
+def label(value, code: str) -> None:
+    """A HUMAN date label. Shape only; it grants nothing and orders nothing.
 
-      YYYY-MM-DD              a day, read as ending at 23:59:59Z
-      RFC 3339 with offset    an instant, e.g. 2026-09-04T00:25:17+03:00
-
-    A datetime WITHOUT an offset is refused. That is the exact ambiguity that
-    bit this surface: a date-only label was compared against `now(UTC)`, so an
-    act taken at 00:25+03:00 was refused as being in the future. If you need an
-    instant, say which instant; if a day is enough, a day is fine.
-
-    Shape is checked here. Ordering against a wall clock is NOT authority --
-    see the module docstring.
+    Accepts `YYYY-MM-DD` or RFC 3339 with an explicit offset. A datetime with no
+    offset is refused: an implicit timezone is the ambiguity that once made a
+    legitimate act look like it came from the future.
     """
     if not isinstance(value, str):
         raise Refusal(code)
     try:
         if len(value) == 10:
-            return dt.datetime.combine(dt.date.fromisoformat(value),
-                                       dt.time(23, 59, 59), tzinfo=dt.UTC)
+            dt.date.fromisoformat(value)
+            return
+        parsed = dt.datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise Refusal(code) from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise Refusal(f"{code}:OFFSET_MISSING")
+
+
+def instant(value, code: str) -> dt.datetime:
+    """An EXECUTABLE moment: RFC 3339 with an explicit offset, nothing else.
+
+    A day is not an instant. Reading `2026-12-31` as 23:59:59Z looks harmless
+    and is the same defect this module just removed one level up: UTC stops
+    being the judge and comes back as the deadline's unstated jurisdiction. If a
+    date is going to be compared against a clock, it has to say which moment it
+    means, in whose offset.
+
+    Comparing two instants in UTC afterwards is fine. Normalising is not the
+    problem; inventing a zone for a zoneless date is.
+    """
+    if not isinstance(value, str):
+        raise Refusal(code)
+    if len(value) == 10:
+        raise Refusal(f"{code}:NEEDS_INSTANT_NOT_A_DAY")
+    try:
         parsed = dt.datetime.fromisoformat(value)
     except ValueError as exc:
         raise Refusal(code) from exc
@@ -146,7 +162,7 @@ def validate_profile(root: Path, doc):
         raise Refusal("PROFILE_SCHEMA")
     if doc["profile"] != PROFILE:
         raise Refusal("PROFILE_UNKNOWN")
-    stamp(doc["as_of"], "AS_OF_INVALID")
+    label(doc["as_of"], "AS_OF_INVALID")
     if not isinstance(doc["rows"], list) or not doc["rows"]:
         raise Refusal("ROWS_EMPTY")
 
@@ -185,7 +201,7 @@ def validate_profile(root: Path, doc):
             nonempty(raw["scope"], f"SCOPE_EMPTY:{rid}")
             nonempty(raw["revocation"], f"REVOCATION_EMPTY:{rid}")
             nonempty(raw["by"], f"BY_EMPTY:{rid}")
-            stamp(raw["adopted"], f"ADOPTED_INVALID:{rid}")
+            label(raw["adopted"], f"ADOPTED_INVALID:{rid}")
         elif cls == "intent":
             nonempty(raw["origin"], f"ORIGIN_EMPTY:{rid}")
             trigger, expiry = raw["review_trigger"], raw["expiry"]
@@ -194,14 +210,15 @@ def validate_profile(root: Path, doc):
             if trigger is not None:
                 nonempty(trigger, f"TRIGGER_EMPTY:{rid}")
             if expiry is not None:
-                # Shape only. Whether the date has PASSED is a clock-dependent
-                # projection (see due()), never structural validity: an overdue
-                # review is a debt, not a malformed row.
-                stamp(expiry, f"EXPIRY_INVALID:{rid}")
+                # An expiry is the one date this repository EXECUTES, so it must
+                # name an instant. Whether that instant has passed is a
+                # clock-dependent projection (see due()), never structural
+                # validity: an overdue review is a debt, not a malformed row.
+                instant(expiry, f"EXPIRY_INVALID:{rid}")
         else:
             if not isinstance(raw["mode"], str) or raw["mode"] not in MODES:
                 raise Refusal(f"RETIRED_MODE_UNKNOWN:{rid}")
-            stamp(raw["retired_on"], f"RETIRED_ON_INVALID:{rid}")
+            label(raw["retired_on"], f"RETIRED_ON_INVALID:{rid}")
             nonempty(raw["loss"], f"LOSS_EMPTY:{rid}")
             if raw["successor"] is not None and (
                 not isinstance(raw["successor"], str) or not ID_RE.fullmatch(raw["successor"])
@@ -242,7 +259,7 @@ def due(rows, now: dt.datetime | None = None):
     for row in rows:
         if row["class"] != "intent" or row["expiry"] is None:
             continue
-        if now > stamp(row["expiry"], f"EXPIRY_INVALID:{row['id']}"):
+        if now > instant(row["expiry"], f"EXPIRY_INVALID:{row['id']}"):
             overdue.append((row["id"], row["expiry"]))
     return overdue
 
@@ -329,7 +346,7 @@ def selftest(doc) -> None:
     # must admit it, and the clock-dependent projection must report it. Both
     # halves are burned, because demoting the clock is only correct if the
     # deadline still bites somewhere.
-    expired = copy.deepcopy(synthetic_intent); expired["expiry"] = "1999-01-01"
+    expired = copy.deepcopy(synthetic_intent); expired["expiry"] = "1999-01-01T00:00:00+00:00"
     mutant = copy.deepcopy(doc); mutant["rows"].append(copy.deepcopy(expired))
     rows_with_debt = validate_profile(ROOT, mutant)
     controls.append("expired-intent-is-not-a-validity-failure")
@@ -337,14 +354,30 @@ def selftest(doc) -> None:
     assert [rid for rid, _ in overdue] == ["synthetic-intent-control"], (
         f"due-projection lost its teeth: an expiry of 1999-01-01 produced {overdue}")
     controls.append("due-projection-reports-the-overdue-intent")
-    fresh = copy.deepcopy(synthetic_intent); fresh["expiry"] = "2999-01-01"
+    fresh = copy.deepcopy(synthetic_intent); fresh["expiry"] = "2999-01-01T00:00:00+03:00"
     mutant = copy.deepcopy(doc); mutant["rows"].append(fresh)
     assert due(validate_profile(ROOT, mutant)) == [], (
         "due-projection reported a debt for an expiry in the year 2999")
     controls.append("due-projection-stays-quiet-when-nothing-is-owed")
 
+    # An expiry is EXECUTED, so it may not be a bare day: reading one as
+    # 23:59:59Z would smuggle UTC back in as the deadline's unstated
+    # jurisdiction, which is the same defect one level down.
+    day_expiry = copy.deepcopy(synthetic_intent); day_expiry["expiry"] = "2026-12-31"
+    mutant = copy.deepcopy(doc); mutant["rows"].append(day_expiry)
+    refuses("expiry-as-a-bare-day", mutant, "NEEDS_INSTANT_NOT_A_DAY")
+    naive_expiry = copy.deepcopy(synthetic_intent); naive_expiry["expiry"] = "2026-12-31T23:59:59"
+    mutant = copy.deepcopy(doc); mutant["rows"].append(naive_expiry)
+    refuses("expiry-without-offset", mutant, "OFFSET_MISSING")
+    offset_expiry = copy.deepcopy(synthetic_intent); offset_expiry["expiry"] = "2999-12-31T23:59:59+03:00"
+    mutant = copy.deepcopy(doc); mutant["rows"].append(offset_expiry)
+    validate_profile(ROOT, mutant)
+    controls.append("expiry-as-an-offset-bearing-instant-admitted")
+
     # Dates are labels now. A future adoption date is admitted -- burned here so
     # the removed gate cannot creep back without a control going red.
+    # A human LABEL stays permissive: a bare day is fine there, because nothing
+    # executes it.
     mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["adopted"] = "2999-01-01"
     validate_profile(ROOT, mutant)
     controls.append("future-date-is-not-a-validity-failure")
