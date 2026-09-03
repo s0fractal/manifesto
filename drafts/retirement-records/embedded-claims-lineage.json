@@ -1,0 +1,75 @@
+{
+  "profile": "manifesto.retirement-record@v0.1",
+  "id": "embedded-claims-lineage",
+  "status": "APPLIED",
+  "expect": "VALID",
+  "subject_scope": "in-repo",
+  "before_revision": "2a6e54d81a493623a32521ead5850e3ff7d8b92f",
+  "subjects": [
+    {"path": "drafts/EMBED-FORMAT-DESIGN.md",
+     "sha256": "ee60c7ac375b4ea8d7931688d84840c4ee7bd0d066f5f3e32715b6bb3f6992cc",
+     "mode": "SUPERSEDED",
+     "reason": "exploratory inline/recipe format no longer defines authoring eligibility"},
+    {"path": "drafts/EMBEDDING-SETTLEMENT.md",
+     "sha256": "1740691754bef4383a91e7e85cdc6976c36160a1db5ca3459f181008eb43b57a",
+     "mode": "SUPERSEDED",
+     "reason": "direct inline settlement survives only as legacy fixture substrate"},
+    {"path": "drafts/EMBEDDED-CLAIMS-ARCHITECTURE-0.1.md",
+     "sha256": "57cc4f47d362bc4c296f866d06430ea482c7aa21d058db359b337c163fdcb726",
+     "mode": "SUPERSEDED",
+     "reason": "a proposal and build plan was being mistaken for the implemented current route"},
+    {"path": "drafts/EMBEDDED-CLAIMS-REVIEW-0.1.md",
+     "sha256": "5aac3a25db34c852a1b8cd51e6fd1c109f044b16ecd6f6d85f7c517cd73edc94",
+     "mode": "ARCHIVED",
+     "reason": "review evidence informed the implementation but is not a current requirements document"},
+    {"path": "drafts/embedded-claims-poc/PARSER-THREAT-MODEL.md",
+     "sha256": "789decea49df4bdf782de6bfce4ff9a2e4bea635b86f3ced3b3fef7424526dc9",
+     "mode": "ARCHIVED",
+     "reason": "its pivot banner contradicted the inline requirements retained below it; executable adversarial fixtures now carry the active boundary"}
+  ],
+  "replacement": {
+    "relation": "replaced-by",
+    "operands": [
+      {"path": "drafts/embedded-claims-poc/README.md", "sha256": "669a0726a2ed0eca083f307ac5442a2d8fadf3306cb08b7f224553b4d4c0bf03"},
+      {"path": "drafts/embedded-claims-poc/fixtures/adversarial/EXPECTED.md", "sha256": "3922079925ce28587299994fb78b45a7fa37806c4582d74e66f98d557daffcd3"},
+      {"path": "drafts/embedded-claims-poc/parser.py", "sha256": "4d059e6f65dc25e9e0636966014a5606feb23e1b0518462ae3ef2d5e44dabf76"},
+      {"path": "drafts/embedded-claims-poc/compiler.py", "sha256": "c4539388a37827fd92d6e34641e0f1548ef52fa9ca9e057f38dcd731312d7fe1"},
+      {"path": "drafts/embedded-claims-poc/runner.py", "sha256": "91198c62f8a82f58f7d2a62118769b924ea0a76f443309d5ee941a7b88219109"},
+      {"path": "drafts/embedded-claims-poc/claims.py", "sha256": "66bbaaa0d23f36c5582ccc66ea7e0b87d7dd27b3cd17b8b6216904b9625c01e9"},
+      {"path": "drafts/EMBEDDED-CLAIMS-E2E-0.1.md", "sha256": "391df6a2cf4578275b887a44e3fa5380869a41fcab1bc4903c7763898e0f007d"},
+      {"path": ".github/workflows/embedded-claims-poc.yml", "sha256": "dc00be31ec7238078a710bdc6d4442b031685a40e290b9a9e1bab8c59f966239"}
+    ]
+  },
+  "loss": [
+    "the long MYC/Trinity/SPORE design genealogy",
+    "rejected syntax alternatives and the chronological review conversation",
+    "the complete prose derivation of every threat and identity distinction",
+    "the original build phases and open-decision queue"
+  ],
+  "preservation": {
+    "policy": "git-history-best-effort; this record does not promise permanent storage",
+    "locator": "git show 2a6e54d81a493623a32521ead5850e3ff7d8b92f:<historical-path>, with the HISTORICAL EMBEDDED-CLAIMS ARTIFACT envelope recorded in drafts/EMBEDDED-CLAIMS-RETIREMENT-0.1.md"
+  },
+  "admission": {
+    "default": "EXCLUDED",
+    "historical_review": "ALLOWED_WITH_STATUS",
+    "normative_use": "FORBIDDEN_WITHOUT_READOPTION"
+  },
+  "authority": {
+    "owner": "s0fractal (repository owner)",
+    "act": "repository owner instruction in the working session, as recorded in drafts/EMBEDDED-CLAIMS-RETIREMENT-0.1.md under 'Applied transition'; this is the address of the act, not a proof that it was within anyone's power"
+  },
+  "applied": {
+    "apply_commit": "b2c0a1573be5fcaff8d188befd52abc446c91f6b",
+    "apply_tree": "09ad6e546a5623ccbc617bcd6e4396dab9205de4",
+    "receipt": "the child commit of b2c0a15 carrying drafts/EMBEDDED-CLAIMS-RETIREMENT-0.1.md; the tombstone addresses the completed parent transition rather than containing its own commit identity"
+  },
+  "postconditions": [
+    {"argv": ["python3", "tools/embedded_claims_surface_check.py"],
+     "entrypoint": {"path": "tools/embedded_claims_surface_check.py", "sha256": "918bf70d0906f8f3475e49c57ae479c2d542157d74de1c9ee1e384c3d1868c11"},
+     "falsifier": "a retired subject back in the tree, or a tracked non-historical file citing one as current, while this record still reads VALID"},
+    {"argv": ["python3", "tools/embedded_claims_surface_check.py", "--selftest"],
+     "entrypoint": {"path": "tools/embedded_claims_surface_check.py", "sha256": "918bf70d0906f8f3475e49c57ae479c2d542157d74de1c9ee1e384c3d1868c11"},
+     "falsifier": "the surface check passing with its resurrection, zombie-reference or boundary-loss control removed"}
+  ]
+}

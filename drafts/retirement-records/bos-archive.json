@@ -1,0 +1,40 @@
+{
+  "profile": "manifesto.retirement-record@v0.1",
+  "id": "bos-archive",
+  "status": "DRY_RUN",
+  "expect": "REFUSED:EXTERNAL_SUBJECT_IDENTITY_MISSING",
+  "subject_scope": "external",
+  "subjects": [
+    {
+      "locator": "BOS, active main e9b8ab775aef18542ff37842f6fa67e7020161f4 and unmerged observer-relative head ee4034c16866db68d2adcbf439c46d49c357a655, per drafts/INTENT-VOCABULARY-EVOLUTION-0.1.md section 6",
+      "note": "address only, outside this repository and not verified here; the repository identity itself is recorded nowhere in this repository, which is the refusal this record exists to produce",
+      "mode": "ARCHIVED",
+      "reason": "the general typed decision graph found no external consumer; its narrow invariants were extracted before archival rather than carried forward"
+    }
+  ],
+  "replacement": {
+    "relation": "extracted-from",
+    "operands": [
+      {
+        "path": "drafts/INTENT-VOCABULARY-EVOLUTION-0.1.md",
+        "sha256": "33541e9e753a83674dd22325e058319b2eb88e8349b0fdc0a2d72c5a826029d7"
+      }
+    ]
+  },
+  "loss": [
+    "the general query surface BOS offered over claims, assessments, decisions and trajectories",
+    "the ability to reconstruct every actor trajectory",
+    "the full atom-kind and scope registries, and the self-contained genesis governance machinery",
+    "any adoption credit from the unmerged observer-relative branch"
+  ],
+  "preservation": {
+    "policy": "external repository history, best-effort; retrievability is NOT verified from inside this repository and this record does not claim it was",
+    "locator": "the two revisions named in the subject locator, in whatever repository holds them"
+  },
+  "admission": {
+    "default": "EXCLUDED",
+    "historical_review": "ALLOWED_WITH_STATUS",
+    "normative_use": "FORBIDDEN_WITHOUT_READOPTION"
+  },
+  "postconditions": []
+}

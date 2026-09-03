@@ -39,6 +39,17 @@ jobs:
           python3 tools/embedded_claims_surface_check.py --selftest
           python3 tools/embedded_claims_surface_check.py
 
+      # The general retirement consumer: it reads RetirementRecords as data
+      # instead of reading prose about them. Both edges are executable -- the
+      # applied embedded-claims lineage must validate and replay its own
+      # postconditions, and the BOS dry-run must be REFUSED for exactly one
+      # named reason. A record whose verdict stops matching its declared
+      # expectation is a MISMATCH and fails this job.
+      - name: Retirement records (positive and negative edge)
+        run: |
+          python3 tools/retirement_record_check.py --selftest
+          python3 tools/retirement_record_check.py
+
       # This is a small orientation surface, not a document truth badge. Each
       # row carries one typed predicate; exact in-repo operands are digest-bound,
       # intent/retirement carry no credit, and output stays a per-row vector.
