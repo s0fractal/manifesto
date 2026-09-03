@@ -26,8 +26,9 @@ carries `multi-model-raid-promised` as a `WITHDRAWN` retirement with its loss
 named, and counts no substitute exercise as having discharged it. The ranked
 list stays, because a single reviewer who does show up still gets the most out
 of these joints — but read it as *where a reviewer's time would go furthest*,
-never as *these joints have been attacked*. MISSION.md still lists the
-obligation as open; reconciling its text is the operator's act, not this file's.
+never as *these joints have been attacked*. MISSION.md records the withdrawal
+itself as of the same date, by the operator's own class-(c) act, so the mission
+and this file no longer disagree about what is owed.
 
 ## Attack surface (ranked by expected yield)
 

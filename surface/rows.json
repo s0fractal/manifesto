@@ -21,21 +21,21 @@
       "class": "normative",
       "statement": "MISSION.md is the operator-accepted direction, decomposed by typology 0041; the Purpose slot belongs to the operator alone.",
       "sources": [
-        {"path": "MISSION.md", "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"},
-        {"path": "MISSION.receipt.json", "sha256": "cfe3ac01a4b1df720709acfec65456dfe81609f22abc4d7ec921c493083c38d8"}
+        {"path": "MISSION.md", "sha256": "54031a17395b60d4bdd0b9b0412696d424780192d21ace5bb24cc8b106e1fdb4"},
+        {"path": "MISSION.receipt.json", "sha256": "e41be25593ddb7b488bc0bf30c8516c0fe6d68328cdf079282670846add48584"}
       ],
-      "authority": {"path": "MISSION.settled.md", "sha256": "222fe6b87e6a38c4d5c0bc54e7fdc0cc3a60b58fc33bd1f24bb315ed655a8ec3"},
+      "authority": {"path": "MISSION.settled.md", "sha256": "238ba704dcc184acf22801ceff33f339a109c8a84a21cb7af8098ef15751f3b5"},
       "scope": "project direction only; not a gate for any other repository",
       "revocation": "the operator rewrites MISSION.md as a new class-(c) act",
       "adopted": "2026-08-30",
-      "by": "s0fractal (operator), recorded class-(c) act"
+      "by": "s0fractal (operator), recorded class-(c) act; revised 2026-09-03 by a further class-(c) act withdrawing the raid obligation, which is why the authority bytes moved while the adoption date did not"
     },
     {
       "id": "mission-receipt-fresh",
       "class": "operational",
       "statement": "MISSION.receipt.json is settled against the README.md bytes in the tree now: every dependency its claims recorded is recomputed and matches, so the \u2693 badges in MISSION.settled.md quote a README that still exists.",
       "sources": [
-        {"path": "MISSION.receipt.json", "sha256": "cfe3ac01a4b1df720709acfec65456dfe81609f22abc4d7ec921c493083c38d8"},
+        {"path": "MISSION.receipt.json", "sha256": "e41be25593ddb7b488bc0bf30c8516c0fe6d68328cdf079282670846add48584"},
         {"path": "tools/receipt_freshness.py", "sha256": "ef36feaa27e021291c107afbf3895ea9a05b2ff3437bb7fd1a9bbdbfdfb59d9b"}
       ],
       "check": {
@@ -60,14 +60,14 @@
     {
       "id": "multi-model-raid-promised",
       "class": "retired",
-      "statement": "The multi-model raid promised in MISSION.md is withdrawn without being run; no other exercise, the cap-lab capsule dialogue included, is counted as having discharged it, and reviews/README.md no longer advertises the raid as this repository's next phase.",
+      "statement": "The multi-model raid is withdrawn without being run, and MISSION.md now says so itself: the operator retyped the obligation in place on 2026-09-03, with no successor and with no other exercise \u2014 the cap-lab capsule dialogue included \u2014 counted as having discharged it.",
       "sources": [
-        {"path": "MISSION.md", "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"},
-        {"path": "reviews/README.md", "sha256": "c99bddc6886b22481cf908b921e7c99c2cf412c4df377d32f3afdb6d3c3cb28f"}
+        {"path": "MISSION.md", "sha256": "54031a17395b60d4bdd0b9b0412696d424780192d21ace5bb24cc8b106e1fdb4"},
+        {"path": "reviews/README.md", "sha256": "036623806df379dead3a8b534f9c84ba1cbf96fea1e17f5810f8a5f5f49cabad"}
       ],
       "mode": "WITHDRAWN",
       "retired_on": "2026-09-03",
-      "loss": "The manifesto attack surface keeps no adversarial pass over it, so its theses carry no external counterexample search; the papers-review goal that named the raid as its input loses that input; and MISSION.md still lists the obligation as open, which only the operator can reconcile as a class-(c) act.",
+      "loss": "The manifesto attack surface keeps no adversarial pass over it, so its theses carry no external counterexample search, and '\u0440\u0435\u0439\u0434 \u2192 \u043f\u0435\u0440\u0435\u0433\u043b\u044f\u0434 \u0441\u0442\u0430\u0442\u0435\u0439' is gone from MISSION.md's goal candidates along with the input it named \u2014 a papers review, if it happens, now needs a different ground. What is no longer lost is the divergence: the mission text no longer advertises an obligation the surface calls withdrawn.",
       "successor": null,
       "record": {"locator": "operator directive, working session 2026-09-03: broad multi-model attacks refused", "note": "chat-level operator act; address only, with no byte-pinned record in this repository"}
     },
