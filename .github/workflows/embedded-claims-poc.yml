@@ -57,6 +57,10 @@ jobs:
         run: |
           python3 tools/active_surface.py --selftest
           python3 tools/active_surface.py
+          # Separate axis, separate line: structural validity above is clock-free,
+          # and this is the only reading that consults a wall clock. It keeps
+          # teeth -- a review debt that has come due fails the job by its own name.
+          python3 tools/active_surface.py --due
 
       # The explicitly legacy inline harness remains as negative evidence. Its
       # 22 fixtures + 5 invariants reproduce from a clean installation. This is

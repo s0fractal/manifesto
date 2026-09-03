@@ -3,6 +3,25 @@
 
 This checks evidence predicates, not the truth of each human statement. Output is
 per-row; there is deliberately no document-level truth badge.
+
+TIME. A wall clock is not a source of governance truth here, and three axes are
+kept apart:
+
+  causal order   git -- commit and tree digests, parent ancestry, pinned
+                 authority bytes. Which act preceded which needs no clock.
+  human dates    LABELS. Shape is checked; ordering against `now` is not
+                 authority and grants nothing. This tool used to refuse
+                 AS_OF_IN_FUTURE / ADOPTED_IN_FUTURE / RETIRED_IN_FUTURE, and
+                 that cost a real refusal of a legitimate act: an adoption taken
+                 at 00:25+03:00 was "in the future" against now(UTC). Those
+                 gates guarded nothing -- no predicate downstream reads a date --
+                 so they are gone.
+  external mark  not implemented here, and not needed by anything yet.
+
+`expiry` is the one place a clock still bites, and it bites in its own room:
+structural validity is clock-free, and `--due` is a separate projection that
+reports overdue review debts and exits non-zero. An overdue intent is a debt,
+not a malformed row, and the two must not be reported by the same word.
 """
 from __future__ import annotations
 
@@ -57,13 +76,33 @@ def nonempty(value, code: str) -> str:
     return value
 
 
-def iso_date(value, code: str) -> dt.date:
+def stamp(value, code: str) -> dt.datetime:
+    """Parse a date LABEL and return the instant it denotes, for projections
+    only. Two shapes are accepted:
+
+      YYYY-MM-DD              a day, read as ending at 23:59:59Z
+      RFC 3339 with offset    an instant, e.g. 2026-09-04T00:25:17+03:00
+
+    A datetime WITHOUT an offset is refused. That is the exact ambiguity that
+    bit this surface: a date-only label was compared against `now(UTC)`, so an
+    act taken at 00:25+03:00 was refused as being in the future. If you need an
+    instant, say which instant; if a day is enough, a day is fine.
+
+    Shape is checked here. Ordering against a wall clock is NOT authority --
+    see the module docstring.
+    """
     if not isinstance(value, str):
         raise Refusal(code)
     try:
-        return dt.date.fromisoformat(value)
+        if len(value) == 10:
+            return dt.datetime.combine(dt.date.fromisoformat(value),
+                                       dt.time(23, 59, 59), tzinfo=dt.UTC)
+        parsed = dt.datetime.fromisoformat(value)
     except ValueError as exc:
         raise Refusal(code) from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise Refusal(f"{code}:OFFSET_MISSING")
+    return parsed
 
 
 def sha256(path: Path) -> str:
@@ -102,14 +141,12 @@ def source(root: Path, operand, code: str) -> tuple[str, str] | None:
     raise Refusal(f"{code}:SCHEMA")
 
 
-def validate_profile(root: Path, doc, today: dt.date):
+def validate_profile(root: Path, doc):
     if not isinstance(doc, dict) or set(doc) != {"profile", "as_of", "rows"}:
         raise Refusal("PROFILE_SCHEMA")
     if doc["profile"] != PROFILE:
         raise Refusal("PROFILE_UNKNOWN")
-    as_of = iso_date(doc["as_of"], "AS_OF_INVALID")
-    if as_of > today:
-        raise Refusal("AS_OF_IN_FUTURE")
+    stamp(doc["as_of"], "AS_OF_INVALID")
     if not isinstance(doc["rows"], list) or not doc["rows"]:
         raise Refusal("ROWS_EMPTY")
 
@@ -148,8 +185,7 @@ def validate_profile(root: Path, doc, today: dt.date):
             nonempty(raw["scope"], f"SCOPE_EMPTY:{rid}")
             nonempty(raw["revocation"], f"REVOCATION_EMPTY:{rid}")
             nonempty(raw["by"], f"BY_EMPTY:{rid}")
-            if iso_date(raw["adopted"], f"ADOPTED_INVALID:{rid}") > today:
-                raise Refusal(f"ADOPTED_IN_FUTURE:{rid}")
+            stamp(raw["adopted"], f"ADOPTED_INVALID:{rid}")
         elif cls == "intent":
             nonempty(raw["origin"], f"ORIGIN_EMPTY:{rid}")
             trigger, expiry = raw["review_trigger"], raw["expiry"]
@@ -157,13 +193,15 @@ def validate_profile(root: Path, doc, today: dt.date):
                 raise Refusal(f"INTENT_UNBOUNDED:{rid}")
             if trigger is not None:
                 nonempty(trigger, f"TRIGGER_EMPTY:{rid}")
-            if expiry is not None and iso_date(expiry, f"EXPIRY_INVALID:{rid}") < today:
-                raise Refusal(f"INTENT_EXPIRED:{rid}:{expiry}")
+            if expiry is not None:
+                # Shape only. Whether the date has PASSED is a clock-dependent
+                # projection (see due()), never structural validity: an overdue
+                # review is a debt, not a malformed row.
+                stamp(expiry, f"EXPIRY_INVALID:{rid}")
         else:
             if not isinstance(raw["mode"], str) or raw["mode"] not in MODES:
                 raise Refusal(f"RETIRED_MODE_UNKNOWN:{rid}")
-            if iso_date(raw["retired_on"], f"RETIRED_ON_INVALID:{rid}") > today:
-                raise Refusal(f"RETIRED_IN_FUTURE:{rid}")
+            stamp(raw["retired_on"], f"RETIRED_ON_INVALID:{rid}")
             nonempty(raw["loss"], f"LOSS_EMPTY:{rid}")
             if raw["successor"] is not None and (
                 not isinstance(raw["successor"], str) or not ID_RE.fullmatch(raw["successor"])
@@ -190,6 +228,23 @@ def validate_profile(root: Path, doc, today: dt.date):
             if successor["class"] == "retired":
                 raise Refusal(f"SUCCESSOR_RETIRED:{row['id']}:{row['successor']}")
     return rows
+
+
+def due(rows, now: dt.datetime | None = None):
+    """Clock-dependent projection, deliberately NOT part of validity.
+
+    Kept with teeth on purpose: `--due` exits non-zero when a review debt has
+    come due. A deadline that can no longer fail is not a deadline, and moving
+    expiry out of validation must not quietly turn it into one.
+    """
+    now = now or dt.datetime.now(dt.UTC)
+    overdue = []
+    for row in rows:
+        if row["class"] != "intent" or row["expiry"] is None:
+            continue
+        if now > stamp(row["expiry"], f"EXPIRY_INVALID:{row['id']}"):
+            overdue.append((row["id"], row["expiry"]))
+    return overdue
 
 
 def execute(rows, root: Path):
@@ -220,12 +275,12 @@ def load(path: Path):
     return strict_loads(path.read_text(encoding="utf-8"))
 
 
-def selftest(doc, today: dt.date) -> None:
+def selftest(doc) -> None:
     controls = []
 
-    def refuses(name, candidate, expected, at=today):
+    def refuses(name, candidate, expected):
         try:
-            validate_profile(ROOT, candidate, at)
+            validate_profile(ROOT, candidate)
         except Refusal as exc:
             if expected not in str(exc):
                 raise AssertionError(f"{name}: wrong refusal {exc}") from exc
@@ -270,10 +325,36 @@ def selftest(doc, today: dt.date) -> None:
     }
     mutant = copy.deepcopy(doc); mutant["rows"].append(copy.deepcopy(synthetic_intent))
     refuses("unbounded-intent", mutant, "INTENT_UNBOUNDED")
-    mutant = copy.deepcopy(doc)
-    bounded = copy.deepcopy(synthetic_intent); bounded["expiry"] = "1999-01-01"
-    mutant["rows"].append(bounded)
-    refuses("expired-intent", mutant, "INTENT_EXPIRED")
+    # An expired intent is a DEBT, not a malformed row: structural validation
+    # must admit it, and the clock-dependent projection must report it. Both
+    # halves are burned, because demoting the clock is only correct if the
+    # deadline still bites somewhere.
+    expired = copy.deepcopy(synthetic_intent); expired["expiry"] = "1999-01-01"
+    mutant = copy.deepcopy(doc); mutant["rows"].append(copy.deepcopy(expired))
+    rows_with_debt = validate_profile(ROOT, mutant)
+    controls.append("expired-intent-is-not-a-validity-failure")
+    overdue = due(rows_with_debt)
+    assert [rid for rid, _ in overdue] == ["synthetic-intent-control"], (
+        f"due-projection lost its teeth: an expiry of 1999-01-01 produced {overdue}")
+    controls.append("due-projection-reports-the-overdue-intent")
+    fresh = copy.deepcopy(synthetic_intent); fresh["expiry"] = "2999-01-01"
+    mutant = copy.deepcopy(doc); mutant["rows"].append(fresh)
+    assert due(validate_profile(ROOT, mutant)) == [], (
+        "due-projection reported a debt for an expiry in the year 2999")
+    controls.append("due-projection-stays-quiet-when-nothing-is-owed")
+
+    # Dates are labels now. A future adoption date is admitted -- burned here so
+    # the removed gate cannot creep back without a control going red.
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["adopted"] = "2999-01-01"
+    validate_profile(ROOT, mutant)
+    controls.append("future-date-is-not-a-validity-failure")
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["adopted"] = "2026-09-04T00:25:17+03:00"
+    validate_profile(ROOT, mutant)
+    controls.append("rfc3339-with-offset-admitted")
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["adopted"] = "2026-09-04T00:25:17"
+    refuses("offsetless-datetime", mutant, "OFFSET_MISSING")
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["adopted"] = "the fourth"
+    refuses("malformed-date", mutant, "ADOPTED_INVALID")
     # The vocabulary stays closed even though occupancy is not compulsory.
     mutant = copy.deepcopy(doc); mutant["rows"][pick("operational")]["class"] = "speculative"
     refuses("class-outside-vocabulary", mutant, "ROW_CLASS_UNKNOWN")
@@ -288,7 +369,7 @@ def selftest(doc, today: dt.date) -> None:
     # invariant was prose that happened to be enforced.
     mutant = copy.deepcopy(doc); mutant["rows"][pick("retired")]["loss"] = "   "
     refuses("empty-loss", mutant, "LOSS_EMPTY")
-    rows = validate_profile(ROOT, doc, today)
+    rows = validate_profile(ROOT, doc)
     with mock.patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 1)):
         try:
             execute(rows, ROOT)
@@ -302,12 +383,19 @@ def selftest(doc, today: dt.date) -> None:
 
 def main(argv: list[str]) -> int:
     try:
-        today = dt.date.fromisoformat(argv[1]) if len(argv) > 1 and argv[1] != "--selftest" else dt.datetime.now(dt.UTC).date()
         doc = load(ROOT / "surface" / "rows.json")
         if "--selftest" in argv:
-            selftest(doc, today)
+            selftest(doc)
             return 0
-        rows = validate_profile(ROOT, doc, today)
+        rows = validate_profile(ROOT, doc)
+        if "--due" in argv:
+            # A separate room on purpose: this is the only reading that consults
+            # a clock, and it never speaks about validity.
+            overdue = due(rows)
+            for rid, when in overdue:
+                print(f"DUE      {rid}  expiry={when} has passed; the review it names is owed")
+            print(f"PROJECTION due={len(overdue)} clock=wall-clock authority=none")
+            return 1 if overdue else 0
         for rid, cls, predicate, credit in execute(rows, ROOT):
             print(f"CHECKED  {rid}  class={cls} predicate={predicate} credit={credit}")
         print(f"VECTOR   rows={len(rows)} checked={len(rows)} refused=0 semantic-credit=none")

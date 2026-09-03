@@ -69,7 +69,7 @@
       },
       {
         "path": ".github/workflows/embedded-claims-poc.yml",
-        "sha256": "dc00be31ec7238078a710bdc6d4442b031685a40e290b9a9e1bab8c59f966239"
+        "sha256": "263475d7c2e7489406d2ea77e778fdc19f028d3ff216f18ef68ae0f8b53fe13f"
       }
     ]
   },
