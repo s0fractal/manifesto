@@ -212,8 +212,10 @@ revision, path та content digest. Інакше між review та apply мож
 відмовляє `LOSS_EMPTY:<row>` для кожного рядка класу `retired` у
 `surface/rows.json`, а контроль `empty-loss` у його selftest спалює саме цю
 відмову мутацією. Межа цього burn названа точно: він накриває рядки одного
-файла, не RetirementRecord взагалі. Поки цей документ — draft, записи поза
-`surface/rows.json` мають лише цю prose-вимогу і жодного falling consumer.
+файла, не RetirementRecord взагалі. Решту накриває другий consumer:
+`tools/retirement_record_check.py` вимагає непорожній `loss` у структурованому
+`RetirementRecord` при **кожному** mode і status, і працює в CI. Prose-only стан,
+описаний у першій редакції цього абзацу, закінчився 2026-09-03.
 
 ### I5. Retirement is not refutation
 
@@ -659,7 +661,7 @@ postconditions: виконуваний чекер + названі mutation cont
 REFUSED  bos-archive  EXTERNAL_SUBJECT_IDENTITY_MISSING  (expected)
 VALID    embedded-claims-lineage  subjects=5 scope=in-repo relation=replaced-by postconditions-replayed=2
 VECTOR   records=2 valid=1 refused-as-expected=1 mismatched=0 semantic-credit=none
-ALL PASS (26 retirement-record mutation controls)
+ALL PASS (32 retirement-record mutation controls)
 ```
 
 Перша версія цього consumer'а (`eb1502c`) давала цей самий зелений вивід і була
@@ -691,8 +693,10 @@ ALL PASS (26 retirement-record mutation controls)
 кожного вилученого суб'єкта перераховується з git-об'єкта на before revision (файла
 в дереві вже нема — у цьому й суть); `repository` обов'язковий **лише** для
 зовнішнього суб'єкта; `relation ∈ {replaced-by, extracted-from, none}`; `loss`
-непорожній **завжди**; postconditions — структуровані `argv` із пінованим
-entrypoint, які **справді запускаються**, а не описуються.
+непорожній **завжди**; postconditions несуть `runner` (закрита множина) +
+**запінений** `entrypoint` + `args`, з яких **argv конструює сам consumer** —
+слота `argv` у записі нема, тож запінений entrypoint є тим, що виконується, а не
+тим, що згадується поруч, і ці команди **справді запускаються**.
 
 Негативний край ізолює **одну** змінну, і це перевірено, а не заявлено: якщо
 підставити BOS-запису будь-яку `repository`, він проходить усе решта чисто. Тобто

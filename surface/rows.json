@@ -45,19 +45,6 @@
       "falsifier": "README.md moving under the receipt while this row still reports CHECKED \u2014 the silent staleness that made this an intent row until 2026-09-03"
     },
     {
-      "id": "sev-loss-manifest-needs-home",
-      "class": "intent",
-      "statement": "loss_manifest is enforced for this repository's own surface \u2014 every retired row carries a non-empty loss, refused as LOSS_EMPTY by tools/active_surface.py and burned by its empty-loss control \u2014 but no falling consumer covers a retirement record outside surface/rows.json; CONTROLLED-FORGETTING-0.1 I4 now states the requirement for every mode as draft prose only.",
-      "sources": [
-        {"locator": "trajectory-audit-fable-5.1-2026-09/09-INVARIANT-CENSUS.md, row sev", "note": "outside this repository; address only, not verified evidence"},
-        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "6c23a61af86bf7fcba024da7c5b50c82d0c957baf4a126f4dff24416439b5852"},
-        {"path": "tools/active_surface.py", "sha256": "5e6097554c90624684e23208a5358e52e92408c638e6c4483a544f3c3dbf7b4e"}
-      ],
-      "origin": "trajectory audit invariant census 09, first pass; narrowed 2026-09-03 after reading CONTROLLED-FORGETTING-0.1 and INTENT-VOCABULARY-EVOLUTION-0.1 for existing loss-manifest form",
-      "review_trigger": "before another portfolio archive act, the next projection artifact, or any owner act promoting CONTROLLED-FORGETTING-0.1 out of draft",
-      "expiry": "2026-12-31"
-    },
-    {
       "id": "multi-model-raid-promised",
       "class": "retired",
       "statement": "The multi-model raid is withdrawn without being run, and MISSION.md now says so itself: the operator retyped the obligation in place on 2026-09-03, with no successor and with no other exercise \u2014 the cap-lab capsule dialogue included \u2014 counted as having discharged it.",
@@ -77,12 +64,12 @@
       "statement": "SEV repository was archived on 2026-09-02 and removed from the active project surface.",
       "sources": [
         {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external historical locator; not verified by this repository"},
-        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "6c23a61af86bf7fcba024da7c5b50c82d0c957baf4a126f4dff24416439b5852"}
+        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "a39e829720ed3bf5c0e107387cbeb9110d09b7a3df7b7ab5f167b2ff00a88e9d"}
       ],
       "mode": "ARCHIVED",
       "retired_on": "2026-09-02",
-      "loss": "the loss_manifest invariant has no live home with its falsifier",
-      "successor": "sev-loss-manifest-needs-home",
+      "loss": "at the retirement on 2026-09-02 the loss_manifest invariant had no live home carrying its falsifier; what covers it now was built afterwards and is not this row's to claim \u2014 tools/active_surface.py refuses an empty loss on any retired row, and tools/retirement_record_check.py reads structured RetirementRecords in CI.",
+      "successor": null,
       "record": {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external retirement record; address only"}
     }
   ]

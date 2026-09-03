@@ -174,9 +174,13 @@ def validate_profile(root: Path, doc, today: dt.date):
                 raise Refusal(f"REDACTED_CARRIES_BYTE_PIN:{rid}")
         rows.append(raw)
 
-    present = {row["class"] for row in rows}
-    if present != CLASSES:
-        raise Refusal(f"CLASS_SET_NOT_CLOSED:{sorted(present)}")
+    # The class vocabulary is CLOSED (an unknown class is refused per row, above)
+    # but occupancy is NOT COMPULSORY. Requiring one row of every class made the
+    # vector keep a class alive for the checker's sake: when the open edge that
+    # justified the only `intent` row was actually closed, the row could not be
+    # deleted without tripping this, so a false statement stayed on the surface
+    # to satisfy a shape rule. A closed vocabulary is about which classes may
+    # appear, never about which must.
     by_id = {row["id"]: row for row in rows}
     for row in rows:
         if row["class"] == "retired" and row["successor"] is not None:
@@ -255,9 +259,24 @@ def selftest(doc, today: dt.date) -> None:
     refuses("source-drift", mutant, "DIGEST_MISMATCH")
     mutant = copy.deepcopy(doc); mutant["rows"][pick("normative")]["authority"]["sha256"] = "0" * 64
     refuses("authority-drift", mutant, "DIGEST_MISMATCH")
-    mutant = copy.deepcopy(doc); intent = pick("intent")
-    mutant["rows"][intent]["review_trigger"] = None; mutant["rows"][intent]["expiry"] = None
+    # Synthetic, so the control does not depend on a live intent row existing:
+    # a class may legitimately be empty, and a control that quietly stops running
+    # when its class empties is a control that reports nothing while passing.
+    synthetic_intent = {
+        "id": "synthetic-intent-control", "class": "intent",
+        "statement": "control row, never part of the live vector",
+        "sources": [{"locator": "selftest fixture", "note": "synthetic; address only"}],
+        "origin": "active_surface selftest", "review_trigger": None, "expiry": None,
+    }
+    mutant = copy.deepcopy(doc); mutant["rows"].append(copy.deepcopy(synthetic_intent))
     refuses("unbounded-intent", mutant, "INTENT_UNBOUNDED")
+    mutant = copy.deepcopy(doc)
+    bounded = copy.deepcopy(synthetic_intent); bounded["expiry"] = "1999-01-01"
+    mutant["rows"].append(bounded)
+    refuses("expired-intent", mutant, "INTENT_EXPIRED")
+    # The vocabulary stays closed even though occupancy is not compulsory.
+    mutant = copy.deepcopy(doc); mutant["rows"][pick("operational")]["class"] = "speculative"
+    refuses("class-outside-vocabulary", mutant, "ROW_CLASS_UNKNOWN")
     mutant = copy.deepcopy(doc); mutant["rows"][pick("retired")]["successor"] = "missing-row"
     refuses("dangling-successor", mutant, "SUCCESSOR_UNKNOWN")
     mutant = copy.deepcopy(doc); mutant["rows"][pick("operational")]["class"] = []
@@ -295,6 +314,12 @@ def main(argv: list[str]) -> int:
         return 0
     except (Refusal, AssertionError, ValueError) as exc:
         print(f"REFUSED  {exc}")
+        return 1
+    except Exception as exc:  # the LAST membrane, never the schema
+        # Reaching here means an input found a path the typed checks miss. Fail
+        # closed and name it; do not print a traceback and do not treat this as
+        # a category anything is allowed to live in.
+        print(f"REFUSED  INTERNAL_UNTYPED:{type(exc).__name__}:{exc}")
         return 1
 
 
