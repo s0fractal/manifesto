@@ -31,6 +31,20 @@
       "by": "s0fractal (operator), recorded class-(c) act; revised 2026-09-03 by a further class-(c) act withdrawing the raid obligation, which is why the authority bytes moved while the adoption date did not"
     },
     {
+      "id": "controlled-forgetting-core-adopted",
+      "class": "normative",
+      "statement": "Sections 1-10 of CONTROLLED-FORGETTING-0.1 (retirement modes and invariants I1-I10) and RetirementRecord v0.1 in its two fixture-covered combinations, APPLIED + in-repo and DRY_RUN + external, are this repository's retirement policy. Every other section of that document -- Phase 3-4, the candidate CLI, external APPLIED, redaction implementation, and the open decisions -- stays non-normative.",
+      "sources": [
+        {"path": "CONTROLLED-FORGETTING-0.1.md", "sha256": "47a68191e0ebf0eed5394f8899691f3d4ee169d194cafbaab460466f697452bd"},
+        {"path": "tools/retirement_record_check.py", "sha256": "0a4e0970bd1bfdeee3653c57779a99e7bbbc5f68965ea8bb3fc1a160003d07a2"}
+      ],
+      "authority": {"path": "CONTROLLED-FORGETTING-0.1.md", "sha256": "47a68191e0ebf0eed5394f8899691f3d4ee169d194cafbaab460466f697452bd"},
+      "scope": "retirement acts recorded in this repository only; it binds no other repository, licenses no sweep, and names no file as a candidate",
+      "revocation": "the operator rewrites the status section as a new class-(c) act",
+      "adopted": "2026-09-03",
+      "by": "s0fractal (operator), class-(c) act; the promoted slice is the part carrying an executable consumer, and the unfinished edges stay open by the same act"
+    },
+    {
       "id": "mission-receipt-fresh",
       "class": "operational",
       "statement": "MISSION.receipt.json is settled against the README.md bytes in the tree now: every dependency its claims recorded is recomputed and matches, so the \u2693 badges in MISSION.settled.md quote a README that still exists.",
@@ -64,7 +78,7 @@
       "statement": "SEV repository was archived on 2026-09-02 and removed from the active project surface.",
       "sources": [
         {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external historical locator; not verified by this repository"},
-        {"path": "drafts/CONTROLLED-FORGETTING-0.1.md", "sha256": "a39e829720ed3bf5c0e107387cbeb9110d09b7a3df7b7ab5f167b2ff00a88e9d"}
+        {"path": "CONTROLLED-FORGETTING-0.1.md", "sha256": "47a68191e0ebf0eed5394f8899691f3d4ee169d194cafbaab460466f697452bd"}
       ],
       "mode": "ARCHIVED",
       "retired_on": "2026-09-02",
