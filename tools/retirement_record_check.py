@@ -27,6 +27,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from unittest import mock
 
@@ -377,19 +378,31 @@ def check_manifest(found: dict[str, str]) -> None:
             raise Refusal(f"RECORD_FILENAME_ID_MISMATCH:{stem}!={rid}")
 
 
-def load_records() -> list[tuple[Path, dict]]:
-    if not RECORDS.is_dir():
+def load_records(directory: Path = RECORDS) -> list[tuple[Path, dict]]:
+    """Every way a file on disk can be hostile is answered with a typed refusal
+    here, BEFORE anything downstream assumes a mapping. A record that is a list,
+    a number or undecodable bytes must not reach run() and become an
+    AttributeError; the loader is the membrane, and main()'s catch-all is only
+    the last one."""
+    if not directory.is_dir():
         raise Refusal("RECORDS_DIR_MISSING")
     out = []
-    for path in sorted(RECORDS.glob("*.json")):
+    for path in sorted(directory.glob("*.json")):
         if path.is_symlink():
             raise Refusal(f"RECORD_SYMLINK:{path.name}")
-        out.append((path, strict_loads(path.read_text(encoding="utf-8"))))
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            raise Refusal(f"RECORD_UNREADABLE:{path.name}:{type(exc).__name__}") from exc
+        record = strict_loads(text)
+        if not isinstance(record, dict):
+            raise Refusal(f"RECORD_NOT_AN_OBJECT:{path.name}")
+        out.append((path, record))
     return out
 
 
-def run() -> int:
-    records = load_records()
+def run(directory: Path = RECORDS) -> int:
+    records = load_records(directory)
     found = {}
     for path, record in records:
         rid = record.get("id")
@@ -525,6 +538,39 @@ def selftest() -> int:
                      {**{k: k for k in EXPECTED}, "bos-archive": "harmless-name"},
                      "RECORD_FILENAME_ID_MISMATCH")
 
+    # --- P1: the loader is the membrane, exercised THROUGH the loader ---------
+    def loader_refuses(name, filename, payload, expected):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / filename
+            target.write_bytes(payload)
+            try:
+                load_records(Path(tmp))
+            except Refusal as exc:
+                if expected not in str(exc):
+                    raise AssertionError(f"{name}: wrong refusal {exc}") from exc
+                controls.append(name)
+                return
+            raise AssertionError(f"{name}: mutation survived")
+
+    loader_refuses("loader-non-object-json", "x.json", b'["not", "a", "record"]',
+                   "RECORD_NOT_AN_OBJECT")
+    loader_refuses("loader-scalar-json", "x.json", b'42', "RECORD_NOT_AN_OBJECT")
+    loader_refuses("loader-undecodable-bytes", "x.json", b'\xff\xfe{"id": "x"}',
+                   "RECORD_UNREADABLE")
+    loader_refuses("loader-malformed-json", "x.json", b'{ broken', "JSON_INVALID")
+    loader_refuses("loader-duplicate-key", "x.json", b'{"id": "a", "id": "b"}',
+                   "DUPLICATE_JSON_KEY")
+    # ...and through run(), which is the entry point a consumer actually calls.
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "rogue.json").write_bytes(b'["not", "a", "record"]')
+        try:
+            run(Path(tmp))
+        except Refusal as exc:
+            assert "RECORD_NOT_AN_OBJECT" in str(exc), exc
+            controls.append("run-refuses-non-object-record")
+        else:
+            raise AssertionError("run-refuses-non-object-record: mutation survived")
+
     # A green postcondition that is not actually run is the label-wider-than-
     # predicate failure in its purest form, so the red path is burned too.
     summary = validate(copy.deepcopy(good))
@@ -546,6 +592,12 @@ def main(argv: list[str]) -> int:
         return selftest() if "--selftest" in argv else run()
     except (Refusal, AssertionError) as exc:
         print(f"REFUSED  {exc}")
+        return 1
+    except Exception as exc:  # the LAST membrane, never the schema
+        # Reaching here means some input found a path the typed checks do not
+        # cover. It must still fail closed rather than print a traceback, and it
+        # is a defect to be named, not a category to live in.
+        print(f"REFUSED  INTERNAL_UNTYPED:{type(exc).__name__}:{exc}")
         return 1
 
 
