@@ -308,9 +308,15 @@ def receipt_profile_refusal(receipt):
 
     Receipts stamped with any other version are not judged. 0.3 stays a
     historical artifact; this is a new profile, not a migration.
+
+    "Any other version" means exactly that, so the test is equality with
+    GATE_VERSION and not a prefix. A prefix test reaches settle_gate/0.40-foreign
+    and settle_gate/0.4evil -- neighbours in string space, strangers in contract
+    space -- and judging a stranger's receipt by our rule is the same category
+    error as letting ours go unjudged (owner review, 2026-09-03).
     """
     version = receipt.get("gate_version")
-    if not isinstance(version, str) or not version.startswith("settle_gate/0.4"):
+    if version != GATE_VERSION:
         return None
     claims = receipt.get("claims")
     if not isinstance(claims, list):
@@ -428,6 +434,19 @@ def selftest():
     if "observed_value" in live["claims"][2]:
         raise AssertionError("unsettled-exempt: probe's UNSETTLED claim carries an observed_value")
     admits("unsettled-exempt", live)
+
+    # A version this profile does not name is none of its business, and near
+    # misses are the cases a prefix test would silently claim.
+    for foreign in ("settle_gate/0.40-foreign", "settle_gate/0.4evil",
+                    "other-gate/0.4+deps+observed"):
+        mutant = copy.deepcopy(live)
+        mutant["gate_version"] = foreign
+        for claim in mutant["claims"]:
+            claim.pop("observed_value", None)
+        refusal = receipt_profile_refusal(mutant)
+        if refusal is not None:
+            raise AssertionError(f"foreign-version-not-judged: {foreign} was judged ({refusal})")
+    controls.append("foreign-version-not-judged")
 
     # 0.3 receipts are historical, not migration targets: the rule does not
     # reach back and judge them.
