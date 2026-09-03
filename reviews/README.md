@@ -1,8 +1,8 @@
 # Reviews
 
-Adversarial review is this repository's intended next phase: the owner plans
-to attack the RVB/SSD/AIE line of work with models from other vendors. This
-directory is where those reviews land, in the discipline of
+Adversarial review is how the RVB/SSD/AIE line of work gets tested. Reviews
+from Codex, Qwen and Kimi are filed here; Grok's is in `quotes/Grok/`. This
+directory is where they land, in the discipline of
 `warrant/reviews/`: one file per review, named
 `YYYY-MM-<vendor-or-model>-<slug>.md`, filed **as received**, with responses
 in separate files, never edits to the original. A review that kills a claim
@@ -18,6 +18,16 @@ self-contained text are byte-verbatim. Where the full original exists it
 should be linkable. (Also: review files carry the date the review was
 authored; the git commit that files them may be a day off — check `git log`,
 not the filename, for filing time.)
+
+**The raid is not coming (2026-09-03).** MISSION.md promised a multi-model raid
+on the surface below, and this file used to open by announcing it as the next
+phase. The owner has withdrawn broad multi-vendor attacks; `surface/rows.json`
+carries `multi-model-raid-promised` as a `WITHDRAWN` retirement with its loss
+named, and counts no substitute exercise as having discharged it. The ranked
+list stays, because a single reviewer who does show up still gets the most out
+of these joints — but read it as *where a reviewer's time would go furthest*,
+never as *these joints have been attacked*. MISSION.md still lists the
+obligation as open; reconciling its text is the operator's act, not this file's.
 
 ## Attack surface (ranked by expected yield)
 

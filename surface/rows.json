@@ -60,9 +60,10 @@
     {
       "id": "multi-model-raid-promised",
       "class": "retired",
-      "statement": "The multi-model raid promised in MISSION.md is withdrawn without being run; no other exercise, the cap-lab capsule dialogue included, is counted as having discharged it.",
+      "statement": "The multi-model raid promised in MISSION.md is withdrawn without being run; no other exercise, the cap-lab capsule dialogue included, is counted as having discharged it, and reviews/README.md no longer advertises the raid as this repository's next phase.",
       "sources": [
-        {"path": "MISSION.md", "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"}
+        {"path": "MISSION.md", "sha256": "ed3fe3c7a81669cd350f30f65a1a9711b31cd2138ff1d34cfa6588dacddd0a39"},
+        {"path": "reviews/README.md", "sha256": "c99bddc6886b22481cf908b921e7c99c2cf412c4df377d32f3afdb6d3c3cb28f"}
       ],
       "mode": "WITHDRAWN",
       "retired_on": "2026-09-03",
