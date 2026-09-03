@@ -562,7 +562,99 @@ historical retrieval. Це момент, коли retirement починає ре
 Перевірити один exact consumer link. Не робити repo sweep і не заявляти, що всі
 невідомі consumers мігровані.
 
-### Пробне прикладення форми до BOS (2026-09-03) — що не зв'язалось
+### Phase 1: `COMPLETE_BY_EXISTING_SPECIMEN` (2026-09-03)
+
+Phase 1 не треба виконувати — він виконаний раніше, ніж цей розділ його попросив.
+`drafts/EMBEDDED-CLAIMS-RETIREMENT-0.1.md` є **applied** specimen: п'ять точних
+суб'єктів із digest-ами, exact before revision, apply commit і tree, replacement,
+known loss, authority, historical retrieval, межа допуску і **падаючий consumer у
+CI**. Перевірено виконанням, не описом:
+
+```
+PASS embedded-claims active surface: 5 retired, 0 zombie references
+ALL PASS (embedded-claims surface mutation controls)
+```
+
+і незалежно від самого чекера: `b2c0a15^` = `2a6e54d8…` (apply commit справді
+прямий нащадок before revision), `b2c0a15^{tree}` = `09ad6e54…`.
+
+Це знімає з розділу вимогу «знайти specimen». Відкритий крок інший: **винести з
+уже успішного specimen мінімальну загальну форму**, не втративши того, що
+зламалось на BOS.
+
+#### Ретроспективне зіставлення з `RetirementRecord` §6
+
+Адресовано те, що вже є в байтах. Відсутнього **не дописано заднім числом** —
+порожній рядок тут інформативніший за заповнений.
+
+| Поле §6 | Що в байтах specimen | Статус |
+|---|---|---|
+| `type`, `schema_version` | нема | ABSENT |
+| `subject.repository` | не названо; зв'язується вміщенням | IMPLICIT |
+| `subject.revision` | `2a6e54d8…` | BOUND |
+| `subject.path` | п'ять шляхів | BOUND ×5 |
+| `subject.content_digest` | п'ять SHA-256 | BOUND ×5 |
+| `mode` | 3×`SUPERSEDED`, 2×`ARCHIVED` — **per subject** | BOUND, але множинно |
+| `reason.summary` | колонка Reason + розділ Decision | BOUND |
+| `reason.evidence[].locator` | нема | ABSENT |
+| `replacement` | п'ять адрес, relation названа прозою | BOUND, без revision/digest |
+| `known_loss` | чотири пункти + підстава прийняття | BOUND |
+| `preservation.policy` | «Git availability is best-effort» | BOUND |
+| `preservation.locator` | `git show 2a6e54d…:<historical-path>` | BOUND |
+| `preservation.verified_retrievable_at` | нема | ABSENT |
+| `admission.default` | `current admission: EXCLUDED` | BOUND |
+| `admission.historical_review` | «Historical research remains allowed with status» | BOUND |
+| `admission.normative_use` | «do not treat as current precedent without an explicit re-adoption act» | BOUND |
+| `authority.owner` | «repository owner instruction in the working session» | BOUND |
+| `authority.warrant` | нема | ABSENT |
+| `applied.before_tree` | дано before **revision** (коміт), не tree | ABSENT (виводиться) |
+| `applied.after_tree` | `09ad6e54…` | BOUND |
+| `applied.receipt` | «recorded by the child commit» | BOUND |
+
+Результат неприємний для §6 і корисний: **шість полів схеми не знадобились
+єдиному retirement'у, який справді відбувся**, а одне — `subject.repository` —
+трималось не декларацією, а вміщенням.
+
+#### Чого §6 не має, а specimen ніс
+
+1. **Executable postconditions.** Розділ, що називає предикати чекера і його
+   mutation controls (resurrection, zombie reference, boundary loss). Це
+   найсильніша частина запису, і слота під неї в §6 нема. Без нього tombstone —
+   опис; з ним — падаюча перевірка.
+2. **Множинний суб'єкт.** Акт був **lineage**-вилученням: п'ять суб'єктів, одне
+   рішення, різні modes. Схема §6 однинна.
+
+#### Мінімальна загальна форма — кандидат, не прийнята схема
+
+Перетин того, що specimen справді ніс, із тим, що BOS показав обов'язковим:
+
+```text
+subject:  [ {path, digest, mode, reason} … ]   множина: акт може бути lineage
+          revision (before)
+          repository — ОБОВ'ЯЗКОВЕ лише коли суб'єкт зовнішній   ← урок BOS
+replacement:  множина адрес + названа relation; пін не був потрібен
+              relation ∈ {replaces-active-role, extracted-from, none}
+              «extracted-from» додано з BOS: витягли, а не замінили
+known_loss:   непорожній                     ← єдине поле, спалене живою відмовою
+preservation: policy + retrieval locator
+admission:    default / historical_review / normative_use
+authority:    owner (warrant не був потрібен)
+applied:      before revision + apply commit + apply tree + де лежить receipt
+postconditions: виконуваний чекер + названі mutation controls   ← §6 не має
+```
+
+Що BOS додає до кожного рядка, коли суб'єкт **репозиторно-формний і зовнішній**:
+`repository` мусить бути явним; `path`/`content_digest` втрачають сенс і
+потребують tree або локатора; `verified_retrievable_at` стає неперевірним;
+`authority` може бути невідомою; `replacement` буває третьою формою.
+
+**Чому драфт усе одно не підвищується.** Падаючий consumer перевіряє **конкретний**
+embedded-claims transition, а не читає загальний структурований `RetirementRecord`.
+Поки такого consumer'а нема, форма вище лишається prose-кандидатом. Phase 2 з
+цього списку виконаний **частково**: падаючий consumer існує для одного переходу,
+загального — нема.
+
+### BOS — `DRY_RUN / FORM_LIMIT_FOUND` (2026-09-03), не retirement
 
 Перед будь-яким підвищенням цього драфту оператор попросив прикласти форму ще до
 одного **відмінного** retirement-кейсу і подивитися, чи вона не зав'язана лише на
@@ -597,9 +689,10 @@ extraction, написаним перед його архівацією. Ніч�
 
 **Висновок.** Форма узагальнюється за межі SEV, але прив'язана до **артефакто-
 формних, внутрішньорепозиторних** суб'єктів із локально відомою authority.
-Репозиторно-формні й зовнішні суб'єкти — там, де вона зупиняється. Тому драфт
-лишається драфтом: specimen, який виправдав би підвищення, це все ще локальний
-Phase 1, а не цей.
+Репозиторно-формні й зовнішні суб'єкти — там, де вона зупиняється. Цей запис —
+`DRY_RUN`, а не retirement: BOS тут нічого не вилучає і нічого не оформлює. Його
+робота — знайдена межа форми, і вона врахована в мінімальній загальній формі вище
+(рядки `repository`, `relation: extracted-from`, `verified_retrievable_at`).
 
 **Фальсифікатор цієї нотатки:** хтось заповнює `RetirementRecord` для BOS усіма
 п'ятьма полями з доказів, нічого не вигадавши — тоді названа тут межа хибна.
