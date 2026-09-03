@@ -4,10 +4,14 @@
       "class": "cite",
       "dep": {
         "path": "README.md",
-        "sha256": "c2827df8c26eb08ace53148b4c865644402d8454cc34ec303d1264e7e1387896"
+        "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
       },
       "detail": "verbatim quote found",
       "layer": "repo",
+      "observed_value": {
+        "found": true,
+        "kind": "citation"
+      },
       "payload": "\"створити **умови для народження нового**\" in README.md",
       "verdict": "PASS"
     },
@@ -15,10 +19,14 @@
       "class": "cite",
       "dep": {
         "path": "README.md",
-        "sha256": "c2827df8c26eb08ace53148b4c865644402d8454cc34ec303d1264e7e1387896"
+        "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
       },
       "detail": "verbatim quote found",
       "layer": "repo",
+      "observed_value": {
+        "found": true,
+        "kind": "citation"
+      },
       "payload": "\"а тому, що вони мають **історію, яку можна зрозуміти**\" in README.md",
       "verdict": "PASS"
     },
@@ -26,17 +34,21 @@
       "class": "cite",
       "dep": {
         "path": "README.md",
-        "sha256": "c2827df8c26eb08ace53148b4c865644402d8454cc34ec303d1264e7e1387896"
+        "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
       },
       "detail": "verbatim quote found",
       "layer": "repo",
+      "observed_value": {
+        "found": true,
+        "kind": "citation"
+      },
       "payload": "\"Ми не будуємо інструмент контролю\" in README.md",
       "verdict": "PASS"
     }
   ],
   "deps": {
     "README.md": [
-      "c2827df8c26eb08ace53148b4c865644402d8454cc34ec303d1264e7e1387896"
+      "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
     ]
   },
   "gate_version": "settle_gate/0.3+deps",
@@ -49,4 +61,4 @@
     "unsettled": 0
   }
 }
-RECEIPT_SHA256: e9a99b9a4cee1cf9bd9682451d49d8b273af800ca097c5bc7f39298c1f6612e2
+RECEIPT_SHA256: 14a45bd6e495a8c2421b1e3f86f7e05adaf6aaeb7cda6bd834003a460000df59

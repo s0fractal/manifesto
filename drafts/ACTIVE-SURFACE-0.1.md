@@ -25,9 +25,12 @@ of secret bytes may itself be an oracle).
 The output is a per-row vector. `CHECKED` means only that row's typed predicate
 held; it never means the statement, the file, or Manifesto as a whole is true.
 
-Current specimen: six rows. Its useful live finding is that
-`MISSION.receipt.json` is stale against current `README.md`; the row is therefore
-an `intent`, not an operational or normative upgrade.
+Current specimen: six rows — two operational, one normative, one intent, two
+retired. The receipt-freshness row is the one that moved: while
+`MISSION.receipt.json` was stale against `README.md` it could only be an
+`intent`, because there was nothing green to run. Re-settling it on the current
+bytes bought exactly one thing — a check that goes red, rather than quietly
+stale, the next time `README.md` moves under it.
 
 Run:
 
