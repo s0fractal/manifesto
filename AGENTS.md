@@ -33,9 +33,11 @@ accident:
 python3 tools/context_view.py
 ```
 
-**Explicit historical** — the same set plus every retired fact, each arriving
-with its retirement mode, loss, relation and replacement, retrieval address and
-admission status:
+**Explicit historical** — the same set plus the retired subjects of the one
+retirement record this specimen covers, each arriving with its retirement mode,
+loss, relation and replacement, retrieval address and admission status. It is
+one pair, not a sweep of everything this repository ever retired; retired facts
+that record never addressed are outside it and are read through their own owner:
 
 ```sh
 python3 tools/context_view.py --mode historical
@@ -58,9 +60,14 @@ Scope and counting grammar: `drafts/CONTEXT-POLICY-0.1.md`.
 1. **Historical mode is archaeology, not precedent.** Availability is not
    admission. Quote a retired artifact only with its status attached: a
    withdrawn revision said X; the current surface does not adopt it.
-2. **Do not hand a retired subject back into the default set.** Re-entry is an
-   owner act on the record it was retired by, not an edit to a view, a tool or
-   this file. Proposing one is allowed; performing one is not.
+2. **There is no readmission door here, and do not build one in passing.** Re-entry
+   into the default set is unimplemented on purpose: flipping `admission.default`
+   to `INCLUDED` in a retirement record is refused as `READOPTION_NOT_IMPLEMENTED`,
+   because a one-field edit is not a governed transition and the authority that
+   record already cites was addressed to the retirement, not to a later return.
+   A real re-entry needs an explicit act with a decision identity of its own,
+   which is outside this specimen. Proposing one is allowed; performing one —
+   through a record field, a view, a tool or this file — is not.
 3. **Do not commit generated context.** The view is printed on demand. A checked
    artifact needs a demonstrated consumer first.
 4. **Run any check that reads `git ls-files` after `git add`.** Before staging it

@@ -25,27 +25,34 @@ consumer has been demonstrated for a checked-in copy.
 
 THE TWO MODES
 
-  default     the agent working set. Retired subjects and retired rows are
+  default     the agent working set: the active surface rows and the live
+              replacement operands. The record's five retired subjects are
               absent -- not their paths, not their digests, not their reasons.
               What remains is a pointer: the record's address and how many facts
               are withheld, which is the short tombstone status
               CONTROLLED-FORGETTING section 8.1 asks a default loader to carry.
 
-  historical  the same set plus every retired fact, each wrapped in a typed
-              envelope: retirement mode, loss, relation and replacement, the
-              retrieval address, and the admission triple. Availability is not
-              admission (I3): this mode hands over bytes with their status, and
-              grants no credit.
+  historical  the same set plus the retired subjects OF THIS PAIR ONLY, each
+              wrapped in a typed envelope: retirement mode, loss, relation and
+              replacement, the retrieval address, and the admission triple.
+              Availability is not admission (I3): this mode hands over bytes
+              with their status, and grants no credit. Retired facts the
+              selected record does not address -- including the surface's own
+              retired rows -- are outside this specimen and enter neither mode.
 
-WHAT MOVES A SUBJECT BACK INTO DEFAULT
+NOTHING MOVES A SUBJECT BACK INTO DEFAULT
 
-Exactly one thing: `admission.default` in the canonical record reading
-`INCLUDED` instead of `EXCLUDED`. That is an edit to an owner record, which its
-own consumer holds to an addressed authority and to subjects that still bind. No
-such act exists here and this tool does not invent one; the selftest flips the
-field on an in-memory copy to burn the gate, and the live record stays EXCLUDED.
-Like the record consumer, this file never certifies that any act was within
-anyone's power (I6).
+This specimen implements no readmission door, and it is the narrower for it. The
+canonical record's admission triple is bound exactly as it stands, with
+`default: EXCLUDED`; any other state is refused as READOPTION_NOT_IMPLEMENTED.
+A one-field edit from `EXCLUDED` to `INCLUDED` is not a governed transition: the
+authority address the record already carries was given for the retirement, and
+reusing it would let an ordinary field edit spend an act that never decided
+this. Re-entry needs an explicit governed transition -- a decision identity of
+its own -- and that is outside this specimen's scope, stated rather than
+approximated. Historical retrieval stays open and stays non-crediting. Like the
+record consumer, this file never certifies that any act was within anyone's
+power (I6).
 
 COUNTING GRAMMAR -- see `--measure`, and drafts/CONTEXT-POLICY-0.1.md.
 """
@@ -77,6 +84,14 @@ SPECIMEN_SCOPE = "in-repo"
 SPECIMEN_RELATION = "replaced-by"
 SPECIMEN_SUBJECTS = 5
 SPECIMEN_OPERANDS = 8
+# The admission triple is pinned here too, exactly as the record declares it
+# today. This specimen covers the EXCLUDED state and nothing else: readmission
+# is not implemented, so any other triple is a refusal rather than a mode.
+SPECIMEN_ADMISSION = {
+    "default": "EXCLUDED",
+    "historical_review": "ALLOWED_WITH_STATUS",
+    "normative_use": "FORBIDDEN_WITHOUT_READOPTION",
+}
 
 ENVELOPE = ("HISTORICAL ARTIFACT: retired, EXCLUDED from default context. "
             "Cite with this status; do not treat as current precedent.")
@@ -154,6 +169,22 @@ def load_owners(root: Path, records_dir: Path | None = None):
     return rows, found[SPECIMEN_RECORD]
 
 
+def assert_no_readoption(record) -> None:
+    """The gate this specimen actually has. It reads the record's admission and
+    covers exactly one state: EXCLUDED as declared. An `INCLUDED` default is not
+    a supported mode here -- the record's authority address was given for the
+    retirement and says nothing about a later readmission, so honouring the flip
+    would let an ordinary field edit spend an act that never decided it."""
+    admission = record.get("admission")
+    if not isinstance(admission, dict):
+        raise Refusal("SPECIMEN_ADMISSION_UNEXPECTED:not-an-object")
+    if admission.get("default") != SPECIMEN_ADMISSION["default"]:
+        raise Refusal(f"READOPTION_NOT_IMPLEMENTED:{record.get('id')}:"
+                      f"admission.default={admission.get('default')}")
+    if admission != SPECIMEN_ADMISSION:
+        raise Refusal(f"SPECIMEN_ADMISSION_UNEXPECTED:{sorted(admission.items())}")
+
+
 def bind(record) -> None:
     """Bind the specimen record: the owner consumer first (it recomputes every
     subject digest from the git object at the before revision and every
@@ -168,6 +199,7 @@ def bind(record) -> None:
         raise Refusal(f"SPECIMEN_SCOPE_UNEXPECTED:{record['subject_scope']}")
     if record["replacement"]["relation"] != SPECIMEN_RELATION:
         raise Refusal(f"SPECIMEN_RELATION_UNEXPECTED:{record['replacement']['relation']}")
+    assert_no_readoption(record)
     if len(record["subjects"]) != SPECIMEN_SUBJECTS:
         raise Refusal(f"SPECIMEN_SUBJECT_COUNT:{len(record['subjects'])}!={SPECIMEN_SUBJECTS}")
     operands = record["replacement"]["operands"]
@@ -265,14 +297,15 @@ def build(rows, record, operands: dict[str, str], mode: str) -> dict:
     """Pure: already-bound owners in, one deterministic document out."""
     if mode not in MODES:
         raise Refusal(f"MODE_UNKNOWN:{mode}")
-    # A row's admission follows its own class; the record's `admission` field
-    # governs the record's subjects and nothing else. Conflating them would let
-    # one act readmit rows it never addressed.
-    readmitted = record["admission"]["default"] == "INCLUDED"
-    facts = [row_fact(row) for row in rows
-             if row["class"] != "retired" or mode == "historical"]
+    assert_no_readoption(record)
+    # The active surface is the substrate of both modes. Its retired rows are
+    # NOT this specimen's history: they belong to no pair (successor: null) and
+    # the selected record never addressed them. Historical mode expands exactly
+    # the one pair it names, so the measured delta is that pair's and not a
+    # class-wide sweep of everything the repository ever retired.
+    facts = [row_fact(row) for row in rows if row["class"] != "retired"]
     facts += [operand_fact(record, rel, digest) for rel, digest in sorted(operands.items())]
-    if mode == "historical" or readmitted:
+    if mode == "historical":
         facts += [subject_fact(record, subject) for subject in record["subjects"]]
 
     seen = set()
@@ -297,12 +330,12 @@ def build(rows, record, operands: dict[str, str], mode: str) -> dict:
     }
     if mode == "default":
         # The short tombstone status the default loader is allowed to carry: an
-        # address and a count, never the retired facts themselves.
-        withheld = sum(1 for row in rows if row["class"] == "retired")
-        withheld += 0 if readmitted else len(record["subjects"])
+        # address and a count, never the retired facts themselves. The count is
+        # this pair's withheld subjects -- it does not speak for retired facts
+        # the record never addressed.
         doc["historical"] = {
             "record": f"drafts/retirement-records/{record['id']}.json",
-            "retired_facts_withheld": withheld,
+            "retired_facts_withheld": len(record["subjects"]),
             "admission_default": record["admission"]["default"],
             "command": "python3 tools/context_view.py --mode historical",
         }
@@ -335,8 +368,10 @@ def assert_default_excludes(default_doc, rows, record) -> None:
     for row in rows:
         if row["class"] == "retired" and f'"{row["id"]}"' in text:
             raise Refusal(f"DEFAULT_ADMITS_RETIRED_ROW:{row['id']}")
-    if record["admission"]["default"] == "INCLUDED":
-        return  # the record's subjects were readmitted by an owner act.
+    # No admission state exempts a caller from the rest of this check: an
+    # `INCLUDED` record is refused here too, so a view built by some other path
+    # cannot reach an agent by declaring itself readmitted.
+    assert_no_readoption(record)
     for subject in record["subjects"]:
         for token in (subject["path"], subject["sha256"], subject["reason"]):
             if token and token in text:
@@ -360,6 +395,21 @@ def assert_historical_envelope(historical_doc) -> None:
             raise Refusal(f"HISTORICAL_FACT_GRANTS_NORMATIVE_USE:{fact['id']}")
         if admission.get("default") != "EXCLUDED":
             raise Refusal(f"HISTORICAL_FACT_CLAIMS_DEFAULT_ADMISSION:{fact['id']}")
+
+
+def assert_one_pair(historical_doc, record) -> None:
+    """The specimen says one pair, so the expansion must be one pair. Every
+    retired fact historical mode hands over is a subject of the selected record;
+    a retired fact from anywhere else -- another record, or a retired surface row
+    that merely shares the class -- would silently widen both the claim and the
+    measured delta."""
+    addressed = {subject["path"] for subject in record["subjects"]}
+    retired = [fact for fact in historical_doc["facts"] if fact.get("status") == "RETIRED"]
+    for fact in retired:
+        if fact.get("kind") != "retired-subject" or fact["id"] not in addressed:
+            raise Refusal(f"HISTORICAL_ADMITS_UNRELATED_FACT:{fact['kind']}:{fact['id']}")
+    if len(retired) != len(addressed):
+        raise Refusal(f"HISTORICAL_PAIR_INCOMPLETE:{len(retired)}!={len(addressed)}")
 
 
 def assert_scope_nonempty(default_doc, historical_doc) -> None:
@@ -386,6 +436,7 @@ def check(root: Path) -> int:
     rows, record, operands, default, historical = views(root)
     assert_default_excludes(default, rows, record)
     assert_historical_envelope(historical)
+    assert_one_pair(historical, record)
     assert_scope_nonempty(default, historical)
     # Determinism: the same owners must render the same bytes, or "bytes" is not
     # a measurement anyone can reproduce.
@@ -444,17 +495,42 @@ def selftest(root: Path) -> int:
         assert subject["path"] not in text and subject["sha256"] not in text, subject["path"]
     controls.append("default-carries-no-retired-subject")
 
-    # ...and the exclusion is PRODUCED by the declared admission, not by luck.
+    # ...and the exclusion is READ FROM the record, not luck: the one-field edit
+    # the review reproduced is run through the live owner/check path here. The
+    # owner consumer accepts it -- INCLUDED is a legal value of its enum and the
+    # authority object is untouched -- and this specimen still refuses, because
+    # a reused address is not a commitment to a decision it never made.
     readmitted = copy.deepcopy(record)
     readmitted["admission"]["default"] = "INCLUDED"
-    admitted_doc = build(rows, readmitted, operands, "default")
-    assert any(fact["kind"] == "retired-subject" for fact in admitted_doc["facts"]), (
-        "flipping admission.default to INCLUDED changed nothing: the exclusion "
-        "is not being read from the record at all")
-    controls.append("readmission-flips-the-gate")
-    assert not any(fact.get("class") == "retired" for fact in admitted_doc["facts"]), (
-        "the record's admission field readmitted surface rows it never addressed")
-    controls.append("readmission-does-not-reach-rows-it-never-addressed")
+    records.validate(readmitted)  # the owner is satisfied; that is the point
+    refuses("readmission-by-field-edit-is-refused",
+            lambda: bind(readmitted), "READOPTION_NOT_IMPLEMENTED")
+    refuses("readmission-cannot-build-a-default-view",
+            lambda: build(rows, readmitted, operands, "default"), "READOPTION_NOT_IMPLEMENTED")
+    refuses("readmission-cannot-pass-the-default-invariant",
+            lambda: assert_default_excludes(default, rows, readmitted),
+            "READOPTION_NOT_IMPLEMENTED")
+
+    # Not only in memory: the same flip written to disk and read back through
+    # the owner's real loader is refused on the live path an agent would use.
+    with tempfile.TemporaryDirectory() as staging:
+        (Path(staging) / f"{SPECIMEN_RECORD}.json").write_text(
+            json.dumps(readmitted, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        def readmitted_from_disk():
+            _, on_disk = load_owners(root, Path(staging))
+            bind(on_disk)
+
+        refuses("readmission-refused-on-the-live-load-path",
+                readmitted_from_disk, "READOPTION_NOT_IMPLEMENTED")
+    # The whole triple is bound, not just its first field: an owner-legal edit
+    # that closes historical review would leave this specimen's prose describing
+    # a policy the record no longer declares.
+    drifted_admission = copy.deepcopy(record)
+    drifted_admission["admission"]["historical_review"] = "FORBIDDEN"
+    records.validate(drifted_admission)
+    refuses("admission-triple-drift",
+            lambda: bind(drifted_admission), "SPECIMEN_ADMISSION_UNEXPECTED")
 
     retired_rows = [row for row in rows if row["class"] == "retired"]
     assert retired_rows, "the surface has no retired row, so this control is vacuous"
@@ -464,6 +540,36 @@ def selftest(root: Path) -> int:
             lambda: assert_default_excludes(smuggled_row, rows, record),
             "DEFAULT_ADMITS_RETIRED_ROW")
 
+    # --- P1: the expansion is ONE pair, and only that pair -------------------
+    addressed = {subject["path"] for subject in record["subjects"]}
+    historical_retired = [fact for fact in historical["facts"] if fact.get("status") == "RETIRED"]
+    assert {fact["id"] for fact in historical_retired} == addressed, (
+        "historical mode expanded something other than the selected record's "
+        "subjects", sorted(fact["id"] for fact in historical_retired))
+    controls.append("historical-expands-exactly-the-selected-pair")
+    assert not any(fact["kind"] == "surface-row" and fact.get("status") == "RETIRED"
+                   for fact in historical["facts"]), (
+        "a retired surface row entered the one-pair view merely by sharing the class")
+    controls.append("retired-rows-outside-the-pair-enter-neither-mode")
+
+    # A retired fact this record never addressed is refused even when it is
+    # perfectly well formed -- sharing the class is not sharing the pair.
+    unrelated = copy.deepcopy(historical)
+    unrelated["facts"].append(row_fact(retired_rows[0]))
+    refuses("historical-admitting-an-unrelated-retired-row",
+            lambda: assert_one_pair(unrelated, record), "HISTORICAL_ADMITS_UNRELATED_FACT")
+    foreign = copy.deepcopy(historical)
+    foreign["facts"].append(subject_fact(
+        record, {"path": "drafts/FROM-ANOTHER-RECORD.md", "mode": "superseded",
+                 "reason": "retired by some other act", "sha256": "0" * 64}))
+    refuses("historical-admitting-a-foreign-record-subject",
+            lambda: assert_one_pair(foreign, record), "HISTORICAL_ADMITS_UNRELATED_FACT")
+    partial = copy.deepcopy(historical)
+    partial["facts"] = [fact for fact in partial["facts"]
+                        if fact.get("kind") != "retired-subject" or fact["id"] != sorted(addressed)[0]]
+    refuses("historical-dropping-half-the-pair",
+            lambda: assert_one_pair(partial, record), "HISTORICAL_PAIR_INCOMPLETE")
+
     # A view that carries a retired fact while the record says EXCLUDED is a
     # refusal, whatever produced it.
     smuggled = copy.deepcopy(default)
@@ -472,11 +578,12 @@ def selftest(root: Path) -> int:
             lambda: assert_default_excludes(smuggled, rows, record),
             "DEFAULT_ADMITS_EXCLUDED_SUBJECT")
 
-    # Readmission is not a free edit: the owner consumer still requires an
-    # addressed authority for an applied record.
-    unaddressed = copy.deepcopy(readmitted)
+    # And the owner's own floor holds underneath this specimen's refusal: an
+    # applied record whose authority stops being addressed is refused by the
+    # owner consumer, before any question about admission is reached.
+    unaddressed = copy.deepcopy(record)
     unaddressed["authority"]["act"] = "   "
-    refuses("readmission-without-addressed-authority",
+    refuses("record-without-addressed-authority",
             lambda: bind(unaddressed), "AUTHORITY_ACT_UNADDRESSED")
 
     # --- P0: starvation. Deleting the input must not shrink the green set ----
@@ -553,8 +660,11 @@ def selftest(root: Path) -> int:
     assert render(build(rows, record, operands, "historical")) == render(historical)
     controls.append("view-is-deterministic")
     before, after = measure(historical), measure(default)
-    assert after["retired_facts"] == 0 and before["retired_facts"] >= SPECIMEN_SUBJECTS, (
+    # The delta is the pair's: exactly the record's subjects, no more, so the
+    # advertised number cannot quietly count retired facts from elsewhere.
+    assert after["retired_facts"] == 0 and before["retired_facts"] == SPECIMEN_SUBJECTS, (
         before, after)
+    assert before["facts"] - after["facts"] == SPECIMEN_SUBJECTS, (before, after)
     assert after["bytes"] < before["bytes"], (before, after)
     controls.append("measurement-separates-the-two-modes")
 
@@ -582,6 +692,7 @@ def main(argv: list[str]) -> int:
         # quietly carries a retired fact.
         if args.mode == "historical":
             assert_historical_envelope(historical)
+            assert_one_pair(historical, record)
             sys.stdout.write(render(historical))
         else:
             assert_default_excludes(default, rows, record)

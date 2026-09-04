@@ -65,10 +65,12 @@ jobs:
       # Phase-3 context policy over the SAME owners as the two steps above: one
       # derived view, generated on demand and never committed. Default retrieval
       # withholds the retired subjects; historical retrieval hands them over with
-      # their envelope. --check recomputes every operand from bytes rather than
-      # believing the generated document, and the controls burn both edges the
-      # policy stands on: no re-entry into default without an owner act on the
-      # record, and no smaller green set after deleting the retired input.
+      # their envelope, for the ONE retirement record this specimen selects and
+      # for nothing else. --check recomputes every operand from bytes rather than
+      # believing the generated document, and the controls burn the three edges
+      # the policy stands on: no re-entry into default at all (an admission field
+      # edit is refused, not honoured), no retired fact from outside the selected
+      # pair, and no smaller green set after deleting the retired input.
       - name: Context policy (default vs explicit historical retrieval)
         run: |
           python3 tools/context_view.py --selftest
