@@ -62,6 +62,21 @@ jobs:
           # teeth -- a review debt that has come due fails the job by its own name.
           python3 tools/active_surface.py --due
 
+      # Phase-3 context policy over the SAME owners as the two steps above: one
+      # derived view, generated on demand and never committed. Default retrieval
+      # withholds the retired subjects; historical retrieval hands them over with
+      # their envelope, for the ONE retirement record this specimen selects and
+      # for nothing else. --check recomputes every operand from bytes rather than
+      # believing the generated document, and the controls burn the three edges
+      # the policy stands on: no re-entry into default at all (an admission field
+      # edit is refused, not honoured), no retired fact from outside the selected
+      # pair, and no smaller green set after deleting the retired input.
+      - name: Context policy (default vs explicit historical retrieval)
+        run: |
+          python3 tools/context_view.py --selftest
+          python3 tools/context_view.py --check
+          python3 tools/context_view.py --measure
+
       # The explicitly legacy inline harness remains as negative evidence. Its
       # 22 fixtures + 5 invariants reproduce from a clean installation. This is
       # not an alternative authoring route: canonical authoring is capsule-only.

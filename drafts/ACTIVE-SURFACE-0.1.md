@@ -1,8 +1,10 @@
 # ACTIVE-SURFACE-0.1 — a small declared surface with typed evidence
 
 **Status:** draft, non-normative. The surface is `surface/rows.json`; the falling
-consumer is `tools/active_surface.py`. There is no generated duplicate and
-`AGENTS.md` is untouched.
+consumer is `tools/active_surface.py`. There is no generated duplicate. A root
+`AGENTS.md` now exists — added by the context-policy specimen
+(`drafts/CONTEXT-POLICY-0.1.md`) — and it copies no row from this surface: it
+links this owner and names the command that derives a view on demand.
 
 The file answers one bounded question: **what does this repository currently
 treat as operational, normative, intended, or retired, and what predicate does
