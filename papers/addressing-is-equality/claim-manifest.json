@@ -54,19 +54,13 @@
       "operands": ["tools/aie_errata_check.py"]
     },
     "B7": {
-      "strategy": "warrant_conformance", "class": "conformance",
-      "title": "stored SKI check re-executes (pass, 2108 ATP); pack LEGACY_UNPINNED",
-      "python_env_var": "MANIFESTO_WARRANT_PYTHON",
-      "distribution": "warrant-verify", "version": "0.9.0", "module": "warrant",
-      "module_sha256": "0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a",
-      "pack": "drafts/ssd-pack", "store": ".warrants",
-      "check_id": "0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87",
-      "expect_status": "pass",
-      "expect_result": "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00",
-      "expect_atp": 2108,
-      "pack_replay": {
-        "script": "tools/replay_pack.py", "args": ["replay", "drafts/ssd-pack"],
-        "expect_rc": 1, "expect_status_line": "REPLAY: LEGACY_UNPINNED"
+      "strategy": "refused", "reason": "WARRANT_ARTIFACT_NOT_BINDABLE",
+      "class": "conformance",
+      "title": "stored SKI check re-executes (pass, e0419cc5\u2026, 2108 ATP); pack LEGACY_UNPINNED",
+      "note": "Both observations are real, exact and runnable by hand under the released warrant-verify==0.9.0, and CI runs them; see DEPOSIT-AND-AUDIT.md D. Neither is CHECKED, because this engine cannot bind the artifact that produces them: a named foreign interpreter answers its own identity probe, only one front module was ever pinned (not the runtime closure that computes the result), and the pack-level verifier lives inside the tree it verifies. An unbound observation is refused, not credited. The removed strategy and its four reproduced bypasses are recorded in deposit_check.py (B7 note).",
+      "unbound_observations": {
+        "stored_check": "warrant-verify==0.9.0: -I -m warrant --store .warrants check 0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87 -> pass  result=e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00  atp_spent=2108",
+        "pack_replay": "python3 tools/replay_pack.py replay drafts/ssd-pack -> REPLAY: LEGACY_UNPINNED (exit 1)"
       },
       "operands": ["drafts/ssd-pack/.warrants", "drafts/ssd-pack/manifest.json",
                    "tools/replay_pack.py"]

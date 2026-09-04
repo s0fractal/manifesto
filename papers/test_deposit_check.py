@@ -9,6 +9,12 @@ importantly, it FAILS CLOSED / REFUSES under every mutation the operator require
   delete candidate · change a number keeping the old literal · claim-ID drift ·
   profile swap · missing vendored profile · receipt/source mismatch · duplicate id.
 
+It also carries the four B7 bypasses Codex reproduced against the (now removed)
+`warrant_conformance` strategy as standing negative controls: an executable that
+impersonates the Warrant environment, a bound front module that is not the runtime
+closure, an in-tree replay tool used as its own success oracle, and an
+opportunistic RECORD binding. None of them can move B7 out of REFUSED.
+
 It is deliberately independent of sigma-glyph: it drives the engine with synthetic
 `recount_source`, `receipt_tally`, and `vendored_profile` claims so "mechanism green"
 never depends on "deposit clean". Run: `python3 papers/test_deposit_check.py`.
@@ -223,265 +229,187 @@ for name in ("every-check-spawns-more", "addressing-is-equality"):
     expect(f"{name} candidate + ledger BIND (engine OK)", r["engine"] == "OK")
 
 # =========================================================================== #
-# B7 — Warrant conformance: the two observations, and every way they refuse.
+# B7 — the four reproduced bypasses, as standing negative controls.
 #
-# Hermetic by construction. These build a throwaway venv and hand-install a
-# SYNTHETIC `warrant-verify` distribution into it, so no control here consults
-# ambient PATH, a developer source checkout, the network, or the real released
-# wheel. The mechanism is what is under test: that identity is bound before
-# output is read, that status / result / ATP are compared independently, and
-# that a per-check pass is never spent as credit for the pack.
+# The `warrant_conformance` strategy that once awarded B7 CHECKED was removed:
+# Codex reproduced four ways to obtain that credit without the artifact. These
+# controls keep it removed. They assert the SHAPE of the refusal — that nothing
+# an attacker controls in the environment or in the tree can move B7 out of
+# REFUSED — not merely that today's manifest happens to say `refused`.
 #
-# The REAL positive (the released `warrant-verify==0.9.0` re-executing the
-# stored check) is the opt-in tail of this section: set
-# MANIFESTO_WARRANT_PYTHON to a clean 3.12 interpreter that has it installed.
+# Hermetic by construction: each control builds its own hostile interpreter or
+# tree under a temp root. Nothing consults ambient PATH, the network, a developer
+# checkout, or the real released wheel.
 # =========================================================================== #
-import base64
 import os
-import venv
+import subprocess
 
 from deposit_check import STRATEGIES  # noqa: E402
 
 B7_ID = "0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87"
 B7_RESULT = "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00"
 B7_LINE = f"pass  result={B7_RESULT}  atp_spent=2108"
+B7_REASON = "WARRANT_ARTIFACT_NOT_BINDABLE"
 
-# A synthetic CLI that answers the ONE stored check id and nothing else. It is a
-# stand-in for the released artifact, never a claim about it.
-FAKE_WARRANT = '''
-import sys
-ID = "%s"
-def main(argv):
-    if "check" not in argv:
-        return 2
-    if argv[argv.index("check") + 1] != ID:
-        return 2
-    print(%%r)
-    return 0
-if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
-''' % B7_ID
-
-
-def _record_line(rel, data: bytes) -> str:
-    h = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).decode().rstrip("=")
-    return f"{rel},sha256={h},{len(data)}"
-
-
-def install_fake_dist(site, *, dist="warrant-verify", version="0.9.0", body=None):
-    """Hand-install a synthetic distribution: module + METADATA + RECORD."""
-    for old in site.glob("*.dist-info"):
-        shutil.rmtree(old)
-    for old in list(site.glob("*.pth")) + list(site.glob("warrant.py")):
-        old.unlink()
-    # Same-length mutations rewritten inside one mtime tick would otherwise
-    # re-execute a stale .pyc and the "mutation" would not reach the engine.
-    shutil.rmtree(site / "__pycache__", ignore_errors=True)
-    src = (body if body is not None else FAKE_WARRANT % B7_LINE).encode()
-    (site / "warrant.py").write_bytes(src)
-    di = site / f"{dist.replace('-', '_')}-{version}.dist-info"
-    di.mkdir()
-    meta = f"Metadata-Version: 2.1\nName: {dist}\nVersion: {version}\n".encode()
-    (di / "METADATA").write_bytes(meta)
-    (di / "RECORD").write_text(
-        _record_line("warrant.py", src) + "\n"
-        + _record_line(f"{di.name}/METADATA", meta) + "\n"
-        + f"{di.name}/RECORD,,\n")
-    return site / "warrant.py"
-
-
-def b7_manifest(root, interp, **over):
-    """A manifest whose ONLY claim is B7, pointed at the real pack and replay."""
-    repo = Path(__file__).resolve().parents[1]
-    cand = root / "cand.md"
-    cand.write_bytes(b"b7 fixture\n")
-    (root / "LEDGER.md").write_text("| # | c |\n|---|---|\n| B7 | warrant |\n")
-    spec = {
-        "strategy": "warrant_conformance", "class": "conformance",
-        "title": "b7 fixture",
-        "python_env_var": "B7_TEST_PYTHON",
-        "distribution": "warrant-verify", "version": "0.9.0", "module": "warrant",
-        "module_sha256": sha((FAKE_WARRANT % B7_LINE).encode()),
-        "pack": "drafts/ssd-pack", "store": ".warrants", "check_id": B7_ID,
-        "expect_status": "pass", "expect_result": B7_RESULT, "expect_atp": 2108,
-        "pack_replay": {"script": "tools/replay_pack.py",
-                        "args": ["replay", "drafts/ssd-pack"],
-                        "expect_rc": 1, "expect_status_line": "REPLAY: LEGACY_UNPINNED"},
-        "operands": ["drafts/ssd-pack/.warrants"],
-    }
-    spec.update(over)
-    mf = {"paper": "b7-fixture", "base": str(repo),
-          "candidate": {"path": str(cand), "sha256": sha(cand.read_bytes())},
-          "ledger": {"path": str(root / "LEDGER.md"), "closed_ids": ["B7"]},
-          "claims": {"B7": spec}}
-    (root / "manifest.json").write_text(json.dumps(mf, indent=2))
-    return root / "manifest.json"
-
-
-def run_b7(root, interp, *, set_env=True, **over):
-    m = b7_manifest(root, interp, **over)
-    prev = os.environ.get("B7_TEST_PYTHON")
-    if set_env:
-        os.environ["B7_TEST_PYTHON"] = str(interp)
-    else:
-        os.environ.pop("B7_TEST_PYTHON", None)
-    try:
-        return status_of(evaluate(m), "B7")
-    finally:
-        if prev is None:
-            os.environ.pop("B7_TEST_PYTHON", None)
-        else:
-            os.environ["B7_TEST_PYTHON"] = prev
-
-
+AIE = HERE / "addressing-is-equality" / "claim-manifest.json"
 B7ROOT = Path(tempfile.mkdtemp())
-VENV = B7ROOT / "venv"
-venv.EnvBuilder(with_pip=False).create(VENV)
-INTERP = VENV / "bin" / "python"
-SITE = next((VENV / "lib").glob("python3.*")) / "site-packages"
-MODULE = install_fake_dist(SITE)
 
-d = B7ROOT / "case"
+
+def b7_under(env_overrides=None, manifest=AIE):
+    """Evaluate the REAL paper-B manifest under a hostile environment."""
+    prev = {k: os.environ.get(k) for k in (env_overrides or {})}
+    os.environ.update(env_overrides or {})
+    try:
+        return status_of(evaluate(manifest), "B7")
+    finally:
+        for k, v in prev.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+# --- structural: no strategy in the engine can award B7 -------------------- #
+# The two retired names, and the general property behind them: the engine holds
+# no strategy that runs a foreign interpreter and reads its output as evidence.
+expect("the generic `command` strategy is gone", "command" not in STRATEGIES)
+expect("the `warrant_conformance` strategy is gone",
+       "warrant_conformance" not in STRATEGIES)
+expect("B7 consumes no strategy that can produce CHECKED",
+       json.loads(AIE.read_text())["claims"]["B7"]["strategy"] == "refused")
+
+# A manifest that still NAMES the removed strategy does not silently pass: an
+# unknown strategy is a typed refusal, never credit.
+d = B7ROOT / "unknown"
 d.mkdir()
+m = build_fixture(d)
+mm = json.loads((d / "manifest.json").read_text())
+mm["claims"]["K1"]["strategy"] = "warrant_conformance"
+(d / "manifest.json").write_text(json.dumps(mm))
+k = status_of(evaluate(m), "K1")
+expect("a manifest naming `warrant_conformance` REFUSES UNKNOWN_STRATEGY",
+       k["status"] == "REFUSED" and k["reason"] == "UNKNOWN_STRATEGY")
 
-# --- positive (synthetic): both observations bind -> CHECKED --------------- #
-c = run_b7(d, INTERP)
-expect("b7 synthetic positive CHECKED", c["status"] == "CHECKED")
-expect("b7 evidence binds the distribution identity",
-       c["evidence"]["artifact"]["distribution"] == "warrant-verify==0.9.0")
-expect("b7 evidence carries BOTH observations separately",
-       c["evidence"]["stored_check"]["atp_spent"] == 2108
-       and c["evidence"]["pack_replay"]["status_line"] == "REPLAY: LEGACY_UNPINNED")
+# --- baseline: the real B7 refuses, with the narrow reason ----------------- #
+c = b7_under()
+expect("B7 REFUSED with the narrow typed reason",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+expect("B7 still names its operands", "tools/replay_pack.py" in c["operands"])
 
-# --- no environment named -> REFUSED, and never from PATH ------------------ #
-c = run_b7(d, INTERP, set_env=False)
-expect("b7 unbound env REFUSED WARRANT_ENV_NOT_PROVIDED",
-       c["status"] == "REFUSED" and c["reason"] == "WARRANT_ENV_NOT_PROVIDED")
+_r = evaluate(AIE)
+expect("B7 is not in the CHECKED set", "B7" not in _r["summary"]["checked"])
+expect("paper B still DEPOSIT: BLOCKED (B4 + B7)",
+       _r["deposit"] == "BLOCKED" and {"B4", "B7"} <= set(_r["summary"]["refused"]))
 
-# --- an interpreter that is not one -> REFUSED ----------------------------- #
-c = run_b7(d, B7ROOT / "no-such-python")
-expect("b7 absent interpreter REFUSED WARRANT_ENV_UNUSABLE",
-       c["reason"] == "WARRANT_ENV_UNUSABLE")
+# --- P0-1: an executable that impersonates the Warrant environment --------- #
+# Codex's exact reproducer: a /bin/sh script that answers an identity probe with
+# the pinned distribution/version/digest fields and then prints the exact
+# `pass  result=…  atp_spent=2108` line. No Python, no Warrant, no wheel, no
+# stored check. It used to award B7 CHECKED.
+fake = B7ROOT / "fake-python"
+fake.write_text(
+    "#!/bin/sh\n"
+    "if [ \"$2\" = \"-c\" ]; then\n"
+    "  printf '%s\\n' '{\"dist_name\":\"warrant-verify\",\"version\":\"0.9.0\","
+    "\"origin\":\"/tmp/not-warrant.py\",\"module_sha256\":"
+    "\"0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a\","
+    "\"owned_by_distribution\":true,\"record_sha256\":"
+    "\"0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a\"}'\n"
+    "  exit 0\n"
+    "fi\n"
+    f"printf '%s\\n' '{B7_LINE}'\n"
+    "exit 0\n")
+fake.chmod(0o755)
+# the impersonator really does answer both probes convincingly ...
+_probe = subprocess.run([str(fake), "-I", "-c", "x", "warrant-verify", "warrant"],
+                        capture_output=True, text=True)
+expect("P0-1 impersonator answers the identity probe (control is live)",
+       '"version": "0.9.0"' in _probe.stdout.replace('":', '": '))
+_run = subprocess.run([str(fake), "-I", "-m", "warrant", "check", B7_ID],
+                      capture_output=True, text=True)
+expect("P0-1 impersonator prints the exact pass line (control is live)",
+       _run.stdout.strip() == B7_LINE and _run.returncode == 0)
+# ... and buys nothing.
+c = b7_under({"MANIFESTO_WARRANT_PYTHON": str(fake)})
+expect("P0-1 impersonated environment CANNOT award B7",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
 
-# --- wrong distribution name -> REFUSED ------------------------------------ #
-c = run_b7(d, INTERP, distribution="warrant-verify-fork")
-expect("b7 wrong distribution REFUSED WARRANT_DISTRIBUTION_ABSENT",
-       c["reason"] == "WARRANT_DISTRIBUTION_ABSENT")
+# --- P0-2: a bound front module is not the runtime closure ----------------- #
+# The old check pinned `warrant.py` only; mutating another installed file in the
+# same environment (e.g. `sigma_glyph.py`) changed the bytes that compute the
+# result while B7 stayed CHECKED. Nothing about an environment is read now, so
+# there is no digest to satisfy and no closure to miss.
+mutated = B7ROOT / "closure"
+mutated.mkdir()
+(mutated / "python3").write_text("#!/bin/sh\nprintf '%s\\n' '" + B7_LINE + "'\nexit 0\n")
+(mutated / "python3").chmod(0o755)
+c = b7_under({"MANIFESTO_WARRANT_PYTHON": str(mutated / "python3")})
+expect("P0-2 no environment digest can award B7",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+expect("P0-2 the report carries no environment evidence at all", c["evidence"] == {})
 
-# --- wrong version -> REFUSED (0.8.0 installed, 0.9.0 demanded) ------------ #
-install_fake_dist(SITE, version="0.8.0")
-c = run_b7(d, INTERP)
-expect("b7 wrong version REFUSED WARRANT_VERSION_MISMATCH",
-       c["reason"] == "WARRANT_VERSION_MISMATCH"
-       and c["evidence"]["observed"] == "0.8.0")
-install_fake_dist(SITE)
+# --- P0-3: the pack-replay verifier lives in the tree it verifies ---------- #
+# A four-line stub at `tools/replay_pack.py` printing `REPLAY: LEGACY_UNPINNED`
+# and exiting 1 used to satisfy the second observation. Rebuild that tree — the
+# real paper manifest, the real ledger and candidate, a stub replay tool — and
+# confirm the stub buys nothing.
+oracle = B7ROOT / "oracle"
+(oracle / "tools").mkdir(parents=True)
+(oracle / "papers" / "addressing-is-equality").mkdir(parents=True)
+(oracle / "tools" / "replay_pack.py").write_text(
+    "#!/usr/bin/env python3\nimport sys\nprint('REPLAY: LEGACY_UNPINNED')\nsys.exit(1)\n")
+repo = HERE.parent
+for rel in ("papers/addressing-is-equality/claim-manifest.json",
+            "papers/addressing-is-equality/CLAIM-LEDGER.md"):
+    shutil.copy2(repo / rel, oracle / rel)
+shutil.copy2(repo / json.loads(AIE.read_text())["candidate"]["path"],
+             oracle / json.loads(AIE.read_text())["candidate"]["path"])
+_stub = subprocess.run([sys.executable, str(oracle / "tools" / "replay_pack.py"),
+                        "replay", "drafts/ssd-pack"], capture_output=True, text=True)
+expect("P0-3 stub replay tool emits the expected line at exit 1 (control is live)",
+       _stub.stdout.strip() == "REPLAY: LEGACY_UNPINNED" and _stub.returncode == 1)
+_or = evaluate(oracle / "papers/addressing-is-equality/claim-manifest.json")
+expect("P0-3 the stub tree binds candidate + ledger (control is not vacuous)",
+       _or["engine"] == "OK")
+c = status_of(_or, "B7")
+expect("P0-3 a stubbed in-tree replay tool CANNOT award B7",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
 
-# --- SHADOW artifact: same name, not the distribution's file --------------- #
-shadow = B7ROOT / "shadow"
-shadow.mkdir()
-(shadow / "warrant.py").write_bytes((FAKE_WARRANT % B7_LINE).encode())   # byte-identical!
-(SITE / "zz-shadow.pth").write_text(
-    f"import sys; sys.path.insert(0, {str(shadow)!r})\n")
-c = run_b7(d, INTERP)
-expect("b7 shadow artifact REFUSED WARRANT_ARTIFACT_SHADOWED",
-       c["reason"] == "WARRANT_ARTIFACT_SHADOWED")
-(SITE / "zz-shadow.pth").unlink()
+# --- P1: no opportunistic binding is left to weaken ------------------------ #
+# Emptying the wheel RECORD hash used to drop the second identity binding while
+# B7 stayed CHECKED, because the cross-check was `if rec is not None`. The whole
+# probe is gone; assert the engine reads no distribution metadata at all.
+_engine = (HERE / "deposit_check.py").read_text()
+for token in ("importlib.metadata", "record_sha256", "owned_by_distribution",
+              "MANIFESTO_WARRANT_PYTHON", "python_env_var"):
+    expect(f"P1 the engine no longer consults `{token}`", token not in _engine)
 
-# --- artifact mutated in place (pin stale) -> REFUSED ---------------------- #
-MODULE.write_bytes((FAKE_WARRANT % B7_LINE).encode() + b"# touched\n")
-c = run_b7(d, INTERP)
-expect("b7 mutated artifact REFUSED WARRANT_ARTIFACT_MISMATCH",
-       c["reason"] == "WARRANT_ARTIFACT_MISMATCH")
-install_fake_dist(SITE)
+# --- the observations survive as observations, not as credit --------------- #
+# The exact operands stay recorded in the manifest so the claim keeps its precise
+# content; they are prose there, and no strategy reads them.
+_b7 = json.loads(AIE.read_text())["claims"]["B7"]
+expect("the stored-check observation is recorded verbatim",
+       B7_RESULT in _b7["unbound_observations"]["stored_check"]
+       and "atp_spent=2108" in _b7["unbound_observations"]["stored_check"])
+expect("the pack observation is recorded verbatim",
+       "REPLAY: LEGACY_UNPINNED" in _b7["unbound_observations"]["pack_replay"])
+expect("recording an observation does not create a checked strategy field",
+       "expect_result" not in _b7 and "module_sha256" not in _b7)
 
-# --- RECORD disagrees with the installed bytes -> REFUSED ------------------ #
-# A second, independent binding: what the wheel recorded vs what is on disk.
-rec = next(SITE.glob("*.dist-info")) / "RECORD"
-rec.write_text(rec.read_text().replace(
-    rec.read_text().split(",")[1], "sha256=" + "A" * 43, 1))
-c = run_b7(d, INTERP)
-expect("b7 RECORD/disk disagreement REFUSED WARRANT_ARTIFACT_RECORD_MISMATCH",
-       c["reason"] == "WARRANT_ARTIFACT_RECORD_MISMATCH")
-install_fake_dist(SITE)
-
-# --- output mutations: status, result, ATP each refuse SEPARATELY ---------- #
-for label, line, reason in [
-    ("status", f"fail  result={B7_RESULT}  atp_spent=2108",
-     "STORED_CHECK_STATUS_MISMATCH"),
-    ("result", "pass  result=" + "0" * 64 + "  atp_spent=2108",
-     "STORED_CHECK_RESULT_MISMATCH"),
-    ("atp", f"pass  result={B7_RESULT}  atp_spent=2109",
-     "STORED_CHECK_ATP_MISMATCH"),
-]:
-    body = FAKE_WARRANT % line
-    install_fake_dist(SITE, body=body)
-    c = run_b7(d, INTERP, module_sha256=sha(body.encode()))
-    expect(f"b7 output mutation ({label}) REFUSED {reason}", c["reason"] == reason)
-
-# --- output SHAPE drift (an extra line, an unparseable line) --------------- #
-for label, line in [("extra-line", B7_LINE + "\nand another thing"),
-                    ("unparseable", "OK 2108 atp")]:
-    body = FAKE_WARRANT % line
-    install_fake_dist(SITE, body=body)
-    c = run_b7(d, INTERP, module_sha256=sha(body.encode()))
-    expect(f"b7 output drift ({label}) REFUSED STORED_CHECK_OUTPUT_DRIFT",
-           c["reason"] == "STORED_CHECK_OUTPUT_DRIFT")
-
-# --- the stored check itself failing to re-execute -------------------------- #
-body = "import sys\nsys.exit(3)\n"
-install_fake_dist(SITE, body=body)
-c = run_b7(d, INTERP, module_sha256=sha(body.encode()))
-expect("b7 non-executing check REFUSED STORED_CHECK_FAILED",
-       c["reason"] == "STORED_CHECK_FAILED")
-install_fake_dist(SITE)
-
-# --- LOSS OF THE PACK-LEVEL REFUSAL: the decisive control ------------------ #
-# The per-check pass is real and is still reported. It buys nothing: if the pack
-# stops answering LEGACY_UNPINNED, B7 refuses.
-for label, stub, args in [
-    ("exit 0", "import sys\nprint('REPLAY: MATCH')\n", ["replay", "drafts/ssd-pack"]),
-    ("another refusal", "import sys\nprint('REPLAY: DEPENDENCY_MISSING')\nsys.exit(1)\n",
-     ["replay", "drafts/ssd-pack"]),
-    ("status drift", "import sys\nprint('REPLAY: LEGACY_UNPINNED (probably)')\nsys.exit(1)\n",
-     ["replay", "drafts/ssd-pack"]),
-]:
-    stub_path = B7ROOT / "stub_replay.py"
-    stub_path.write_text(stub)
-    c = run_b7(d, INTERP, pack_replay={
-        "script": str(stub_path), "args": args,
-        "expect_rc": 1, "expect_status_line": "REPLAY: LEGACY_UNPINNED"})
-    expect(f"b7 pack no longer LEGACY_UNPINNED ({label}) REFUSED",
-           c["status"] == "REFUSED" and c["reason"] == "PACK_NOT_LEGACY_UNPINNED")
-    expect(f"b7 per-check pass is NOT credit for the pack ({label})",
-           c["evidence"]["stored_check"]["atp_spent"] == 2108)
-
-# --- the pack-level refusal is read from the REAL replay tool -------------- #
-c = run_b7(d, INTERP)
-expect("b7 real replay_pack.py answers LEGACY_UNPINNED at exit 1",
-       c["evidence"]["pack_replay"]["rc"] == 1
-       and c["evidence"]["pack_replay"]["status_line"] == "REPLAY: LEGACY_UNPINNED")
-
-# --- no `which(name) + rc==0` path survives in the engine ------------------ #
-expect("the generic `command` strategy is gone",
-       "command" not in STRATEGIES)
-
-shutil.rmtree(B7ROOT)
-
-# --- OPT-IN: the real released artifact, in a clean environment ------------- #
-# Not a fixture. Set MANIFESTO_WARRANT_PYTHON to a clean Python 3.12 that has
-# `warrant-verify==0.9.0` installed (see DEPOSIT-AND-AUDIT §D).
+# --- a bound environment is STILL not credit ------------------------------- #
+# CI installs the real warrant-verify==0.9.0 and runs both observations for the
+# log. If MANIFESTO_WARRANT_PYTHON is set here, the ONLY assertion is that the
+# report did not move: a real released artifact is not a back door either.
 _real = os.environ.get("MANIFESTO_WARRANT_PYTHON")
 if _real:
-    r = evaluate(HERE / "addressing-is-equality" / "claim-manifest.json")
-    rc = status_of(r, "B7")
-    expect("REAL warrant-verify==0.9.0 B7 CHECKED", rc["status"] == "CHECKED")
-    expect("REAL B7 exact result + ATP",
-           rc["status"] == "CHECKED"
-           and rc["evidence"]["stored_check"]["result"] == B7_RESULT
-           and rc["evidence"]["stored_check"]["atp_spent"] == 2108)
+    c = b7_under()
+    expect("REAL warrant-verify==0.9.0 present and B7 STILL REFUSED (non-crediting)",
+           c["status"] == "REFUSED" and c["reason"] == B7_REASON)
 else:
-    print("skip  REAL warrant-verify==0.9.0 positive "
+    print("skip  REAL warrant-verify==0.9.0 non-crediting control "
           "(set MANIFESTO_WARRANT_PYTHON; see DEPOSIT-AND-AUDIT §D)")
+
+shutil.rmtree(B7ROOT)
 
 print()
 if fails:
