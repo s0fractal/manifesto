@@ -285,7 +285,13 @@ def strat_corpus_activation(base, spec):
     relation via verify_activation_report (a coherent single-file re-forge fails), and (b) check
     whether the LIVE trust root actually applies the proposal's activation. Before the operator
     applies the diff the trust root is empty -> REFUSED: ACTIVATION_NOT_APPLIED. After it is
-    applied -> CHECKED. This NEVER touches C2-MEAS, which is a separate refused claim."""
+    applied -> CHECKED.
+
+    Claim identity is supplied by the ENGINE (`claim_id`, taken from the closed ledger row being
+    evaluated), never read from the manifest row's own data. The strategy credits only the claim
+    the activation proposal actually activates and the trust root actually pins. Pointing a second
+    ledger row (C2-MEAS) at this same corpus dir is REFUSED before any C2-MAP operand is read, so
+    the address map's credit cannot be borrowed by the measurement claim."""
     corpus_dir = (base / spec["corpus_dir"]).resolve()
     corpus_code = (base / "papers" / "corpus").resolve()
     if str(corpus_code) not in sys.path:
@@ -299,17 +305,25 @@ def strat_corpus_activation(base, spec):
     except Exception as e:  # noqa
         return REFUSED, "CORPUS_ENGINE_UNAVAILABLE", {"detail": repr(e)}
 
-    ok, faults = verify_activation_report(corpus_dir)
-    if not ok:
-        return REFUSED, "REPORT_UNVERIFIED", {"faults": faults}
     try:
         tr = load_strict_json(corpus_dir / "CORPUS-TRUST-ROOT.json")
         prop = load_strict_json(corpus_dir / "CORPUS-C2-MAP-ACTIVATION-0.1.json")
         ar = load_strict_json(corpus_dir / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json")
     except ValueError as e:
         return REFUSED, "STRICT_JSON", {"detail": str(e)}
+    # Claim binding FIRST, before any C2-MAP operand is consumed: the row being evaluated must be
+    # the claim this proposal activates. A row that names another claim gets no evidence at all.
+    claim = spec.get("claim_id")
+    activated = (prop.get("manifest") or {}).get("claim")
+    if claim is None or claim != activated:
+        return REFUSED, "ACTIVATION_CLAIM_MISMATCH", {"claim_id": claim, "activated_claim": activated}
+    ok, faults = verify_activation_report(corpus_dir)
+    if not ok:
+        return REFUSED, "REPORT_UNVERIFIED", {"faults": faults}
     if validate_trust_root(tr) is not None:
         return REFUSED, "TRUST_ROOT_INVALID", {}
+    if (tr.get("pinned_manifests") or {}).get(claim) is None:
+        return REFUSED, "ACTIVATION_CLAIM_NOT_PINNED", {"claim_id": claim}
 
     diff = prop["trust_root_diff"]
     ev = {"report_id": ar["report_id"], "proposal_id": prop["proposal_id"],
@@ -351,7 +365,7 @@ def strat_corpus_activation(base, spec):
         receipt_bytes, spec.get("trust_anchor"))
     if not commit_ok:
         return REFUSED, "OPERATOR_COMMIT_UNVERIFIED", {**ev, "faults": commit_faults}
-    if ar["result_vector"]["applied"].get("C2-MAP") != "COMPLETE":
+    if ar["result_vector"]["applied"].get(claim) != "COMPLETE":
         return REFUSED, "REPORT_NOT_COMPLETE", ev
     return CHECKED, None, {**ev, "operator": act["operator_identity"], "authority": act["authority"],
                            "activation_commit": receipt["activation_commit"],
@@ -438,7 +452,9 @@ def evaluate(manifest_path):
             if strat is None:
                 status, reason, evidence = REFUSED, "UNKNOWN_STRATEGY", {"strategy": spec["strategy"]}
             else:
-                status, reason, evidence = strat(base, spec)
+                # claim_id comes from the CLOSED LEDGER row, not from the manifest body: a
+                # strategy that is claim-scoped cannot be pointed at another claim's evidence.
+                status, reason, evidence = strat(base, {**spec, "claim_id": cid})
         except Exception as e:  # never let an error read as pass
             status, reason, evidence = REFUSED, "CHECK_ERROR", {"error": repr(e)}
         report["claims"].append({
