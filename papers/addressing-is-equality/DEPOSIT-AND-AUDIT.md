@@ -12,9 +12,8 @@ depends on an absolute author-machine ADR path). **Current deposit report (BLOCK
 `glyphlib` digest + normal-form addresses); `B3`, `B6` **CHECKED** (`aie_errata_check.py` executed,
 exit 0); `B2` **EXCLUDED: DERIVED_FROM_B1**; `B5` **EXCLUDED: ARGUED_OBLIGATION**; `B8` **EXCLUDED:
 DEFINITIONAL**; `B4` **REFUSED: PROFILE_NOT_VENDORED** (church@v0 @196c45a is not vendored);
-`B7` **REFUSED: COMMAND_UNAVAILABLE** (`warrant` absent — it no longer reads `manifest.json` and calls
-it "re-executes"). Vendoring the DRAFT profile flips B4 to CHECKED; installing `warrant` lets B7
-actually execute. The design the gate implements:
+`B7` **REFUSED: WARRANT_ENV_NOT_PROVIDED** (no interpreter named — see below). Vendoring the DRAFT
+profile flips B4 to CHECKED. The design the gate implements:
 
 **The current checkers pass but decide much less than their banners claim.** `check_claims.py`
 verifies the two Warrant ATP values by **reading `manifest.json`** — it does not execute the check,
@@ -31,10 +30,24 @@ ledger*:
    number to a claim ID, the exact executed **term/AST hash**, and its surface (permissive harness
    vs `church@v0` DRAFT). Emit exact `checked`, `excluded`, and `refused` sets. Profile-label every
    printed number so no permissive figure can be read as a `church@v0` fact.
-2. **Execute, don't read.** The Warrant credit must come from actually running
-   `warrant check 0597575d…` (PASS 2,108 ATP) — not from parsing `manifest.json` — and must also run
-   `python tools/replay_pack.py replay drafts/ssd-pack` and report the `LEGACY_UNPINNED` pack status
-   as a **typed** result beside the per-check PASS.
+2. **Execute, don't read — and bind the artifact first (B7, CLOSED).** The old `command` strategy
+   awarded B7 for `which("warrant")` plus exit 0; it is **removed from the engine**, and no
+   name-on-PATH path can award B7 again. `warrant_conformance` instead:
+   (a) takes the interpreter from **`MANIFESTO_WARRANT_PYTHON`**, never from PATH — unset is
+   `REFUSED: WARRANT_ENV_NOT_PROVIDED`, which is why the default report above still blocks;
+   (b) reads that interpreter's own installed metadata and requires distribution
+   **`warrant-verify==0.9.0`**, with the module actually imported owned by that distribution and at
+   the pinned digest `0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a` (the
+   `warrant.py` inside `warrant_verify-0.9.0-py3-none-any.whl`, sha256 `62c57f62…`) — a shadow
+   module, a source checkout, another distribution or another version refuses **before** any output
+   is read as evidence;
+   (c) runs `-I -m warrant --store .warrants check 0597575d…` under the bound interpreter and parses
+   the exact machine line, comparing **status**, **result hash** and **ATP** independently
+   (`pass` / `e0419cc5…` / `2108`), each with its own typed refusal;
+   (d) runs `python tools/replay_pack.py replay drafts/ssd-pack` **separately** and requires exactly
+   `REPLAY: LEGACY_UNPINNED` at exit 1. Exit 0, another refusal, or output drift is
+   `PACK_NOT_LEGACY_UNPINNED` and refuses B7 — the per-check pass is reported and buys nothing.
+   Neither observation is ever credit for the other.
 3. **Pin the DRAFT profile by content, not by path.** Vendor the ADR-011 reference implementation at
    commit `196c45a2…` into the deposit and verify it by content digest; a missing/re-pathed proposal
    is a **typed refusal** (`PROFILE_NOT_VENDORED`), never a string-presence pass. Split the evaluator
@@ -89,11 +102,13 @@ identity". The two-sided composition whose novelty is asked for must be vendored
 
 - **All ATP figures** are `replay` (byte-identical evaluator replay under a pinned sigma-glyph),
   *not* transcript — safe to present as reproducible, **provided the profile label is attached.**
-- **The Warrant credit is two different things (Codex P1-S1).** `warrant check 0597575d…` re-executes
-  one stored SKI check to PASS at 2,108 ATP (`command`); `warrant verify --settlement` reports 4
-  records, 0/0. But `python tools/replay_pack.py replay drafts/ssd-pack` returns `LEGACY_UNPINNED`
-  (exit 1): the pack as a whole is historically sealed. Report both; neither cancels the other. A
-  one-sided check against a constant is not a two-sided equality receipt or endorsement.
+- **The Warrant credit is two different things (Codex P1-S1).** Under the bound
+  `warrant-verify==0.9.0`, `check 0597575d…` re-executes one stored SKI check to `pass`,
+  result `e0419cc5…`, `atp_spent=2108`. But `python tools/replay_pack.py replay drafts/ssd-pack`
+  returns `LEGACY_UNPINNED` (exit 1): the pack as a whole is historically sealed. The gate requires
+  **both** and spends neither as credit for the other. A one-sided check against a constant is not a
+  two-sided equality receipt or endorsement. `warrant verify --settlement` (4 records, 0/0) is a
+  third, **unbound** observation: it was dropped from the B7 row rather than reported as checked.
 - **The `church@v0` per-unit ≈37 ATP figure** (DRAFT profile @196c45a, admitted numerals only — not
   the computed `7+5`) and the permissive ≈50 are `replay` over a measured range — label
   observed-over-range, not extrapolated, and never present `church@v0` as released.
@@ -110,9 +125,23 @@ python3 -m venv .venv
 # idiom vs predicate costs, marker collision, mutations, Warrant pack:
 .venv/bin/python papers/addressing-is-equality/check_claims.py     # after §A closed-manifest rewrite
 .venv/bin/python tools/aie_errata_check.py                          # collision counterexample + M1/M2/M3
-# per-check re-execution vs pack-level replay (report BOTH):
-warrant check 0597575d...                                           # PASS, 2,108 ATP
-python tools/replay_pack.py replay drafts/ssd-pack                  # REPLAY: LEGACY_UNPINNED (exit 1) — expected
+# per-check re-execution vs pack-level replay — the gate runs BOTH and reports them separately.
+# B7 needs a clean interpreter that has the RELEASED distribution; it is named, never found on PATH,
+# and nothing about it is committed (no venv, wheel, report or cache):
+mise exec python@3.12 -- python -m venv /tmp/warrant-0.9.0
+/tmp/warrant-0.9.0/bin/pip install "warrant-verify==0.9.0"
+MANIFESTO_WARRANT_PYTHON=/tmp/warrant-0.9.0/bin/python \
+  python3 papers/deposit_check.py papers/addressing-is-equality/claim-manifest.json   # B7 CHECKED
+# what that binds, directly:
+#   (cd drafts/ssd-pack && /tmp/warrant-0.9.0/bin/python -I -m warrant --store .warrants \
+#      check 0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87)
+#     -> pass  result=e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00  atp_spent=2108
+#   python3 tools/replay_pack.py replay drafts/ssd-pack
+#     -> REPLAY: LEGACY_UNPINNED (exit 1) — the expected typed boundary, NOT a failure of the run
+# mechanism (hermetic; builds a synthetic distribution, touches no network and no PATH):
+python3 papers/test_deposit_check.py
+# and the same suite with the REAL artifact bound, which then asserts the real positive too:
+MANIFESTO_WARRANT_PYTHON=/tmp/warrant-0.9.0/bin/python python3 papers/test_deposit_check.py
 # DRAFT profile (NOT in the 0.6.7 wheel): vendor & pin by content, then exercise admission:
 #   sigma-glyph @ 196c45a2f9074a472b96af1a6bae2c67533edbb1 (v0.6.7-175-g196c45a) ADR-011 selftest → 72/72
 # record: exact repo revision; sigma-glyph release (0.6.7) SEPARATE from the DRAFT profile commit;
@@ -150,7 +179,9 @@ expected_checks:
   - build takes paper-v0.2-draft.md (NOT paper.md); abstract front-loaded; real [@key] citations resolve
   - check_claims.py exits 0 on a clean sigma-glyph==0.6.7 install, every figure bound to a term hash and surface
   - aie_errata_check.py settles the collision PASS and flips under M1/M2/M3
-  - warrant check re-executes to PASS 2,108 ATP AND replay_pack reports LEGACY_UNPINNED (both recorded)
+  - B7: under a bound warrant-verify==0.9.0 the stored check re-executes to pass / e0419cc5… /
+    2108 ATP AND replay_pack separately reports LEGACY_UNPINNED (both required, neither credit
+    for the other); an unnamed or unbound environment is REFUSED, never CHECKED
   - the vendored DRAFT profile admits numerals 0–8 and refuses PLUS 7 5
 excluded:
   - any DOI reservation, release, tag, or claim of adoption / peer review

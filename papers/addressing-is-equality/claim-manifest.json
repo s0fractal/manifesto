@@ -54,10 +54,22 @@
       "operands": ["tools/aie_errata_check.py"]
     },
     "B7": {
-      "strategy": "command", "class": "conformance",
-      "title": "stored SKI check re-executes (PASS 2108 ATP); pack LEGACY_UNPINNED",
-      "cmd": ["warrant", "--store", ".warrants", "check", "0597575d"],
-      "operands": ["drafts/ssd-pack"]
+      "strategy": "warrant_conformance", "class": "conformance",
+      "title": "stored SKI check re-executes (pass, 2108 ATP); pack LEGACY_UNPINNED",
+      "python_env_var": "MANIFESTO_WARRANT_PYTHON",
+      "distribution": "warrant-verify", "version": "0.9.0", "module": "warrant",
+      "module_sha256": "0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a",
+      "pack": "drafts/ssd-pack", "store": ".warrants",
+      "check_id": "0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87",
+      "expect_status": "pass",
+      "expect_result": "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00",
+      "expect_atp": 2108,
+      "pack_replay": {
+        "script": "tools/replay_pack.py", "args": ["replay", "drafts/ssd-pack"],
+        "expect_rc": 1, "expect_status_line": "REPLAY: LEGACY_UNPINNED"
+      },
+      "operands": ["drafts/ssd-pack/.warrants", "drafts/ssd-pack/manifest.json",
+                   "tools/replay_pack.py"]
     },
     "B8": {
       "strategy": "excluded", "reason": "DEFINITIONAL",

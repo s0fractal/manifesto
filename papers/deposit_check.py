@@ -13,7 +13,11 @@ Contract (Codex closure P0-4 + operator go, 2026-09-01):
   REFUSED: FROZEN_CORPUS_NOT_DEPOSITED — never a string-presence credit. When the
   corpus is later deposited, those rows move addressably from REFUSED to CHECKED.
 - Executable claims bind to a term/AST hash, the evaluator identity, and an ACTUAL
-  execution (not a manifest read).
+  execution (not a manifest read). Where the executable is an EXTERNAL released
+  distribution, its identity is bound first: the interpreter is named, never found
+  on PATH, and a shadow module, a source checkout or another version refuses BEFORE
+  its output is read as evidence. There is deliberately no `which(name) + rc == 0`
+  strategy in this engine.
 - Two DISTINCT notions, never merged:
     * mechanism-correct : the engine checks and refuses correctly (test_deposit_check.py);
     * deposit-clean     : the produced report has no blocking REFUSED.
@@ -25,6 +29,7 @@ fail-closed (candidate/ledger binding broken — the report itself cannot be tru
 import hashlib
 import inspect
 import json
+import os
 import re
 import subprocess
 import sys
@@ -178,14 +183,206 @@ def _dir_digest(d: Path) -> str:
     return h.hexdigest()
 
 
-def strat_command(base, spec):
-    from shutil import which
-    if which(spec["cmd"][0]) is None:
-        return REFUSED, "COMMAND_UNAVAILABLE", {"cmd": spec["cmd"]}
-    out = subprocess.run(spec["cmd"], cwd=str(base), capture_output=True, text=True)
+# --------------------------------------------------------------------------- #
+# B7 — Warrant conformance. TWO deliberately separate observations, bound
+# separately; neither may be spent as credit for the other.
+#
+#   (1) ONE STORED CHECK RE-EXECUTES. Not "something named `warrant` was on PATH
+#       and exited 0" — the retired `command` strategy awarded credit for exactly
+#       that. Here the interpreter is named explicitly (never resolved through
+#       PATH), the distribution identity `warrant-verify==0.9.0` is read out of
+#       that interpreter's own installed metadata, the module actually imported
+#       must be the file that distribution installed at the pinned digest, and
+#       the exact machine output is parsed with status, result hash and ATP each
+#       compared independently.
+#   (2) THE PACK AS A WHOLE IS STILL LEGACY-SEALED. `replay_pack.py replay` must
+#       return the exact `LEGACY_UNPINNED` typed refusal at exit 1. Exit 0, a
+#       different refusal, or output drift refuses B7: a strict pack replay
+#       showing up here would mean the claim's second half had become false.
+# --------------------------------------------------------------------------- #
+
+# Runs INSIDE the named interpreter. Reports identity; it never judges it — every
+# comparison is made here, against the manifest's pins.
+WARRANT_IDENTITY_PROBE = r'''
+import base64, hashlib, importlib.metadata as md, importlib.util, json, pathlib, sys
+dist_name, module_name = sys.argv[1], sys.argv[2]
+out = {}
+try:
+    dist = md.distribution(dist_name)
+except Exception as e:
+    print(json.dumps({"probe_error": "DISTRIBUTION_ABSENT", "detail": repr(e)}))
+    raise SystemExit(0)
+out["dist_name"] = dist.metadata["Name"]
+out["version"] = dist.version
+spec = importlib.util.find_spec(module_name)
+if spec is None or not spec.origin:
+    print(json.dumps({"probe_error": "MODULE_ABSENT", **out}))
+    raise SystemExit(0)
+origin = pathlib.Path(spec.origin).resolve()
+out["origin"] = str(origin)
+out["module_sha256"] = hashlib.sha256(origin.read_bytes()).hexdigest()
+owned = None
+for f in (dist.files or ()):
+    if pathlib.Path(dist.locate_file(f)).resolve() == origin:
+        owned = f
+        break
+out["owned_by_distribution"] = owned is not None
+if owned is not None and owned.hash is not None and owned.hash.mode == "sha256":
+    out["record_sha256"] = base64.urlsafe_b64decode(owned.hash.value + "==").hex()
+print(json.dumps(out))
+'''
+
+# `pass  result=<64 hex>  atp_spent=<int>` — the whole line, nothing else.
+STORED_CHECK_RE = re.compile(
+    r"^(?P<status>[A-Za-z_]+)  result=(?P<result>[0-9a-f]{64})  "
+    r"atp_spent=(?P<atp>\d+)$")
+
+
+def _norm_dist(name: str) -> str:
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def _sealed_env():
+    """A deterministic environment for both the probe and the execution.
+
+    PATH is present only because a subprocess wants one; nothing here is ever
+    LOOKED UP in it — the interpreter is invoked by absolute path and the CLI is
+    reached as `-m <module>`. PYTHONPATH/PYTHONHOME are dropped so a developer
+    checkout cannot shadow the installed distribution between probe and run.
+    """
+    env = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
+    if "HOME" in os.environ:
+        env["HOME"] = os.environ["HOME"]
+    return env
+
+
+def _bind_warrant_artifact(base, spec):
+    """Bind the executed artifact to the named released distribution.
+
+    Returns (identity, None) or (None, (reason, evidence)). A shadow module, a
+    source checkout, another distribution or another version refuses HERE —
+    before any output of that artifact is read as evidence of anything.
+    """
+    var = spec["python_env_var"]
+    ev = {"python_env_var": var, "distribution": spec["distribution"],
+          "expected_version": spec["version"], "module": spec["module"]}
+    interp = os.environ.get(var)
+    if not interp:
+        return None, ("WARRANT_ENV_NOT_PROVIDED", ev)
+    ip = Path(interp)
+    ev["interpreter"] = str(ip)
+    if not ip.is_file() or not os.access(ip, os.X_OK):
+        return None, ("WARRANT_ENV_UNUSABLE", {**ev, "detail": "not an executable file"})
+    # `-I` for the probe AND for the execution below: same isolation, same cwd, so
+    # the module the probe resolved is exactly the module that then runs.
+    probe = subprocess.run(
+        [str(ip), "-I", "-c", WARRANT_IDENTITY_PROBE, spec["distribution"], spec["module"]],
+        cwd=str(base / spec["pack"]), capture_output=True, text=True, env=_sealed_env())
+    if probe.returncode != 0:
+        return None, ("WARRANT_ENV_UNUSABLE",
+                      {**ev, "rc": probe.returncode, "stderr": probe.stderr[-500:]})
+    try:
+        info = json.loads(probe.stdout)
+    except ValueError:
+        return None, ("WARRANT_ENV_UNUSABLE", {**ev, "stdout": probe.stdout[-500:]})
+    if info.get("probe_error"):
+        return None, ("WARRANT_DISTRIBUTION_ABSENT" if info["probe_error"] == "DISTRIBUTION_ABSENT"
+                      else "WARRANT_MODULE_ABSENT", {**ev, **info})
+    if _norm_dist(info["dist_name"]) != _norm_dist(spec["distribution"]):
+        return None, ("WARRANT_DISTRIBUTION_MISMATCH", {**ev, "observed": info["dist_name"]})
+    if info["version"] != spec["version"]:
+        return None, ("WARRANT_VERSION_MISMATCH", {**ev, "observed": info["version"]})
+    # The module that WOULD be imported must be the file the distribution installed.
+    if not info.get("owned_by_distribution"):
+        return None, ("WARRANT_ARTIFACT_SHADOWED", {**ev, "origin": info.get("origin")})
+    if info["module_sha256"] != spec["module_sha256"]:
+        return None, ("WARRANT_ARTIFACT_MISMATCH",
+                      {**ev, "expected": spec["module_sha256"],
+                       "observed": info["module_sha256"], "origin": info["origin"]})
+    # Second, independent binding: the installed bytes vs the digest the wheel recorded.
+    rec = info.get("record_sha256")
+    if rec is not None and rec != info["module_sha256"]:
+        return None, ("WARRANT_ARTIFACT_RECORD_MISMATCH",
+                      {**ev, "record": rec, "observed": info["module_sha256"]})
+    return {"distribution": f'{spec["distribution"]}=={info["version"]}',
+            "module": spec["module"], "module_sha256": info["module_sha256"],
+            "record_sha256": rec, "origin": info["origin"],
+            "interpreter": str(ip), "python_env_var": var}, None
+
+
+def _stored_check(base, spec, ident):
+    """Observation 1: ONE stored check re-executes, to the exact stated result."""
+    pack = base / spec["pack"]
+    cmd = ["-I", "-m", spec["module"], "--store", spec["store"], "check", spec["check_id"]]
+    out = subprocess.run([ident["interpreter"], *cmd], cwd=str(pack),
+                         capture_output=True, text=True, env=_sealed_env())
+    ev = {"argv": cmd, "cwd": spec["pack"], "check_id": spec["check_id"],
+          "rc": out.returncode}
     if out.returncode != 0:
-        return REFUSED, "COMMAND_FAILED", {"cmd": spec["cmd"], "rc": out.returncode}
-    return CHECKED, None, {"cmd": spec["cmd"]}
+        return None, ("STORED_CHECK_FAILED", {**ev, "stderr": out.stderr[-500:]})
+    lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    if len(lines) != 1:
+        return None, ("STORED_CHECK_OUTPUT_DRIFT", {**ev, "lines": len(lines),
+                                                    "stdout": out.stdout[-500:]})
+    m = STORED_CHECK_RE.match(lines[0])
+    if not m:
+        return None, ("STORED_CHECK_OUTPUT_DRIFT", {**ev, "line": lines[0]})
+    status, result, atp = m["status"], m["result"], int(m["atp"])
+    ev.update({"status": status, "result": result, "atp_spent": atp})
+    # Three independent comparisons, three distinct refusals: a wrong verdict, a
+    # wrong result address and a wrong price are different failures of the claim.
+    if status != spec["expect_status"]:
+        return None, ("STORED_CHECK_STATUS_MISMATCH",
+                      {**ev, "expected": spec["expect_status"]})
+    if result != spec["expect_result"]:
+        return None, ("STORED_CHECK_RESULT_MISMATCH",
+                      {**ev, "expected": spec["expect_result"]})
+    if atp != spec["expect_atp"]:
+        return None, ("STORED_CHECK_ATP_MISMATCH", {**ev, "expected": spec["expect_atp"]})
+    return ev, None
+
+
+def _pack_replay(base, spec):
+    """Observation 2: the pack as a whole is NOT strict replay evidence.
+
+    The expected outcome is a refusal. Success here would not be better news —
+    it would mean the pack stopped being the legacy-sealed artifact B7 describes,
+    so exit 0 refuses B7 just as loudly as the wrong refusal does."""
+    r = spec["pack_replay"]
+    script = base / r["script"]
+    if not script.is_file():
+        return None, ("PACK_REPLAY_SCRIPT_MISSING", {"script": r["script"]})
+    out = subprocess.run([sys.executable, str(script), *r["args"]], cwd=str(base),
+                         capture_output=True, text=True)
+    lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    ev = {"script": r["script"], "args": r["args"], "rc": out.returncode,
+          "status_line": lines[-1] if lines else ""}
+    if out.returncode != r["expect_rc"] or ev["status_line"] != r["expect_status_line"]:
+        return None, ("PACK_NOT_LEGACY_UNPINNED",
+                      {**ev, "expected_rc": r["expect_rc"],
+                       "expected_status_line": r["expect_status_line"]})
+    return ev, None
+
+
+def strat_warrant_conformance(base, spec):
+    store = base / spec["pack"] / spec["store"]
+    if not store.is_dir():
+        return REFUSED, "WARRANT_STORE_MISSING", {
+            "store": f'{spec["pack"]}/{spec["store"]}'}
+    ident, refusal = _bind_warrant_artifact(base, spec)
+    if refusal:
+        return REFUSED, refusal[0], refusal[1]
+    stored, refusal = _stored_check(base, spec, ident)
+    if refusal:
+        return REFUSED, refusal[0], {"artifact": ident, **refusal[1]}
+    replay, refusal = _pack_replay(base, spec)
+    if refusal:
+        # The per-check pass is NOT credit for the pack. It is reported and the
+        # claim still refuses.
+        return REFUSED, refusal[0], {"artifact": ident, "stored_check": stored,
+                                     "pack_replay": refusal[1]}
+    return CHECKED, None, {"artifact": ident, "stored_check": stored,
+                           "pack_replay": replay}
 
 
 def strat_evaluator_replay(base, spec):
@@ -330,7 +527,7 @@ STRATEGIES = {
     "recount_source": strat_recount_source,
     "receipt_tally": strat_receipt_tally,
     "vendored_profile": strat_vendored_profile,
-    "command": strat_command,
+    "warrant_conformance": strat_warrant_conformance,
     "evaluator_replay": strat_evaluator_replay,
     "corpus_activation": strat_corpus_activation,
 }

@@ -10,9 +10,10 @@ name: papers-deposit-check
 #
 # Green does NOT mean deposit-clean: both papers are expected to be DEPOSIT: BLOCKED
 # (Paper A refuses the not-yet-deposited frozen corpus; Paper B refuses the
-# un-vendored DRAFT profile and the absent `warrant` CLI). That is the honest shape
-# of absence the gate exists to record; the corpus/profile later flip specific
-# claims from REFUSED to CHECKED.
+# un-vendored DRAFT profile, and refuses B7 until an interpreter carrying the
+# released `warrant-verify==0.9.0` is NAMED — never found on PATH). That is the
+# honest shape of absence the gate exists to record; the corpus/profile later flip
+# specific claims from REFUSED to CHECKED.
 on: [push, pull_request]
 
 jobs:
@@ -38,6 +39,22 @@ jobs:
           set -euo pipefail
           python3 papers/test_deposit_check.py | tee mech.log
           grep -q "GREEN: the deposit-check mechanism checks and fails-closed correctly." mech.log
+
+      - name: B7 real positive — the RELEASED warrant artifact, in a clean 3.12 env
+        # The synthetic controls above prove the mechanism; this proves the claim.
+        # The interpreter is NAMED, never found on PATH, and nothing about this env
+        # is committed. With MANIFESTO_WARRANT_PYTHON set, the same suite additionally
+        # asserts B7 CHECKED at the exact result hash and 2108 ATP.
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/warrant-0.9.0"
+          "$RUNNER_TEMP/warrant-0.9.0/bin/pip" install --quiet "warrant-verify==0.9.0"
+          MANIFESTO_WARRANT_PYTHON="$RUNNER_TEMP/warrant-0.9.0/bin/python" \
+            python3 papers/test_deposit_check.py | tee b7.log
+          grep -q "ok   REAL warrant-verify==0.9.0 B7 CHECKED" b7.log
+          grep -q "ok   REAL B7 exact result + ATP" b7.log
+          grep -q "GREEN: the deposit-check mechanism checks and fails-closed correctly." b7.log
 
       - name: Corpus exporter mechanism (F1-F9) green (no quarantine, no evaluator)
         shell: bash
