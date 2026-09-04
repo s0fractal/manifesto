@@ -192,7 +192,9 @@ included:
   - drafts/ssd-pack/                                     # Warrant pack (conformance only; LEGACY_UNPINNED)
   - vendored/adr-011@196c45a/                             # DRAFT profile impl + its upstream license,
                                                           #   pinned by content digest (NOT the 0.6.7 wheel)
-  - papers/addressing-is-equality/novelty-search-log.md  # dated prior-art search (novelty is OPEN)
+  - papers/addressing-is-equality/novelty-search-log.md  # comparison memo, NOT the dated prior-art
+                                                         #   search §B requires; novelty stays OPEN
+                                                         #   and the independent/human search is owed
 profile_implementation:                                   # kept SEPARATE from `evaluator` above
   source: sigma-glyph @ 196c45a2f9074a472b96af1a6bae2c67533edbb1  # v0.6.7-175-g196c45a, DRAFT, unreleased
   status: DRAFT — non-normative, not gated, not adopted, BLOCKED on PLUS 7 5
