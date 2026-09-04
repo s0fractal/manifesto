@@ -452,6 +452,59 @@ try:
            app["l3_bundle_id"].startswith("l3:") and len(app["record_ids"]) == 8
            and len(set(app["record_ids"])) == 8)
 
+    # ==== 6.6 C2 credit boundary: the serialized-L3/L4 residual, and why it is not closed here ====
+    # RESIDUAL (OPEN, deliberately not repaired on this branch). `cm._view` types a claim ONLY by
+    # which manifest the trust root pins under that id, so the claim LABEL alone decides the
+    # evidence class: relabel C2-MAP's own pinned manifest `"claim": "C2-MEAS"`, pin it in a
+    # COPIED root, and the exact committed C2-MAP L3 records replay to C2-MEAS COMPLETE off the
+    # same 8 address-map units. This control pins that result so the residual cannot change
+    # silently; a repair that closes it turns this expect RED, which is the intended signal.
+    from corpus_map import manifest_id as _manifest_id  # noqa: E402
+    from corpus_operator_readback import applied_trust_root as _applied  # noqa: E402
+    prod_l3 = json.loads((PAPER / "CORPUS-C2-MAP-L3-0.1.json").read_text())
+    # derive the activated root from the committed root + the proposal diff, so the control reads
+    # the same whether this checkout is pre- or post-operator-act
+    activated = _applied(live_root_now, pr["trust_root_diff"])
+    relabelled = copy.deepcopy(pr["manifest"]); relabelled["claim"] = "C2-MEAS"
+    forged_root = copy.deepcopy(activated)
+    forged_root["pinned_manifests"] = dict(forged_root.get("pinned_manifests") or {},
+                                           **{"C2-MEAS": _manifest_id(relabelled)})
+    lv = l4_evaluate(prod_l3, {"C2-MAP": pr["manifest"], "C2-MEAS": relabelled}, forged_root)
+    expect("RESIDUAL(open): relabelled C2-MAP manifest pinned as C2-MEAS replays COMPLETE at L4",
+           lv["l3_ok"] and lv["views"]["C2-MEAS"]["status"] == "COMPLETE"
+           and lv["views"]["C2-MEAS"]["units"] == 8)
+    # what the residual costs is bounded: it is the SAME 8 address-map units under a second label,
+    # not new evidence — the two views differ only in manifest/evaluation id.
+    expect("RESIDUAL is a relabel, not new evidence: same 8 units, C2-MAP view unchanged",
+           lv["views"]["C2-MAP"]["status"] == "COMPLETE" and lv["views"]["C2-MAP"]["units"] == 8
+           and lv["views"]["C2-MAP"]["evaluation_id"] == app["evaluation_id"]
+           and lv["views"]["C2-MEAS"]["evaluation_id"] != lv["views"]["C2-MAP"]["evaluation_id"])
+    # WHY NOT REPAIRED HERE: the review's preferred site is corpus_l4.py, correct that it is not in
+    # `mapper_closure_id` — but it IS one of the six byte-pinned inputs of the ACTIVATION REPORT's
+    # `generator_closure`. A comment-only edit there rotates that closure, so the committed report
+    # stops verifying and the LIVE C2-MAP deposit row falls from CHECKED to
+    # REFUSED [REPORT_UNVERIFIED / GENERATOR_CLOSURE_MISMATCH]. Closing the residual therefore
+    # requires regenerating a governed artifact — an owner act, out of scope for this branch.
+    import shutil as _shutil, subprocess as _sp  # noqa: E402
+    _t = Path(tempfile.mkdtemp()) / "papers"
+    _shutil.copytree(PAPER.parent / "corpus", _t / "corpus")
+    _shutil.copytree(PAPER, _t / "every-check-spawns-more")
+    _l4f = _t / "corpus" / "corpus_l4.py"
+    _l4f.write_bytes(_l4f.read_bytes() + b"\n# byte-level probe: any repair edit lands here\n")
+    _probe = _sp.run(
+        [sys.executable, "-c",
+         "import sys, json, pathlib; sys.path.insert(0, sys.argv[1]);"
+         "from corpus_activation_report import verify_activation_report as v;"
+         "print(json.dumps(v(pathlib.Path(sys.argv[2]))))",
+         str(_t / "corpus"), str(_t / "every-check-spawns-more")],
+        capture_output=True, text=True)
+    expect("repair site is FROZEN: a byte edit to corpus_l4.py breaks the committed report",
+           _probe.returncode == 0
+           and json.loads(_probe.stdout) == [False, ["GENERATOR_CLOSURE_MISMATCH"]])
+    if _probe.returncode != 0:
+        print("   probe stderr:", _probe.stderr.strip()[-300:])
+    _shutil.rmtree(_t.parent)
+
     # ============ P0-2: INDEPENDENT report verification + coherent-forge regression ============
     from corpus_activation_report import verify_activation_report  # noqa: E402
     vok, vf = verify_activation_report(PAPER)
