@@ -556,7 +556,7 @@ try:
     ar_s = json.loads((mal / "CORPUS-C2-MAP-ACTIVATION-REPORT-0.1.json").read_text())
     live = applied_trust_root(base_tr, prop_s["trust_root_diff"])
     (mal / "CORPUS-TRUST-ROOT.json").write_text(json.dumps(live, indent=1))
-    st0, rs0, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(mal)})
+    st0, rs0, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(mal), "claim_id": "C2-MAP"})
     expect("applied root WITHOUT operator act -> REFUSED: OPERATOR_ACT_ABSENT",
            st0 == "REFUSED" and rs0 == "OPERATOR_ACT_ABSENT")
     mal_act = build_operator_act(live, prop_s, ar_s, "mallory:anyone", "self-asserted:anything", "not-a-git-commit")
@@ -564,7 +564,7 @@ try:
     (mal / "CORPUS-C2-MAP-COMMIT-RECEIPT.json").write_text(json.dumps(
         build_commit_receipt("deadbeef" * 5, mal_act, (mal / "CORPUS-TRUST-ROOT.json").read_bytes(),
                              (mal / "CORPUS-OPERATOR-ACT.json").read_bytes()), indent=1))
-    stm, rsm, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(mal)})
+    stm, rsm, _ = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(mal), "claim_id": "C2-MAP"})
     expect("mallory self-minted act in a non-git dir -> REFUSED (no positive credit)",
            stm == "REFUSED" and rsm in ("OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE", "OPERATOR_COMMIT_UNVERIFIED"))
     shutil.rmtree(mal.parent)
@@ -608,7 +608,7 @@ try:
 
     # positive: valid two-commit act, pushed, with the declared anchor -> CHECKED
     trepo, cdir, cact, anchor = build_repo()
-    spec = {"corpus_dir": str(cdir), "trust_anchor": anchor}
+    spec = {"corpus_dir": str(cdir), "trust_anchor": anchor, "claim_id": "C2-MAP"}
     st, rs, evd = dc.strat_corpus_activation(repo_root, spec)
     expect("REAL two-commit Git act + pushed anchor -> C2-MAP CHECKED", st == "CHECKED")
     if st != "CHECKED":
@@ -618,36 +618,70 @@ try:
     st2, rs2, _ = dc.strat_refused(cdir, {"reason": "MEASUREMENT_NOT_REPLAYED"})
     expect("under activation, C2-MEAS STILL REFUSED (no composition laundering)",
            st2 == "REFUSED" and rs2 == "MEASUREMENT_NOT_REPLAYED")
+    # NEGATIVE CONTROL (6.6 boundary audit): the refusal above only restates the manifest row.
+    # The real bypass was a MANIFEST edit — re-point the C2-MEAS ledger row at C2-MAP's own
+    # `corpus_activation` spec verbatim. Before the claim binding the engine returned C2-MEAS
+    # CHECKED carrying C2-MAP's activation_commit byte-for-byte, and (with the unrelated rows
+    # out of scope) DEPOSIT: CLEAN. The claim id now comes from the closed ledger row, so the
+    # measurement row is refused before any C2-MAP operand is read.
+    launder = json.loads((PAPER / "claim-manifest.json").read_text())
+    launder["base"] = str(repo_root)
+    # both rows are pointed at the SAME verified fixture activation, so the only difference
+    # between them is the ledger claim id the engine supplies.
+    launder["claims"]["C2-MAP"] = dict(launder["claims"]["C2-MAP"],
+                                       **{"corpus_dir": str(cdir), "trust_anchor": anchor})
+    launder["claims"]["C2-MEAS"] = dict(launder["claims"]["C2-MAP"], **{
+        "class": "measurement", "title": "offspring / dedup / o-hat per act"})
+    for _cid in ("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8"):
+        launder["claims"][_cid] = {"strategy": "excluded", "reason": "OUT_OF_SCOPE_CONTROL",
+                                   "class": "control", "title": "control"}
+    lpath = Path(tempfile.mkdtemp()) / "claim-manifest.json"
+    lpath.write_text(json.dumps(launder, indent=1))
+    lrep = dc.evaluate(lpath)
+    lbyid = {c["id"]: c for c in lrep["claims"]}
+    expect("C2-MEAS re-pointed at the C2-MAP activation strategy -> REFUSED: ACTIVATION_CLAIM_MISMATCH",
+           lbyid["C2-MEAS"]["status"] == "REFUSED"
+           and lbyid["C2-MEAS"]["reason"] == "ACTIVATION_CLAIM_MISMATCH")
+    expect("the refused C2-MEAS row carries NO C2-MAP evidence (no borrowed activation commit)",
+           not lbyid["C2-MEAS"]["evidence"].get("activation_commit")
+           and lbyid["C2-MEAS"]["evidence"] != lbyid["C2-MAP"]["evidence"])
+    expect("C2-MAP keeps its own credit while the laundering row is refused",
+           lbyid["C2-MAP"]["status"] == "CHECKED"
+           and lbyid["C2-MAP"]["evidence"].get("activation_commit") == cact)
+    expect("no document-level deposit badge follows from C2-MAP alone (DEPOSIT stays BLOCKED)",
+           lrep["deposit"] == "BLOCKED" and lrep["summary"]["refused"] == ["C2-MEAS"]
+           and dc.exit_code(lrep) == 1)
+    shutil.rmtree(lpath.parent)
     # no declared trust anchor -> REFUSED (local reachability is not authority)
-    st3, rs3, ev3 = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cdir)})
+    st3, rs3, ev3 = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cdir), "claim_id": "C2-MAP"})
     expect("no trust anchor -> REFUSED (AUTHORITY_ANCHOR_REQUIRED)",
            st3 == "REFUSED" and "AUTHORITY_ANCHOR_REQUIRED" in (ev3.get("faults") or []))
     shutil.rmtree(trepo)
 
     # P0-1: untracked receipt (activation commit only, receipt in working tree, not committed) -> REFUSED
     trU, cU, _, aU = build_repo(commit_receipt=False)
-    stU, rsU, evU = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cU), "trust_anchor": aU})
+    stU, rsU, evU = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cU), "trust_anchor": aU, "claim_id": "C2-MAP"})
     expect("untracked (uncommitted) receipt -> REFUSED (RECEIPT_COMMIT_MISSING)",
            stU == "REFUSED" and "RECEIPT_COMMIT_MISSING" in (evU.get("faults") or []))
     shutil.rmtree(trU)
 
     # P0-1: receipt commit that also touches an unrelated path -> REFUSED
     trX, cX, _, aX = build_repo(unrelated_in_receipt=True)
-    stX, rsX, evX = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cX), "trust_anchor": aX})
+    stX, rsX, evX = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cX), "trust_anchor": aX, "claim_id": "C2-MAP"})
     expect("receipt commit with an unrelated changed path -> REFUSED (RECEIPT_COMMIT_PATHS)",
            stX == "REFUSED" and "RECEIPT_COMMIT_PATHS" in (evX.get("faults") or []))
     shutil.rmtree(trX)
 
     # activation commit whose real parent != the act's named parent -> REFUSED
     trP, cP, _, aP = build_repo(act_parent="8b2eb65")
-    stP, rsP, evP = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cP), "trust_anchor": aP})
+    stP, rsP, evP = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cP), "trust_anchor": aP, "claim_id": "C2-MAP"})
     expect("stale/wrong parent_commit -> REFUSED (ACTIVATION_COMMIT_WRONG_PARENT)",
            stP == "REFUSED" and "ACTIVATION_COMMIT_WRONG_PARENT" in (evP.get("faults") or []))
     shutil.rmtree(trP)
 
     # P0-2: coherent local two-commit act but NOT in the declared remote ref -> REFUSED (no authority)
     trN, cN, _, aN = build_repo(push=False)
-    stN, rsN, evN = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cN), "trust_anchor": aN})
+    stN, rsN, evN = dc.strat_corpus_activation(repo_root, {"corpus_dir": str(cN), "trust_anchor": aN, "claim_id": "C2-MAP"})
     expect("valid local commits but not in the pinned remote ref -> REFUSED (authority)",
            stN == "REFUSED" and any(c in (evN.get("faults") or [])
                                     for c in ("AUTHORITY_REF_UNAVAILABLE", "AUTHORITY_COMMIT_NOT_IN_DECLARED_REF")))
@@ -658,8 +692,9 @@ try:
     trL, cL, _, aL = build_repo()
     _git(trL, "remote", "set-url", "origin", "https://github.com/s0fractal/manifesto-attacker.git")
     stL, rsL, evL = dc.strat_corpus_activation(
-        repo_root, {"corpus_dir": str(cL), "trust_anchor": {"repo": "s0fractal/manifesto",
-                    "ref": "refs/remotes/origin/main"}})
+        repo_root, {"corpus_dir": str(cL), "claim_id": "C2-MAP",
+                    "trust_anchor": {"repo": "s0fractal/manifesto",
+                                     "ref": "refs/remotes/origin/main"}})
     expect("lookalike substring origin -> REFUSED (exact identity, AUTHORITY_REMOTE_MISMATCH)",
            stL == "REFUSED" and "AUTHORITY_REMOTE_MISMATCH" in (evL.get("faults") or []))
     shutil.rmtree(trL)
@@ -678,7 +713,8 @@ try:
     if depth1:
         cShallow = shallow / "papers" / "every-check-spawns-more"
         stSh, rsSh, evSh = dc.strat_corpus_activation(
-            repo_root, {"corpus_dir": str(cShallow), "trust_anchor": {"repo": bareS, "ref": "refs/remotes/origin/main"}})
+            repo_root, {"corpus_dir": str(cShallow), "claim_id": "C2-MAP",
+                        "trust_anchor": {"repo": bareS, "ref": "refs/remotes/origin/main"}})
         # invariant: a shallow checkout must FAIL CLOSED (never grant credit); the exact typed reason
         # (ACTIVATION_COMMIT_MISSING / AUTHORITY_*) can vary across git versions.
         expect("SHALLOW depth-1 checkout of activated history -> REFUSED (fail-closed, not CHECKED)",
