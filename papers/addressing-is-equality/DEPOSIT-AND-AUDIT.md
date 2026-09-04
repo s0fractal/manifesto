@@ -12,9 +12,10 @@ depends on an absolute author-machine ADR path). **Current deposit report (BLOCK
 `glyphlib` digest + normal-form addresses); `B3`, `B6` **CHECKED** (`aie_errata_check.py` executed,
 exit 0); `B2` **EXCLUDED: DERIVED_FROM_B1**; `B5` **EXCLUDED: ARGUED_OBLIGATION**; `B8` **EXCLUDED:
 DEFINITIONAL**; `B4` **REFUSED: PROFILE_NOT_VENDORED** (church@v0 @196c45a is not vendored);
-`B7` **REFUSED: COMMAND_UNAVAILABLE** (`warrant` absent — it no longer reads `manifest.json` and calls
-it "re-executes"). Vendoring the DRAFT profile flips B4 to CHECKED; installing `warrant` lets B7
-actually execute. The design the gate implements:
+`B7` **REFUSED: WARRANT_ARTIFACT_NOT_BINDABLE** (its two observations are exact and really run —
+they are just not bound; see §A.2). Vendoring the DRAFT profile flips B4 to CHECKED. B7 does not
+flip until an external-artifact anchor exists, which this repository does not have. The design the
+gate implements:
 
 **The current checkers pass but decide much less than their banners claim.** `check_claims.py`
 verifies the two Warrant ATP values by **reading `manifest.json`** — it does not execute the check,
@@ -31,10 +32,41 @@ ledger*:
    number to a claim ID, the exact executed **term/AST hash**, and its surface (permissive harness
    vs `church@v0` DRAFT). Emit exact `checked`, `excluded`, and `refused` sets. Profile-label every
    printed number so no permissive figure can be read as a `church@v0` fact.
-2. **Execute, don't read.** The Warrant credit must come from actually running
-   `warrant check 0597575d…` (PASS 2,108 ATP) — not from parsing `manifest.json` — and must also run
-   `python tools/replay_pack.py replay drafts/ssd-pack` and report the `LEGACY_UNPINNED` pack status
-   as a **typed** result beside the per-check PASS.
+2. **Execute, don't read — and if you cannot bind what executed, refuse (B7, REFUSED).** The old
+   `command` strategy awarded B7 for `which("warrant")` plus exit 0. It is **removed from the
+   engine**, and so is its replacement. A `warrant_conformance` strategy was written that named the
+   interpreter through `MANIFESTO_WARRANT_PYTHON` (never PATH), read the distribution identity
+   `warrant-verify==0.9.0` out of that interpreter's own metadata, pinned the imported `warrant.py`
+   by digest, parsed the exact machine line comparing status / result / ATP independently, and ran
+   the pack replay separately. Codex reproduced **four** ways to take B7 `CHECKED` from it without
+   the artifact, and all four are now standing negative controls in `test_deposit_check.py`:
+
+   - **the environment authenticates itself.** A 12-line `/bin/sh` script named as the interpreter
+     answered the identity probe with the pinned distribution, version and digest, then printed
+     `pass  result=e0419cc5…  atp_spent=2108`. No Python, no Warrant, no wheel, no stored check —
+     `B7 CHECKED`, `origin=/tmp/not-warrant.py`. A probe cannot authenticate a subject that supplies
+     the probe's own answers.
+   - **one front module is not the closure.** Only `warrant.py` was pinned. Appending a line to the
+     installed `sigma_glyph.py` in the same environment changed the bytes that actually compute the
+     result (`sha256:fad333fa…`) while B7 stayed `CHECKED` at the same output.
+   - **the second observation was an in-tree oracle.** `tools/replay_pack.py` sat in a decorative
+     `operands` list that nothing verified. A four-line stub (`sha256:c4914633…`) printing
+     `REPLAY: LEGACY_UNPINNED` at exit 1 kept B7 `CHECKED`. That made the pack fact text emitted by
+     the tree under test.
+   - **an opportunistic binding is not a binding.** The wheel `RECORD` cross-check was
+     `if rec is not None`, so emptying the RECORD hash dropped it silently: `record_sha256=None`,
+     B7 `CHECKED`.
+
+   Closing these honestly needs an interpreter identity this repository has no released digest for,
+   the **full runtime closure** of that interpreter, and an **out-of-tree anchor** for a verifier
+   that lives inside the tree it verifies. Each is a new framework, and a specimen does not grow one
+   to keep a row green (`AGENTS.md` rule 6). So B7 is `refused` in the manifest with the typed
+   reason `WARRANT_ARTIFACT_NOT_BINDABLE` and consumes **no strategy at all**: there is no code path
+   — bound, unbound or opportunistic — that can put B7 into the CHECKED set, and the tests assert
+   that structurally, not just that today's manifest says `refused`. **The observations themselves
+   are unharmed.** They are exact, they really run, §D shows how, and CI runs them on the released
+   wheel every push. They are recorded in the manifest as `unbound_observations` — prose that no
+   strategy reads. An unbound observation is **reported, never credited**.
 3. **Pin the DRAFT profile by content, not by path.** Vendor the ADR-011 reference implementation at
    commit `196c45a2…` into the deposit and verify it by content digest; a missing/re-pathed proposal
    is a **typed refusal** (`PROFILE_NOT_VENDORED`), never a string-presence pass. Split the evaluator
@@ -89,11 +121,15 @@ identity". The two-sided composition whose novelty is asked for must be vendored
 
 - **All ATP figures** are `replay` (byte-identical evaluator replay under a pinned sigma-glyph),
   *not* transcript — safe to present as reproducible, **provided the profile label is attached.**
-- **The Warrant credit is two different things (Codex P1-S1).** `warrant check 0597575d…` re-executes
-  one stored SKI check to PASS at 2,108 ATP (`command`); `warrant verify --settlement` reports 4
-  records, 0/0. But `python tools/replay_pack.py replay drafts/ssd-pack` returns `LEGACY_UNPINNED`
-  (exit 1): the pack as a whole is historically sealed. Report both; neither cancels the other. A
-  one-sided check against a constant is not a two-sided equality receipt or endorsement.
+- **The Warrant observations are two different things, and neither is checked here (Codex P1-S1).**
+  Under `warrant-verify==0.9.0`, `check 0597575d…` re-executes one stored SKI check to `pass`,
+  result `e0419cc5…`, `atp_spent=2108`. Separately, `python tools/replay_pack.py replay
+  drafts/ssd-pack` returns `LEGACY_UNPINNED` (exit 1): the pack as a whole is historically sealed.
+  Report both; neither cancels the other, and neither is credit for the other. Both are **unbound**
+  — the gate refuses B7 (§A.2) — so present them as *observations of an external released tool*,
+  never as this repository's checked facts. A one-sided check against a constant is not a two-sided
+  equality receipt or endorsement in any case. `warrant verify --settlement` (4 records, 0/0) is a
+  third unbound observation and was dropped from the B7 row rather than reported as checked.
 - **The `church@v0` per-unit ≈37 ATP figure** (DRAFT profile @196c45a, admitted numerals only — not
   the computed `7+5`) and the permissive ≈50 are `replay` over a measured range — label
   observed-over-range, not extrapolated, and never present `church@v0` as released.
@@ -110,9 +146,23 @@ python3 -m venv .venv
 # idiom vs predicate costs, marker collision, mutations, Warrant pack:
 .venv/bin/python papers/addressing-is-equality/check_claims.py     # after §A closed-manifest rewrite
 .venv/bin/python tools/aie_errata_check.py                          # collision counterexample + M1/M2/M3
-# per-check re-execution vs pack-level replay (report BOTH):
-warrant check 0597575d...                                           # PASS, 2,108 ATP
-python tools/replay_pack.py replay drafts/ssd-pack                  # REPLAY: LEGACY_UNPINNED (exit 1) — expected
+# B7's two observations — REAL, exact, and NOT credit. Run them yourself; the gate will not
+# move (B7 stays REFUSED: WARRANT_ARTIFACT_NOT_BINDABLE, §A.2). Nothing here is committed:
+mise exec python@3.12 -- python -m venv /tmp/warrant-0.9.0
+/tmp/warrant-0.9.0/bin/pip install "warrant-verify==0.9.0"
+(cd drafts/ssd-pack && /tmp/warrant-0.9.0/bin/python -I -m warrant --store .warrants \
+   check 0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87)
+#  -> pass  result=e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00  atp_spent=2108
+python3 tools/replay_pack.py replay drafts/ssd-pack
+#  -> REPLAY: LEGACY_UNPINNED (exit 1) — the expected typed boundary, NOT a failure of the run
+# the gate, with that released artifact present and named: B7 is STILL REFUSED. That is the point.
+MANIFESTO_WARRANT_PYTHON=/tmp/warrant-0.9.0/bin/python \
+  python3 papers/deposit_check.py papers/addressing-is-equality/claim-manifest.json
+# mechanism (hermetic; builds its own hostile interpreters and trees, no network and no PATH).
+# Carries the four reproduced B7 bypasses as standing negative controls:
+python3 papers/test_deposit_check.py
+# the same suite with the real artifact present, which then asserts it buys nothing:
+MANIFESTO_WARRANT_PYTHON=/tmp/warrant-0.9.0/bin/python python3 papers/test_deposit_check.py
 # DRAFT profile (NOT in the 0.6.7 wheel): vendor & pin by content, then exercise admission:
 #   sigma-glyph @ 196c45a2f9074a472b96af1a6bae2c67533edbb1 (v0.6.7-175-g196c45a) ADR-011 selftest → 72/72
 # record: exact repo revision; sigma-glyph release (0.6.7) SEPARATE from the DRAFT profile commit;
@@ -150,12 +200,16 @@ expected_checks:
   - build takes paper-v0.2-draft.md (NOT paper.md); abstract front-loaded; real [@key] citations resolve
   - check_claims.py exits 0 on a clean sigma-glyph==0.6.7 install, every figure bound to a term hash and surface
   - aie_errata_check.py settles the collision PASS and flips under M1/M2/M3
-  - warrant check re-executes to PASS 2,108 ATP AND replay_pack reports LEGACY_UNPINNED (both recorded)
+  - B7 is REFUSED: WARRANT_ARTIFACT_NOT_BINDABLE and no environment can lift it — the four
+    reproduced bypasses (impersonated interpreter, front-module-not-closure, in-tree replay
+    oracle, opportunistic RECORD) are negative controls and must stay red-if-reintroduced
   - the vendored DRAFT profile admits numerals 0–8 and refuses PLUS 7 5
 excluded:
   - any DOI reservation, release, tag, or claim of adoption / peer review
   - any presentation of 601 ATP as a church@v0 fact, or of church@v0 as a "released profile"
   - any presentation of the Warrant pass — or a strict pack replay — as a proof of the semantic theorem
+  - any presentation of B7's two Warrant observations as CHECKED by this gate; they are exact,
+    they are run in CI, and they are UNBOUND (external released artifact, no anchor here)
 status_note: >
   ADR-011 is a DRAFT proposal on file upstream, not accepted/deployed/standardized, and BLOCKED on
   the motivating case. Publication is a dated trajectory marker, not adoption. This paper is its own

@@ -13,7 +13,13 @@ Contract (Codex closure P0-4 + operator go, 2026-09-01):
   REFUSED: FROZEN_CORPUS_NOT_DEPOSITED — never a string-presence credit. When the
   corpus is later deposited, those rows move addressably from REFUSED to CHECKED.
 - Executable claims bind to a term/AST hash, the evaluator identity, and an ACTUAL
-  execution (not a manifest read).
+  execution (not a manifest read). This holds only for evaluators this repository
+  can bind by content. An EXTERNAL released distribution is NOT one of them: the
+  engine has no strategy that runs a foreign interpreter and reads its output as
+  evidence, because such a check ends up asking the subject to authenticate itself
+  (see the B7 note below). There is deliberately no `which(name) + rc == 0` and no
+  `named-interpreter + self-report` strategy here; a claim about a released
+  external artifact is `refused` with a typed reason and no code path can lift it.
 - Two DISTINCT notions, never merged:
     * mechanism-correct : the engine checks and refuses correctly (test_deposit_check.py);
     * deposit-clean     : the produced report has no blocking REFUSED.
@@ -178,14 +184,42 @@ def _dir_digest(d: Path) -> str:
     return h.hexdigest()
 
 
-def strat_command(base, spec):
-    from shutil import which
-    if which(spec["cmd"][0]) is None:
-        return REFUSED, "COMMAND_UNAVAILABLE", {"cmd": spec["cmd"]}
-    out = subprocess.run(spec["cmd"], cwd=str(base), capture_output=True, text=True)
-    if out.returncode != 0:
-        return REFUSED, "COMMAND_FAILED", {"cmd": spec["cmd"], "rc": out.returncode}
-    return CHECKED, None, {"cmd": spec["cmd"]}
+# --------------------------------------------------------------------------- #
+# B7 — NOT IMPLEMENTED, ON PURPOSE. There is no `warrant_conformance` strategy.
+#
+# B7 asserts two facts about an EXTERNAL released artifact: that one stored check
+# re-executes under `warrant-verify==0.9.0` to an exact result and ATP, and that
+# the pack as a whole is still `LEGACY_UNPINNED`. A strategy that produced those
+# facts by asking a named interpreter to describe itself and then reading its
+# output was written, reviewed and REMOVED at this commit, because four separate
+# reproductions showed it awarding CHECKED to things that were not the artifact:
+#
+#   * a 12-line `/bin/sh` script named as the interpreter answered the identity
+#     probe with the pinned distribution/version/digest fields and then printed
+#     the exact `pass  result=...  atp_spent=2108` line. No Python, no Warrant,
+#     no wheel, no stored check — B7 CHECKED. A probe cannot authenticate a
+#     subject that is supplying the probe's own answers.
+#   * pinning `warrant.py` pinned one front module. Appending a line to the
+#     installed `sigma_glyph.py` in the same environment changed the bytes that
+#     actually compute the result while B7 stayed CHECKED at the same output.
+#   * the pack-level replay ran `tools/replay_pack.py` from the tree under test,
+#     named in a decorative `operands` list that nothing verified. A four-line
+#     stub printing `REPLAY: LEGACY_UNPINNED` and exiting 1 kept B7 CHECKED.
+#   * the wheel RECORD cross-check was opportunistic (`if rec is not None`), so
+#     emptying the RECORD hash removed the binding and left B7 CHECKED.
+#
+# Closing these needs an interpreter identity this repository has no released
+# digest for, the full runtime closure of that interpreter, and an out-of-tree
+# anchor for a verifier that lives inside the tree it verifies. Each is a
+# framework, and this specimen does not get to grow one to keep a green row
+# (AGENTS.md rule 6). So B7 is `refused` in the manifest with a typed reason and
+# consumes NO strategy here: the engine has no code path — bound, unbound or
+# opportunistic — that can put B7 into the CHECKED set.
+#
+# The two observations are still real and still runnable by hand; CI runs them on
+# the released wheel and prints them. That run is an OBSERVATION, not credit, and
+# it does not reach this report.
+# --------------------------------------------------------------------------- #
 
 
 def strat_evaluator_replay(base, spec):
@@ -330,7 +364,6 @@ STRATEGIES = {
     "recount_source": strat_recount_source,
     "receipt_tally": strat_receipt_tally,
     "vendored_profile": strat_vendored_profile,
-    "command": strat_command,
     "evaluator_replay": strat_evaluator_replay,
     "corpus_activation": strat_corpus_activation,
 }

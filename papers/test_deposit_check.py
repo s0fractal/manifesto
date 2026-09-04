@@ -9,6 +9,12 @@ importantly, it FAILS CLOSED / REFUSES under every mutation the operator require
   delete candidate · change a number keeping the old literal · claim-ID drift ·
   profile swap · missing vendored profile · receipt/source mismatch · duplicate id.
 
+It also carries the four B7 bypasses Codex reproduced against the (now removed)
+`warrant_conformance` strategy as standing negative controls: an executable that
+impersonates the Warrant environment, a bound front module that is not the runtime
+closure, an in-tree replay tool used as its own success oracle, and an
+opportunistic RECORD binding. None of them can move B7 out of REFUSED.
+
 It is deliberately independent of sigma-glyph: it drives the engine with synthetic
 `recount_source`, `receipt_tally`, and `vendored_profile` claims so "mechanism green"
 never depends on "deposit clean". Run: `python3 papers/test_deposit_check.py`.
@@ -221,6 +227,189 @@ for name in ("every-check-spawns-more", "addressing-is-equality"):
         continue
     r = evaluate(mf)
     expect(f"{name} candidate + ledger BIND (engine OK)", r["engine"] == "OK")
+
+# =========================================================================== #
+# B7 — the four reproduced bypasses, as standing negative controls.
+#
+# The `warrant_conformance` strategy that once awarded B7 CHECKED was removed:
+# Codex reproduced four ways to obtain that credit without the artifact. These
+# controls keep it removed. They assert the SHAPE of the refusal — that nothing
+# an attacker controls in the environment or in the tree can move B7 out of
+# REFUSED — not merely that today's manifest happens to say `refused`.
+#
+# Hermetic by construction: each control builds its own hostile interpreter or
+# tree under a temp root. Nothing consults ambient PATH, the network, a developer
+# checkout, or the real released wheel.
+# =========================================================================== #
+import os
+import subprocess
+
+from deposit_check import STRATEGIES  # noqa: E402
+
+B7_ID = "0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87"
+B7_RESULT = "e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00"
+B7_LINE = f"pass  result={B7_RESULT}  atp_spent=2108"
+B7_REASON = "WARRANT_ARTIFACT_NOT_BINDABLE"
+
+AIE = HERE / "addressing-is-equality" / "claim-manifest.json"
+B7ROOT = Path(tempfile.mkdtemp())
+
+
+def b7_under(env_overrides=None, manifest=AIE):
+    """Evaluate the REAL paper-B manifest under a hostile environment."""
+    prev = {k: os.environ.get(k) for k in (env_overrides or {})}
+    os.environ.update(env_overrides or {})
+    try:
+        return status_of(evaluate(manifest), "B7")
+    finally:
+        for k, v in prev.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+# --- structural: no strategy in the engine can award B7 -------------------- #
+# The two retired names, and the general property behind them: the engine holds
+# no strategy that runs a foreign interpreter and reads its output as evidence.
+expect("the generic `command` strategy is gone", "command" not in STRATEGIES)
+expect("the `warrant_conformance` strategy is gone",
+       "warrant_conformance" not in STRATEGIES)
+expect("B7 consumes no strategy that can produce CHECKED",
+       json.loads(AIE.read_text())["claims"]["B7"]["strategy"] == "refused")
+
+# A manifest that still NAMES the removed strategy does not silently pass: an
+# unknown strategy is a typed refusal, never credit.
+d = B7ROOT / "unknown"
+d.mkdir()
+m = build_fixture(d)
+mm = json.loads((d / "manifest.json").read_text())
+mm["claims"]["K1"]["strategy"] = "warrant_conformance"
+(d / "manifest.json").write_text(json.dumps(mm))
+k = status_of(evaluate(m), "K1")
+expect("a manifest naming `warrant_conformance` REFUSES UNKNOWN_STRATEGY",
+       k["status"] == "REFUSED" and k["reason"] == "UNKNOWN_STRATEGY")
+
+# --- baseline: the real B7 refuses, with the narrow reason ----------------- #
+c = b7_under()
+expect("B7 REFUSED with the narrow typed reason",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+expect("B7 still names its operands", "tools/replay_pack.py" in c["operands"])
+
+_r = evaluate(AIE)
+expect("B7 is not in the CHECKED set", "B7" not in _r["summary"]["checked"])
+expect("paper B still DEPOSIT: BLOCKED (B4 + B7)",
+       _r["deposit"] == "BLOCKED" and {"B4", "B7"} <= set(_r["summary"]["refused"]))
+
+# --- P0-1: an executable that impersonates the Warrant environment --------- #
+# Codex's exact reproducer: a /bin/sh script that answers an identity probe with
+# the pinned distribution/version/digest fields and then prints the exact
+# `pass  result=…  atp_spent=2108` line. No Python, no Warrant, no wheel, no
+# stored check. It used to award B7 CHECKED.
+fake = B7ROOT / "fake-python"
+fake.write_text(
+    "#!/bin/sh\n"
+    "if [ \"$2\" = \"-c\" ]; then\n"
+    "  printf '%s\\n' '{\"dist_name\":\"warrant-verify\",\"version\":\"0.9.0\","
+    "\"origin\":\"/tmp/not-warrant.py\",\"module_sha256\":"
+    "\"0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a\","
+    "\"owned_by_distribution\":true,\"record_sha256\":"
+    "\"0e6785679aa7b8133fc798794c8f72eb37bc3874b93cb494eadbd41f189d204a\"}'\n"
+    "  exit 0\n"
+    "fi\n"
+    f"printf '%s\\n' '{B7_LINE}'\n"
+    "exit 0\n")
+fake.chmod(0o755)
+# the impersonator really does answer both probes convincingly ...
+_probe = subprocess.run([str(fake), "-I", "-c", "x", "warrant-verify", "warrant"],
+                        capture_output=True, text=True)
+expect("P0-1 impersonator answers the identity probe (control is live)",
+       '"version": "0.9.0"' in _probe.stdout.replace('":', '": '))
+_run = subprocess.run([str(fake), "-I", "-m", "warrant", "check", B7_ID],
+                      capture_output=True, text=True)
+expect("P0-1 impersonator prints the exact pass line (control is live)",
+       _run.stdout.strip() == B7_LINE and _run.returncode == 0)
+# ... and buys nothing.
+c = b7_under({"MANIFESTO_WARRANT_PYTHON": str(fake)})
+expect("P0-1 impersonated environment CANNOT award B7",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+
+# --- P0-2: a bound front module is not the runtime closure ----------------- #
+# The old check pinned `warrant.py` only; mutating another installed file in the
+# same environment (e.g. `sigma_glyph.py`) changed the bytes that compute the
+# result while B7 stayed CHECKED. Nothing about an environment is read now, so
+# there is no digest to satisfy and no closure to miss.
+mutated = B7ROOT / "closure"
+mutated.mkdir()
+(mutated / "python3").write_text("#!/bin/sh\nprintf '%s\\n' '" + B7_LINE + "'\nexit 0\n")
+(mutated / "python3").chmod(0o755)
+c = b7_under({"MANIFESTO_WARRANT_PYTHON": str(mutated / "python3")})
+expect("P0-2 no environment digest can award B7",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+expect("P0-2 the report carries no environment evidence at all", c["evidence"] == {})
+
+# --- P0-3: the pack-replay verifier lives in the tree it verifies ---------- #
+# A four-line stub at `tools/replay_pack.py` printing `REPLAY: LEGACY_UNPINNED`
+# and exiting 1 used to satisfy the second observation. Rebuild that tree — the
+# real paper manifest, the real ledger and candidate, a stub replay tool — and
+# confirm the stub buys nothing.
+oracle = B7ROOT / "oracle"
+(oracle / "tools").mkdir(parents=True)
+(oracle / "papers" / "addressing-is-equality").mkdir(parents=True)
+(oracle / "tools" / "replay_pack.py").write_text(
+    "#!/usr/bin/env python3\nimport sys\nprint('REPLAY: LEGACY_UNPINNED')\nsys.exit(1)\n")
+repo = HERE.parent
+for rel in ("papers/addressing-is-equality/claim-manifest.json",
+            "papers/addressing-is-equality/CLAIM-LEDGER.md"):
+    shutil.copy2(repo / rel, oracle / rel)
+shutil.copy2(repo / json.loads(AIE.read_text())["candidate"]["path"],
+             oracle / json.loads(AIE.read_text())["candidate"]["path"])
+_stub = subprocess.run([sys.executable, str(oracle / "tools" / "replay_pack.py"),
+                        "replay", "drafts/ssd-pack"], capture_output=True, text=True)
+expect("P0-3 stub replay tool emits the expected line at exit 1 (control is live)",
+       _stub.stdout.strip() == "REPLAY: LEGACY_UNPINNED" and _stub.returncode == 1)
+_or = evaluate(oracle / "papers/addressing-is-equality/claim-manifest.json")
+expect("P0-3 the stub tree binds candidate + ledger (control is not vacuous)",
+       _or["engine"] == "OK")
+c = status_of(_or, "B7")
+expect("P0-3 a stubbed in-tree replay tool CANNOT award B7",
+       c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+
+# --- P1: no opportunistic binding is left to weaken ------------------------ #
+# Emptying the wheel RECORD hash used to drop the second identity binding while
+# B7 stayed CHECKED, because the cross-check was `if rec is not None`. The whole
+# probe is gone; assert the engine reads no distribution metadata at all.
+_engine = (HERE / "deposit_check.py").read_text()
+for token in ("importlib.metadata", "record_sha256", "owned_by_distribution",
+              "MANIFESTO_WARRANT_PYTHON", "python_env_var"):
+    expect(f"P1 the engine no longer consults `{token}`", token not in _engine)
+
+# --- the observations survive as observations, not as credit --------------- #
+# The exact operands stay recorded in the manifest so the claim keeps its precise
+# content; they are prose there, and no strategy reads them.
+_b7 = json.loads(AIE.read_text())["claims"]["B7"]
+expect("the stored-check observation is recorded verbatim",
+       B7_RESULT in _b7["unbound_observations"]["stored_check"]
+       and "atp_spent=2108" in _b7["unbound_observations"]["stored_check"])
+expect("the pack observation is recorded verbatim",
+       "REPLAY: LEGACY_UNPINNED" in _b7["unbound_observations"]["pack_replay"])
+expect("recording an observation does not create a checked strategy field",
+       "expect_result" not in _b7 and "module_sha256" not in _b7)
+
+# --- a bound environment is STILL not credit ------------------------------- #
+# CI installs the real warrant-verify==0.9.0 and runs both observations for the
+# log. If MANIFESTO_WARRANT_PYTHON is set here, the ONLY assertion is that the
+# report did not move: a real released artifact is not a back door either.
+_real = os.environ.get("MANIFESTO_WARRANT_PYTHON")
+if _real:
+    c = b7_under()
+    expect("REAL warrant-verify==0.9.0 present and B7 STILL REFUSED (non-crediting)",
+           c["status"] == "REFUSED" and c["reason"] == B7_REASON)
+else:
+    print("skip  REAL warrant-verify==0.9.0 non-crediting control "
+          "(set MANIFESTO_WARRANT_PYTHON; see DEPOSIT-AND-AUDIT §D)")
+
+shutil.rmtree(B7ROOT)
 
 print()
 if fails:

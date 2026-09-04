@@ -10,9 +10,11 @@ name: papers-deposit-check
 #
 # Green does NOT mean deposit-clean: both papers are expected to be DEPOSIT: BLOCKED
 # (Paper A refuses the not-yet-deposited frozen corpus; Paper B refuses the
-# un-vendored DRAFT profile and the absent `warrant` CLI). That is the honest shape
-# of absence the gate exists to record; the corpus/profile later flip specific
-# claims from REFUSED to CHECKED.
+# un-vendored DRAFT profile, and refuses B7 as WARRANT_ARTIFACT_NOT_BINDABLE — its
+# two Warrant observations are exact and are run below, but an external released
+# artifact cannot be bound here, so they are reported and not credited). That is the
+# honest shape of absence the gate exists to record; the corpus/profile later flip
+# specific claims from REFUSED to CHECKED. B7 does not flip.
 on: [push, pull_request]
 
 jobs:
@@ -38,6 +40,38 @@ jobs:
           set -euo pipefail
           python3 papers/test_deposit_check.py | tee mech.log
           grep -q "GREEN: the deposit-check mechanism checks and fails-closed correctly." mech.log
+
+      - name: B7 observations — REAL, printed, and explicitly NOT credit
+        # This step runs B7's two observations against the released `warrant-verify==0.9.0`
+        # so the exact operands stay visible and stay honest. It awards NOTHING: the gate
+        # is asserted to still refuse B7 with the artifact installed and named. If a future
+        # change lets a present interpreter flip B7 to CHECKED, this step goes red.
+        # Nothing about this environment is committed (no venv, wheel, report or cache).
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv "$RUNNER_TEMP/warrant-0.9.0"
+          "$RUNNER_TEMP/warrant-0.9.0/bin/pip" install --quiet "warrant-verify==0.9.0"
+          # observation 1 — one stored check re-executes, exactly
+          ( cd drafts/ssd-pack && "$RUNNER_TEMP/warrant-0.9.0/bin/python" -I -m warrant \
+              --store .warrants check \
+              0597575d21d62c2db265c0d17e3a2c8c1b2db880342b117a403af7e9c4c03c87 ) | tee check.log
+          grep -qx "pass  result=e0419cc5112a95f9e35a019539b25f00eccbea33122a5736a20897d8eea5bf00  atp_spent=2108" check.log
+          # observation 2 — the pack as a whole is still legacy-sealed (exit 1 is EXPECTED)
+          rc=0; python3 tools/replay_pack.py replay drafts/ssd-pack > replay.log 2>&1 || rc=$?
+          cat replay.log
+          test "$rc" -eq 1
+          grep -qx "REPLAY: LEGACY_UNPINNED" replay.log
+          # ...and neither observation moves the report. B7 stays REFUSED, artifact present.
+          MANIFESTO_WARRANT_PYTHON="$RUNNER_TEMP/warrant-0.9.0/bin/python" \
+            python3 papers/test_deposit_check.py | tee b7.log
+          grep -q "ok   REAL warrant-verify==0.9.0 present and B7 STILL REFUSED (non-crediting)" b7.log
+          grep -q "GREEN: the deposit-check mechanism checks and fails-closed correctly." b7.log
+          MANIFESTO_WARRANT_PYTHON="$RUNNER_TEMP/warrant-0.9.0/bin/python" \
+            python3 papers/deposit_check.py \
+            papers/addressing-is-equality/claim-manifest.json > gate.log || true
+          cat gate.log
+          grep -q "XX  B7: REFUSED \[WARRANT_ARTIFACT_NOT_BINDABLE\]" gate.log
 
       - name: Corpus exporter mechanism (F1-F9) green (no quarantine, no evaluator)
         shell: bash
