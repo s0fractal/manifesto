@@ -10,7 +10,7 @@ address.
 ```json capsule
 {
   "verifier": "settle-gate://sha256:dfd20c29d6366da6e78ae6ef5639d2ff7cf343e6eebaca7ac8a6af3ab955feb0",
-  "dep": {"path": "README.md", "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"}
+  "dep": {"path": "README.md", "sha256": "3a6edc622b3dbca9e71885eed8b51a52d4aedd76f1db9f740ab28c4a141b5e52"}
 }
 ```
 
