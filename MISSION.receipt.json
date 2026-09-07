@@ -4,7 +4,7 @@
       "class": "cite",
       "dep": {
         "path": "README.md",
-        "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
+        "sha256": "3a6edc622b3dbca9e71885eed8b51a52d4aedd76f1db9f740ab28c4a141b5e52"
       },
       "detail": "verbatim quote found",
       "layer": "repo",
@@ -19,7 +19,7 @@
       "class": "cite",
       "dep": {
         "path": "README.md",
-        "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
+        "sha256": "3a6edc622b3dbca9e71885eed8b51a52d4aedd76f1db9f740ab28c4a141b5e52"
       },
       "detail": "verbatim quote found",
       "layer": "repo",
@@ -34,7 +34,7 @@
       "class": "cite",
       "dep": {
         "path": "README.md",
-        "sha256": "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
+        "sha256": "3a6edc622b3dbca9e71885eed8b51a52d4aedd76f1db9f740ab28c4a141b5e52"
       },
       "detail": "verbatim quote found",
       "layer": "repo",
@@ -48,7 +48,7 @@
   ],
   "deps": {
     "README.md": [
-      "0c9e3eddf93a12acfaa15a6b9b91a161e3d7275b3a3110202bc0e0c218144ae2"
+      "3a6edc622b3dbca9e71885eed8b51a52d4aedd76f1db9f740ab28c4a141b5e52"
     ]
   },
   "gate_version": "settle_gate/0.4+deps+observed",
@@ -61,4 +61,4 @@
     "unsettled": 0
   }
 }
-RECEIPT_SHA256: 10e2d54cf37ea185a70cf70570bc1bcb671d9502b66a9d46957ed2d03045564b
+RECEIPT_SHA256: e4db1fc608dcd34199c488ffe38da0b9936e22148ee165f2338cf3260f6a7535
