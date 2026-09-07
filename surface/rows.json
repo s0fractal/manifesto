@@ -22,7 +22,7 @@
       "statement": "MISSION.md is the operator-accepted direction, decomposed by typology 0041; the Purpose slot belongs to the operator alone.",
       "sources": [
         {"path": "MISSION.md", "sha256": "54031a17395b60d4bdd0b9b0412696d424780192d21ace5bb24cc8b106e1fdb4"},
-        {"path": "MISSION.receipt.json", "sha256": "e41be25593ddb7b488bc0bf30c8516c0fe6d68328cdf079282670846add48584"}
+        {"path": "MISSION.receipt.json", "sha256": "54d2d56b6a0c539bb1f65d81253d19a1b1a88322c3984dafd91071f171e53316"}
       ],
       "authority": {"path": "MISSION.settled.md", "sha256": "238ba704dcc184acf22801ceff33f339a109c8a84a21cb7af8098ef15751f3b5"},
       "scope": "project direction only; not a gate for any other repository",
@@ -49,7 +49,7 @@
       "class": "operational",
       "statement": "MISSION.receipt.json is settled against the README.md bytes in the tree now: every dependency its claims recorded is recomputed and matches, so the \u2693 badges in MISSION.settled.md quote a README that still exists.",
       "sources": [
-        {"path": "MISSION.receipt.json", "sha256": "e41be25593ddb7b488bc0bf30c8516c0fe6d68328cdf079282670846add48584"},
+        {"path": "MISSION.receipt.json", "sha256": "54d2d56b6a0c539bb1f65d81253d19a1b1a88322c3984dafd91071f171e53316"},
         {"path": "tools/receipt_freshness.py", "sha256": "ef36feaa27e021291c107afbf3895ea9a05b2ff3437bb7fd1a9bbdbfdfb59d9b"}
       ],
       "check": {
