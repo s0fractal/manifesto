@@ -65,7 +65,7 @@
       },
       {
         "path": "drafts/EMBEDDED-CLAIMS-E2E-0.1.md",
-        "sha256": "b19b11567276f93bc2cc3578a8eb14d8c0cb344f3d87b72584a77969c1aad1b6"
+        "sha256": "06f6763c3e8daa95bdb3c46cd22a3ecec613c7cb97c8937b1c2fb3b74f7e1840"
       },
       {
         "path": ".github/workflows/embedded-claims-poc.yml",
