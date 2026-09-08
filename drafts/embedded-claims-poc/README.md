@@ -52,6 +52,15 @@ A malformed or incoherently mutated bundle is refused before execution. A
 coherently rebuilt schema-valid bundle is a new bundle; authenticity requires an
 external commitment or receipt and is not claimed here.
 
+“Self-contained” describes the compiled records: the runner can validate their
+identities and links without reparsing the source Markdown. A world dependency's
+`path` and `sha256` identify external file bytes; those bytes are not embedded in
+the compiled bundle. For the live specimen, the receiver must separately make
+the matching `README.md` available at the path resolved by its trusted verifier.
+Moving only the compiled JSON therefore does not close the data or runtime
+dependencies, and replaying an old dependency does not establish freshness
+against a receiver's current checkout.
+
 ## Status and credit boundary
 
 Execution results are per-record:
