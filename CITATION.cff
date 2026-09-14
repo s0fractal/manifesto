@@ -17,7 +17,8 @@ abstract: >-
   executable soundness counterexample; equality by address holds only on an
   admitted profile, and the draft profile refuses the motivating case). Papers
   in papers/ carry claim ledgers with typed falsifiers and checkers that
-  recount their figures from the repository. Nothing is deposited yet.
+  recount their figures from the repository. The ô report (v0.2.0) is deposited
+  at 10.5281/zenodo.22750755 with its refusals as known loss.
 message: "If you use or evaluate this work, please cite it."
 type: software
 license: AGPL-3.0-only
@@ -37,5 +38,15 @@ keywords:
   - settlement
   - content-addressed computation
   - digital ontology
-# DOI: to be added at first Zenodo deposit; papers/README.md records which
-# commit each deposit freezes.
+preferred-citation:
+  type: report
+  title: "Measuring Verifier-Reported Verification Load on a Single LLM Monologue Corpus: A Report with Termination Controls"
+  version: "0.2.0"
+  doi: "10.5281/zenodo.22750755"
+  date-released: "2026-09-14"
+  authors:
+    - given-names: Serhii
+      family-names: Glova
+      orcid: "https://orcid.org/0009-0001-8010-420X"
+  notes: "Deposited with its closed-manifest gate BLOCKED (2 CHECKED / 8 REFUSED) as known loss. Not peer-reviewed."
+# papers/README.md records which commit each deposit freezes.

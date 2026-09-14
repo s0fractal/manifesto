@@ -247,3 +247,10 @@ markdown, `CLAIM-LEDGER.md`, `claim-manifest.json`, the gate's JSON report, a `g
 deposit commit (includes `reviews/`, the checkers, `LICENSE` and both license texts), and a
 `MANIFEST.md` + `SHA256SUMS` written at deposit time. Upload, publication, tag and the post-DOI
 README/`CITATION.cff` update remain owner acts (AGENTS.md rule 5).
+
+**PUBLISHED 2026-09-14.** Zenodo record 22750755, version DOI `10.5281/zenodo.22750755`, concept DOI
+`10.5281/zenodo.22750754`, version 0.2.0, from annotated tag `paper-every-check-spawns-more-v0.2.0` =
+`448d6de`. Eight files; `deposited-v0.2.0/MANIFEST.md` and `SHA256SUMS` are byte copies of the
+record's. All eight public file checksums matched the local bundle after publication, and `paper.pdf`
+rebuilt byte-identically from the tagged source archive. Do not edit `paper-v0.2-draft.md` past the tag
+without a new deposit version: the manifest pins it, and the deposited bytes are frozen.
