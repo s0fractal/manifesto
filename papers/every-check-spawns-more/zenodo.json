@@ -1,0 +1,42 @@
+{
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "title": "Measuring Verifier-Reported Verification Load on a Single LLM Monologue Corpus: A Report with Termination Controls",
+  "version": "0.2.0",
+  "creators": [
+    {
+      "name": "Glova, Serhii",
+      "affiliation": "Independent",
+      "orcid": "0009-0001-8010-420X"
+    }
+  ],
+  "description": "Under a fixed protocol P, one strict LLM verifier per claim emits a verdict and new claims, judges which are load-bearing, applies a removal test and deduplicates its own output; the per-act result is the verifier-reported offspring count ô, with self-adjudication part of the construct. On one informal single-model monologue corpus, ô sat near 2–3 through sampled depths to 4 over selected paths (not an asymptote); termination controls read about 0.14 and stopped unaided. One claim compiled to a deterministic priced check has a terminal execution sub-act with zero emitted prose obligations, on a separate axis from ô. An earlier branching/queue theorem is retired by scheduler counterexamples. Every abstract claim is a row of a claim ledger decided by a closed-manifest gate that is shipped with the paper. At deposit, with sigma-glyph 0.6.7, the gate reports 2 rows CHECKED and 8 REFUSED with typed reasons (frozen act corpus not deposited, scheduler simulation not deposited, a drifted receipt source, measurement not replayed). This version is deposited with those refusals as known loss, by the author's decision. NOT peer-reviewed; all verifiers are one vendor's models; drafted with language-model assistance, reviewed by other language models (Codex/OpenAI, Kimi, Qwen, Claude), no independent human review to date.",
+  "keywords": [
+    "verification",
+    "LLM agents",
+    "verifier-reported verification load",
+    "claim ledger",
+    "termination controls",
+    "reproducibility",
+    "known loss"
+  ],
+  "license": "cc-by-sa-4.0",
+  "notes": "Paper, ledger and documentary artifacts CC BY-SA 4.0; executable checkers in the attached source archive AGPL-3.0-only (repository LICENSE is the path-scoped authority; both license texts included). PDF built byte-reproducibly from papers/every-check-spawns-more/paper-v0.2-draft.md with pandoc 3.11 + tectonic 0.17.0, DejaVu fonts, SOURCE_DATE_EPOCH=1789344000. Deposit version 0.2.0 is the first deposited version (v0.1 lives in git history as a tombstoned comparator). A frozen artifact, not a venue, peer review, endorsement or protocol release.",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/s0fractal/manifesto",
+      "scheme": "url"
+    },
+    {
+      "relation": "references",
+      "identifier": "10.5281/zenodo.22069650",
+      "scheme": "doi"
+    },
+    {
+      "relation": "references",
+      "identifier": "https://github.com/s0fractal/warrant",
+      "scheme": "url"
+    }
+  ]
+}
