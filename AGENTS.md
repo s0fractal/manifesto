@@ -78,3 +78,17 @@ Scope and counting grammar: `drafts/CONTEXT-POLICY-0.1.md`.
    existing owner already carries. Extend the owner, or say why you cannot.
 7. **No document-level verdicts.** Checks report per-row, per-record, per-fact
    vectors; green means the named predicate held, never that a document is true.
+
+## Repository hygiene
+
+After staging new files, run `python3 tools/absolute_path_check.py --selftest` and
+`python3 tools/absolute_path_check.py`. The check covers tracked UTF-8 text; binary
+files and documented exclusions in `tools/path_allowlist.json` are outside scope.
+Exceptions apply to individual path occurrences, never an entire matching line.
+Unreadable inputs refuse the check. This is portability hygiene, not certification
+of privacy, isolation or document truth.
+
+PR CI also runs lychee 0.24.2 offline on changed Markdown files. External URLs,
+unchanged documents and semantic claims are outside that link check's scope.
+Use `lychee --offline path/to/changed.md` locally. Keep configuration in
+`lychee.toml`; do not add a duplicate `.lycheeignore`.
