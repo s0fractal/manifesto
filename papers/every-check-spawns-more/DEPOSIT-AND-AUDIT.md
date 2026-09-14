@@ -254,3 +254,17 @@ README/`CITATION.cff` update remain owner acts (AGENTS.md rule 5).
 record's. All eight public file checksums matched the local bundle after publication, and `paper.pdf`
 rebuilt byte-identically from the tagged source archive. Do not edit `paper-v0.2-draft.md` past the tag
 without a new deposit version: the manifest pins it, and the deposited bytes are frozen.
+
+**Reproducing the deposited results.** The source archive in the record rebuilds `paper.pdf` byte for
+byte (`build.sh`, pinned toolchain) on its own. It does **not** reproduce the full published gate
+vector: C2-MAP's `corpus_activation` strategy verifies the governance commits from the Git object
+database, so in an extracted archive without history it resolves `REFUSED:
+OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE` (1 CHECKED / 9 REFUSED). The published 2 CHECKED / 8 REFUSED
+vector requires a full Git clone with that history, checked out at tag
+`paper-every-check-spawns-more-v0.2.0`, plus `sigma-glyph==0.6.7` for C5. Reported after an independent
+check of the record (2026-09-14); the deposited bytes are unchanged.
+
+**Wording to narrow in a later version (not applied to the deposited text).** The §0 column heading
+"It establishes" is stronger than the evidence for the REFUSED measurement rows; "Reported
+observations" is the accurate label. The central numbers, including the glossary intervention
+3.13 → 2.11, remain reported observations, not an independently reproduced effect.
