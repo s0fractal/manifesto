@@ -1,0 +1,2 @@
+# Used by the offline local-link CI check. No network requests.
+exclude_path = ["reviews/2026-08-codex-001.md"]

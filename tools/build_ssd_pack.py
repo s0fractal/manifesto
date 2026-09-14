@@ -21,13 +21,14 @@ source bytes and compare the receipt hash.
 Deterministic: fixed key seeds and timestamps -> reproducible pack.
 """
 import json
+import os
 import shutil
 import sys
 import tempfile
 from pathlib import Path
 
 MANIFESTO = Path(__file__).resolve().parent.parent
-WARRANT = Path("/Users/s0fractal/Projects/warrant")
+WARRANT = Path(os.environ.get("WARRANT_PATH", MANIFESTO.parent / "warrant"))
 sys.path.insert(0, str(WARRANT / "impl"))
 import policy_lang as pl  # noqa: E402
 import warrant as w       # noqa: E402
