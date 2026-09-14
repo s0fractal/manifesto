@@ -223,3 +223,48 @@ placeholders/citations are filled): rename `paper.md → paper-v0.1-superseded.m
 `paper-v0.2-draft.md → paper.md` (which drops the `status: SUPERSEDED` guard), regenerate the build
 and HTML, and record the exact loss. A default-context/build probe must then be unable to recover a
 retired claim without explicitly requesting the historical file.
+
+## J. Operator decision (2026-09-14): deposit v0.2 with its refusals
+
+The owner decided to deposit this paper now, **with** the gate's REFUSED rows as known loss, rather
+than wait for the frozen act corpus, the scheduler simulation or a replayed measurement. The gate is
+not relaxed and not bypassed: its per-claim report is shipped with the record, and CI still asserts
+`DEPOSIT: BLOCKED` for this manifest. "Deposit" here means a dated, frozen artifact, not deposit-clean.
+
+Preparation on branch `deposit/every-check-v0.2` (this change): the candidate's front matter and §10
+now say this truthfully, author/date/ORCID are filled, the two systems the body names are cited
+(`[@sigma-glyph]`, `[@warrant]`; the other bibliography entries are not cited in v0.2 and are not
+rendered, which corrects the §B "in-text" column for this version), the manifest re-pins the edited
+candidate, and `build.sh` builds `paper.pdf` from the candidate with enforced pandoc 3.11 / tectonic
+0.17.0, DejaVu fonts and `SOURCE_DATE_EPOCH=1789344000` (two consecutive builds byte-identical).
+`paper.md` stays the tombstoned v0.1; no rename was needed for the deposit.
+
+With `sigma-glyph==0.6.7`: C5 and C2-MAP CHECKED; C1–C4, C7 `FROZEN_CORPUS_NOT_DEPOSITED`; C6
+`SIMULATION_NOT_DEPOSITED`; C8 `SOURCE_MISMATCH`; C2-MEAS `MEASUREMENT_NOT_REPLAYED`.
+
+Record contents (one Zenodo record, metadata in `zenodo.json`): `paper.pdf`, the exact candidate
+markdown, `CLAIM-LEDGER.md`, `claim-manifest.json`, the gate's JSON report, a `git archive` of the
+deposit commit (includes `reviews/`, the checkers, `LICENSE` and both license texts), and a
+`MANIFEST.md` + `SHA256SUMS` written at deposit time. Upload, publication, tag and the post-DOI
+README/`CITATION.cff` update remain owner acts (AGENTS.md rule 5).
+
+**PUBLISHED 2026-09-14.** Zenodo record 22750755, version DOI `10.5281/zenodo.22750755`, concept DOI
+`10.5281/zenodo.22750754`, version 0.2.0, from annotated tag `paper-every-check-spawns-more-v0.2.0` =
+`448d6de`. Eight files; `deposited-v0.2.0/MANIFEST.md` and `SHA256SUMS` are byte copies of the
+record's. All eight public file checksums matched the local bundle after publication, and `paper.pdf`
+rebuilt byte-identically from the tagged source archive. Do not edit `paper-v0.2-draft.md` past the tag
+without a new deposit version: the manifest pins it, and the deposited bytes are frozen.
+
+**Reproducing the deposited results.** The source archive in the record rebuilds `paper.pdf` byte for
+byte (`build.sh`, pinned toolchain) on its own. It does **not** reproduce the full published gate
+vector: C2-MAP's `corpus_activation` strategy verifies the governance commits from the Git object
+database, so in an extracted archive without history it resolves `REFUSED:
+OPERATOR_COMMIT_PROVENANCE_UNAVAILABLE` (1 CHECKED / 9 REFUSED). The published 2 CHECKED / 8 REFUSED
+vector requires a full Git clone with that history, checked out at tag
+`paper-every-check-spawns-more-v0.2.0`, plus `sigma-glyph==0.6.7` for C5. Reported after an independent
+check of the record (2026-09-14); the deposited bytes are unchanged.
+
+**Wording to narrow in a later version (not applied to the deposited text).** The §0 column heading
+"It establishes" is stronger than the evidence for the REFUSED measurement rows; "Reported
+observations" is the accurate label. The central numbers, including the glossary intervention
+3.13 → 2.11, remain reported observations, not an independently reproduced effect.

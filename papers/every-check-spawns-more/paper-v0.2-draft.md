@@ -1,17 +1,21 @@
 ---
 title: "Measuring Verifier-Reported Verification Load on a Single LLM Monologue Corpus: A Report with Termination Controls"
-status: v0.2 replacement draft (rev after Codex adversarial review 2026-09-01) — NOT the canonical paper.md; not deposited; not peer-reviewed
-supersedes: paper.md (v0.1, "Every Check Spawns More: A Reflexive Verification Model (Conjectural)")
-date: draft
+author: "Serhii Glova (ORCID 0009-0001-8010-420X)"
+status: 'v0.2 deposit candidate — deposited with its per-claim gate BLOCKED (2 CHECKED / 8 REFUSED) as known loss; not peer-reviewed'
+supersedes: 'paper.md (v0.1, "Every Check Spawns More: A Reflexive Verification Model (Conjectural)")'
+date: 2026-09-14
 license: CC-BY-SA-4.0
 ---
 
-> **Draft status.** A from-scratch replacement written from the evidence boundary inward (see
+> **Deposit status.** A from-scratch replacement written from the evidence boundary inward (see
 > `CLAIM-LEDGER.md`), revised against Codex's adversarial review (`reviews/2026-09-codex-papers-v0.2.md`).
 > The v0.1 file is retained as a historical comparator; see `MIGRATION-NOTES.md`. CC BY-SA 4.0
-> under the repository's path-scoped license; no deposit, DOI, or claim of external validation.
-> **Deposit is BLOCKED until the frozen act corpus is exported (§10) and the checker decides the
-> repaired ledger (`DEPOSIT-AND-AUDIT.md`).**
+> under the repository's path-scoped license. **This version is deposited while its own
+> closed-manifest gate reports BLOCKED**: with the pinned evaluator, 2 rows are CHECKED (C5, C2-MAP)
+> and 8 are REFUSED with typed reasons (frozen act corpus not deposited, scheduler simulation not
+> deposited, a drifted receipt source, measurement not replayed). The deposit is an operator decision
+> to date and freeze the paper *with* those refusals as known loss; it is not external validation,
+> peer review or adoption. Later versions move rows to CHECKED addressably (§10).
 
 ## Abstract
 
@@ -181,7 +185,7 @@ window is stated here explicitly.)*
 
 ### 6.2 One compiled instance — a terminal sub-act, on a separate axis
 
-The claim 0030 was compiled to a deterministic, integer-only, priced Σ-GLYPH check over confidence
+The claim 0030 was compiled to a deterministic, integer-only, priced Σ-GLYPH [@sigma-glyph] check over confidence
 traces. A *closed execution sub-act* defined as "run the script, compare receipt bytes, stop" emits
 **zero prose obligations**; settlement cost 4,151,277 / 554,678 / 25 ATP (clean / laundering /
 evidence-licensed).
@@ -270,23 +274,24 @@ type them:
 | Someone reads Warrant conformance as endorsement | `misuse_warning` | no |
 | An out-of-domain term behaves differently | `open_obligation` | no, unless the claim is about admission enforcement |
 
-## 10. Artifact map, provenance, and the deposit blocker
+## 10. Artifact map, provenance, and the known loss at deposit
 
 - **Model / date.** Verifiers as **observed in the act transcripts**: `claude-opus-5` (the "Fable 5"
   label was incorrect, §3 correction) and `claude-sonnet-5`, with a minority on `claude-opus-4-8`; date
   on file. Byte reproducibility not claimed for LLM counts.
 - **Summary records (present).** `drafts/EXP-RVB-1-RESULTS.md`, `drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md`.
-- **Frozen act corpus (REQUIRED, not yet present — deposit blocker).** A machine-readable, append-only
+- **Frozen act corpus (REQUIRED, not deposited — known loss of this version).** A machine-readable, append-only
   export with exact source/model/prompt/selected-child/pre-and-post-dedup/removal-decision/rejected-candidate
   fields, from which every table regenerates. Until then ô is a verifier-reported quantity awaiting an
   independent re-derivation.
 - **Compiled instance.** `tools/conf_mono_settle.py` (verdicts/ATP replay live).
 - **Legacy episode.** SSD-DEMO receipts, index audit. **Warrant pack:** the named stored SKI checks
-  re-execute under Warrant (e.g. the AIE check at 2,108 ATP), while the pack *as a whole* is
+  re-execute under Warrant [@warrant] (e.g. the AIE check at 2,108 ATP), while the pack *as a whole* is
   historically sealed / `LEGACY_UNPINNED` and is **not** strict-replayable (`drafts/ssd-pack/STATUS.md`).
   Both facts are reported; neither cancels the other.
-- **Checker.** The current `check_claims.py` is **stale-green w.r.t. this ledger** — it finds summary
-  literals, not re-derived acts. `DEPOSIT-AND-AUDIT.md §A` specifies the closed-manifest checker that
-  must replace it before deposit.
+- **Checker.** `papers/deposit_check.py` decides this ledger per claim (`claim-manifest.json`); the old
+  literal-counting `check_claims.py` is a shim to it. At deposit, with `sigma-glyph==0.6.7`, it reports
+  C5 and C2-MAP CHECKED and C1–C4, C6–C8 and C2-MEAS REFUSED; the report is shipped with the deposit.
+  C2-MAP is address structure only and grants C2-MEAS nothing.
 - **Licensing.** Paper + documentary artifacts CC BY-SA 4.0; executable deposit software AGPL-3.0-only;
-  `LICENSE` is the scope authority. No DOI/tag/deposit here.
+  `LICENSE` is the scope authority. Deposit: a dated, frozen trajectory marker, not peer review.
