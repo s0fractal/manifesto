@@ -1,0 +1,48 @@
+{
+  "$schema": "manifesto.path-allowlist@v0.1",
+  "description": "Allowlist and glob exclusions for tools/absolute_path_check.py",
+  "ignore_globs": [
+    "reviews/**",
+    "*.log",
+    "*.swp"
+  ],
+  "allowed_entries": [
+    {
+      "file": "tools/consumer_boundary_controls.py",
+      "reason": "Boundary control assertions testing absence of /Users/ in generated receipts",
+      "allowed_substrings": [
+        "\"/Users/\" not in text",
+        "string contained \"/Users/\"",
+        "\"/Users/s0fractal/Projects/sigma-glyph\""
+      ]
+    },
+    {
+      "file": "tools/sigma_boundary.py",
+      "reason": "Docstring explaining eliminated historical anti-pattern",
+      "allowed_substrings": [
+        "\"/Users/s0fractal/Projects/sigma-glyph\""
+      ]
+    },
+    {
+      "file": ".github/workflows/errata.yml",
+      "reason": "Workflow comment documenting eliminated machine-local checkout path",
+      "allowed_substrings": [
+        "/Users/s0fractal/Projects/sigma-glyph"
+      ]
+    },
+    {
+      "file": "papers/every-check-spawns-more/CORPUS-QUARANTINE-RECEIPT.json",
+      "reason": "Cryptographic quarantine audit receipt recording machine quarantine root",
+      "allowed_substrings": [
+        "/Users/s0fractal/.manifesto-corpus-quarantine"
+      ]
+    },
+    {
+      "file": "papers/addressing-is-equality/DEPOSIT-AND-AUDIT.md",
+      "reason": "Audit commentary demonstrating why local machine paths break stranger checkouts",
+      "allowed_substrings": [
+        "/Users/s0fractal/Projects/sigma-glyph/proposals/ADR-011-…md"
+      ]
+    }
+  ]
+}
