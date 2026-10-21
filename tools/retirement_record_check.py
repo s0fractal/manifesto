@@ -40,6 +40,9 @@ PROFILE = "manifesto.retirement-record@v0.1"
 EXPECTED = {
     "embedded-claims-lineage": "VALID",
     "bos-archive": "REFUSED:EXTERNAL_SUBJECT_IDENTITY_MISSING",
+    # The first DRY_RUN + external record that binds (declares its repository):
+    # the owner's workspace archival of 2026-10-20, applied outside this repository.
+    "workspace-retirement-2026-10-20": "VALID",
 }
 
 ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")

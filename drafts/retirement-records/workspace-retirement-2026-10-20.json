@@ -1,0 +1,84 @@
+{
+  "profile": "manifesto.retirement-record@v0.1",
+  "id": "workspace-retirement-2026-10-20",
+  "status": "DRY_RUN",
+  "subject_scope": "external",
+  "repository": "the owner's workspace ~/Projects and its GitHub repositories under github.com/s0fractal; tombstones ~/Projects/ARCHIVED-REPOSITORIES.md (section 'Portfolio concentration — 2026-10-20') and ~/Projects/ARCHIVED-WORKSPACE.md; the archival was APPLIED there on 2026-10-20 by the owner's chat decision, and this record is DRY_RUN only because RetirementRecord v0.1 has no external APPLIED combination",
+  "subjects": [
+    {
+      "locator": "github.com/s0fractal/trinity, main 52b98e29e4303a72cd4a5b55f7f9256192bff68b (HSP, RFC-0003 heterogeneous state protocol); local checkout ~/trinity removed",
+      "note": "GitHub archived 2026-10-20; backup ~/Archives/trinity-2026-10-20 (IMPACT.md, history.bundle, full-local.tar.gz, RECEIPT.json); the README of this repository still links HSP as a trajectory and is left unchanged because MISSION.receipt.json settles its bytes — the status is carried by this record and by the surface row hsp-trinity-trajectory",
+      "mode": "ARCHIVED",
+      "reason": "no commit since 2026-08-27; its receipts/quorum/anchoring role is carried by warrant 2 (records, authority) and VARS-1/minds (typed cells, scopes, self-governance)"
+    },
+    {
+      "locator": "github.com/s0fractal/black-heart, main 63649b842db07cae47391f7dc61d42767003c0c6",
+      "note": "GitHub archived 2026-10-20; backup ~/Archives/black-heart-2026-10-20; Zenodo deposits 10.5281/zenodo.22750755 and 10.5281/zenodo.22754264 cite tag paper-runs-its-own-checks-v1.0.0, still served",
+      "mode": "ARCHIVED",
+      "reason": "experiment line complete with recorded negative results (TRANSFER-1 null; triple null, 2026-09-15); lessons transferred to sigma-glyph #56 and warrant"
+    },
+    {
+      "locator": "github.com/s0fractal/stargate, main 8e148e904f1abce71bfa69271fe65a7dfd331462",
+      "note": "checkout archived to ~/Archives/stargate-2026-10-20; GitHub archive flag DEFERRED on purpose while open grant applications cite it (Foresight and ARIA 2026-10-31, NLnet 2026-11-03)",
+      "mode": "ARCHIVED",
+      "reason": "no commit since 2026-10-01; no runtime consumer in warrant, sigma-glyph or minds"
+    },
+    {
+      "locator": "github.com/s0fractal/oaip, main 2ac421c471e7e7a666610db70671003fbdede97c",
+      "note": "GitHub archived 2026-10-20; backup ~/Archives/oaip-2026-10-20; successor warrant 2 (SPEC.md, AGENT.md)",
+      "mode": "SUPERSEDED",
+      "reason": "Observed Action & Intent Protocol is covered by Warrant 2: records, closure, acceptance, agent handoff"
+    },
+    {
+      "locator": "github.com/s0fractal/OMEGA-64, main 8486085ac0d8ec14bd6e14c6bbb40af9619368b8",
+      "note": "GitHub archived 2026-10-20; backup ~/Archives/OMEGA-64-2026-10-20",
+      "mode": "ARCHIVED",
+      "reason": "no commit since 2026-03-17; generated ontology with no consumer"
+    },
+    {
+      "locator": "github.com/s0fractal/oh-my-mermaid, main 38ccdb69298adec949177c92c88d6e3ddfb5bab7",
+      "note": "GitHub archived 2026-10-20; backup ~/Archives/oh-my-mermaid-2026-10-20",
+      "mode": "ARCHIVED",
+      "reason": "no commit since 2026-04-07; documentation-generator fork with no role in the stack"
+    }
+  ],
+  "replacement": {
+    "relation": "replaced-by",
+    "operands": [
+      {
+        "path": "artifacts/REALIZED-PROTOCOLS-2026-10-21.md",
+        "sha256": "f950e824b220822581ec7ce48da528c38a94832ab913b01260abccc203c827d4"
+      },
+      {
+        "locator": "github.com/s0fractal/warrant master b3209a91b862ae8e96825a17b48bca8c10610935 (SPEC.md, AGENT.md, examples/dependency-audit, examples/ref-transport)",
+        "note": "records, closure, acceptance, handoff; address only, not verified by this repository"
+      },
+      {
+        "locator": "github.com/s0fractal/sigma-glyph release 0.8.0, provider identity 0caff793d00dd798a0af89517674c2ca562e1d517e7c969cc40617778c776c5",
+        "note": "deterministic computation, replay, resume; address only"
+      },
+      {
+        "locator": "github.com/s0fractal/minds (VARS-1-SPEC.md, kernel/, proofs/)",
+        "note": "identity and self-governance of an entity; address only"
+      }
+    ]
+  },
+  "loss": [
+    "the HSP vocabulary as a live trajectory: typed domains, translation loss, admission and authority no longer have a home that develops them as one protocol; the roles are split between warrant 2 and VARS-1 without a lossless translation",
+    "trinity's typed-domain-kernel campaign (RFC-0003, Tranche B) stops unmerged; the chord-signature question lives nowhere else",
+    "black-heart's experience store and immediate replay of its packets; RVB-BH-1 and ASYM-1 accepted but never executed",
+    "stargate's checker and examples as a local tool; its interlock line stays open",
+    "the OAIP spec text as a maintained document (its substance moved to Warrant 2, its wording did not)",
+    "immediate local access to every archived tree; GitHub copies are read-only, local backups are best-effort"
+  ],
+  "preservation": {
+    "policy": "per repository: GitHub archive flag (read-only) plus a local backup directory ~/Archives/<name>-2026-10-20 with before-files.json, full-local.tar.gz, history.bundle, RECEIPT.json and SHA256SUMS, verified at retirement; indefinite availability not promised; stargate's GitHub flag deferred",
+    "locator": "~/Projects/ARCHIVED-REPOSITORIES.md section 'Portfolio concentration — 2026-10-20'"
+  },
+  "admission": {
+    "default": "EXCLUDED",
+    "historical_review": "ALLOWED_WITH_STATUS",
+    "normative_use": "FORBIDDEN_WITHOUT_READOPTION"
+  },
+  "postconditions": []
+}

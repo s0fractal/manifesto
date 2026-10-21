@@ -1,6 +1,6 @@
 {
   "profile": "manifesto.active-surface@v0.1",
-  "as_of": "2026-09-03",
+  "as_of": "2026-10-21",
   "rows": [
     {
       "id": "badge-addresses-recomputed",
@@ -36,7 +36,7 @@
       "statement": "Sections 1-10 of CONTROLLED-FORGETTING-0.1 (retirement modes and invariants I1-I10) and RetirementRecord v0.1 in its two fixture-covered combinations, APPLIED + in-repo and DRY_RUN + external, are this repository's retirement policy. Every other section of that document -- Phase 3-4, the candidate CLI, external APPLIED, redaction implementation, and the open decisions -- stays non-normative.",
       "sources": [
         {"path": "CONTROLLED-FORGETTING-0.1.md", "sha256": "c8373c63cfc3a083bea4dab97bb1166969d4233156665954c072caa462a01ad2"},
-        {"path": "tools/retirement_record_check.py", "sha256": "0a4e0970bd1bfdeee3653c57779a99e7bbbc5f68965ea8bb3fc1a160003d07a2"}
+        {"path": "tools/retirement_record_check.py", "sha256": "f42acd0cad36cee339496d0d0c8136e6ce34852045b7f9eaba2ba68742a871c5"}
       ],
       "authority": {"path": "CONTROLLED-FORGETTING-0.1.md", "sha256": "c8373c63cfc3a083bea4dab97bb1166969d4233156665954c072caa462a01ad2"},
       "scope": "retirement acts recorded in this repository only; it binds no other repository, licenses no sweep, and names no file as a candidate",
@@ -85,6 +85,20 @@
       "loss": "at the retirement on 2026-09-02 the loss_manifest invariant had no live home carrying its falsifier; what covers it now was built afterwards and is not this row's to claim \u2014 tools/active_surface.py refuses an empty loss on any retired row, and tools/retirement_record_check.py reads structured RetirementRecords in CI.",
       "successor": null,
       "record": {"locator": "github:s0fractal/sev RETIREMENT.md", "note": "external retirement record; address only"}
+    },
+    {
+      "id": "hsp-trinity-trajectory",
+      "class": "retired",
+      "statement": "HSP / Trinity, listed in README.md as one of the four trajectories, was archived on 2026-10-20 with the rest of the owner's workspace concentration. README.md keeps its link and text because MISSION.receipt.json settles those bytes, so this row and the retirement record carry the status: the trajectory reads as history, and its relatum (typed domains, translation loss, admission, authority) is split between warrant 2 and VARS-1 without a lossless translation.",
+      "sources": [
+        {"locator": "github.com/s0fractal/trinity main 52b98e29e4303a72cd4a5b55f7f9256192bff68b, archived 2026-10-20", "note": "external historical locator; not verified by this repository"},
+        {"path": "artifacts/REALIZED-PROTOCOLS-2026-10-21.md", "sha256": "f950e824b220822581ec7ce48da528c38a94832ab913b01260abccc203c827d4"}
+      ],
+      "mode": "ARCHIVED",
+      "retired_on": "2026-10-20",
+      "loss": "a trajectory that developed typed domains, translation loss, admission and authority as one protocol; its RFC text stays readable only as history, and README.md's section on it is now a historical pointer rather than a live entry, which the README itself cannot say until the operator re-settles MISSION.receipt.json.",
+      "successor": null,
+      "record": {"path": "drafts/retirement-records/workspace-retirement-2026-10-20.json", "sha256": "a3348b2fe5eb2ed6d118d0310e564a34ec522cdbffcaee316215396bd1fc5fa8"}
     }
   ]
 }
