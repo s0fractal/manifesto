@@ -58,14 +58,23 @@ async function getGitInfo(): Promise<{ hash: string; shortHash: string; date: st
   }
 }
 
-// 2. Discover all Markdown files recursively
+// 2. Discover Markdown files
+function isTargetDoc(relPath: string): boolean {
+  const rootOrder = ["README.md", "FLOW.md", "INVARIANT-RECIPES.md"];
+  if (rootOrder.includes(relPath)) return true;
+  if (relPath.startsWith("artifacts/")) return true;
+  if (relPath.startsWith("quotes/Monday/chat-0001/")) return true;
+  return false;
+}
+
 async function collectMarkdownFiles(dir: string): Promise<string[]> {
   const files: string[] = [];
 
   for await (const entry of Deno.readDir(dir)) {
-    // Ignore .git, dist, node_modules, scratch
+    // Ignore non-target directories
     if (
       entry.name === ".git" ||
+      entry.name === ".venv" ||
       entry.name === "dist" ||
       entry.name === "books" ||
       entry.name === "node_modules" ||
@@ -79,9 +88,12 @@ async function collectMarkdownFiles(dir: string): Promise<string[]> {
       const nested = await collectMarkdownFiles(fullPath);
       files.push(...nested);
     } else if (entry.isFile && entry.name.endsWith(".md")) {
-      const stat = await Deno.stat(fullPath);
-      if (stat.size > 0) {
-        files.push(fullPath);
+      const relPath = relative(projectRoot, fullPath);
+      if (isTargetDoc(relPath)) {
+        const stat = await Deno.stat(fullPath);
+        if (stat.size > 0) {
+          files.push(fullPath);
+        }
       }
     }
   }
