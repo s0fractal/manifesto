@@ -2,93 +2,59 @@
 
 Rules for any agent working in this repository. This file is deliberately thin
 and stable: rules, commands and links only. It carries no digests, no copied
-facts, no status summaries and no generated context — those rotate, and a
-confidently stale instruction file is worse than none. Everything that rotates
-lives in the owners below and is derived on demand.
+facts and no generated views — those live in `.warrant/` and are verified on
+demand by Warrant 3.
 
 This file is not an act of adoption and grants no authority to anyone. It
 records how to read what the repository already declares.
 
-## Canonical owners
+## Canonical owner: `.warrant/` (Warrant 3)
 
-- `surface/rows.json` — what this repository currently treats as operational,
-  normative or retired, one typed predicate per row. Consumer:
-  `tools/active_surface.py`.
-- `drafts/retirement-records/` — structured retirement records: which subjects
-  left the active surface, by which addressed act, with which loss, and what
-  holds the role now. Consumer: `tools/retirement_record_check.py`.
-- `CONTROLLED-FORGETTING-0.1.md` — the retirement policy those records answer
-  to. Its adopted scope, and the parts that stay non-normative, are named in its
-  own status section; read that before treating any of it as binding.
+Active surface claims (`claim@1`), distilled research ideas and ontology debts
+(`obligation@1`), and controlled-forgetting retirements (`retirement@1`) live
+as signed, content-addressed Warrant 3 records in `.warrant/records.jsonl`,
+verified under `.warrant/v3.json`.
 
-There is no second registry. Nothing derived from these owners is committed. If
-a derived view and an owner disagree, the owner wins and the check fails.
+- **Verify the store:**
+  ```sh
+  python3 -m warrant verify --root .
+  ```
+- **Inspect lineages / open obligations / retirements:**
+  ```sh
+  python3 -m warrant graph --root .
+  ```
+- **Policy for retirements:** `CONTROLLED-FORGETTING-0.1.md` (§§1–10: modes and
+  invariants I1–I10), now represented by `retirement@1` lineages in `.warrant/`.
 
-## Retrieval
-
-**Default** — the working set. Retired subjects are not in it, by policy, not by
-accident:
-
-```sh
-python3 tools/context_view.py
-```
-
-**Explicit historical** — the same set plus the retired subjects of the one
-retirement record this specimen covers, each arriving with its retirement mode,
-loss, relation and replacement, retrieval address and admission status. It is
-one pair, not a sweep of everything this repository ever retired; retired facts
-that record never addressed are outside it and are read through their own owner:
-
-```sh
-python3 tools/context_view.py --mode historical
-```
-
-Regenerate and verify from a cold start — no state is needed beyond a full
-clone, and `--check` recomputes every operand from bytes rather than believing
-any document:
-
-```sh
-python3 tools/context_view.py --check      # bind the owners, verify the view
-python3 tools/context_view.py --selftest   # the mutation controls
-python3 tools/context_view.py --measure    # default vs historical, in facts and bytes
-```
-
-Scope and counting grammar: `drafts/CONTEXT-POLICY-0.1.md`.
+There is no second registry. Do not re-introduce unsigned JSON surfaces,
+ad-hoc receipt scripts or committed generated views (`dist/`, `*.settled.md`).
 
 ## Rules
 
-1. **Historical mode is archaeology, not precedent.** Availability is not
-   admission. Quote a retired artifact only with its status attached: a
-   withdrawn revision said X; the current surface does not adopt it.
-2. **There is no readmission door here, and do not build one in passing.** Re-entry
-   into the default set is unimplemented on purpose: flipping `admission.default`
-   to `INCLUDED` in a retirement record is refused as `READOPTION_NOT_IMPLEMENTED`,
-   because a one-field edit is not a governed transition and the authority that
-   record already cites was addressed to the retirement, not to a later return.
-   A real re-entry needs an explicit act with a decision identity of its own,
-   which is outside this specimen. Proposing one is allowed; performing one —
-   through a record field, a view, a tool or this file — is not.
-3. **Do not commit generated context.** The view is printed on demand. A checked
-   artifact needs a demonstrated consumer first.
-4. **Run any check that reads `git ls-files` after `git add`.** Before staging it
-   sees a different world, and passes for the wrong reason.
-5. **Branch work is non-canonical.** Push, merge, tag, release, deposit and
-   publication are owner acts.
-6. **Do not add a second registry, schema or framework** to carry something an
-   existing owner already carries. Extend the owner, or say why you cannot.
-7. **No document-level verdicts.** Checks report per-row, per-record, per-fact
-   vectors; green means the named predicate held, never that a document is true.
+1. **Historical mode is archaeology, not precedent.** Availability in Git
+   history (`7ad7d454400ab4cc0693b10055c4ababaa2f3928` or earlier tags) is not
+   admission. Quote a retired artifact only with its `retirement@1` mode and
+   known loss attached.
+2. **No silent readmission door.** A `retirement@1` lineage moves from
+   `retired` to `readopted` only by a signed successor accepted by `pr/owner`.
+   Restoring bytes from Git grants no authority.
+3. **Never claim review authority you do not hold.** Sign only with your own
+   bound key in `.warrant/v3.json`. Passing hygiene/store checks is not an
+   independent review.
+4. **Owner paths stay the owner's.** `.github/`, `.warrant/v3.json` trust/role
+   changes, tags, releases and DOI deposits are owner acts (prepared as PRs,
+   never self-merged).
+5. **No document-level truth verdicts.** Checks verify record signatures,
+   schemas, path hygiene and local links — never that prose is true.
 
 ## Repository hygiene
 
-After staging new files, run `python3 tools/absolute_path_check.py --selftest` and
-`python3 tools/absolute_path_check.py`. The check covers tracked UTF-8 text; binary
-files and documented exclusions in `tools/path_allowlist.json` are outside scope.
-Exceptions apply to individual path occurrences, never an entire matching line.
-Unreadable inputs refuse the check. This is portability hygiene, not certification
-of privacy, isolation or document truth.
+After staging changes, run:
 
-PR CI also runs lychee 0.24.2 offline on changed Markdown files. External URLs,
-unchanged documents and semantic claims are outside that link check's scope.
-Use `lychee --offline path/to/changed.md` locally. Keep configuration in
-`lychee.toml`; do not add a duplicate `.lycheeignore`.
+```sh
+python3 tools/absolute_path_check.py --selftest
+python3 tools/absolute_path_check.py
+lychee --offline README.md AGENTS.md CONTROLLED-FORGETTING-0.1.md artifacts/ONTOLOGY-FORMALIZATION-0.1.md
+```
+
+Keep link-check configuration in `lychee.toml`; do not add `.lycheeignore`.
