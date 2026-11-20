@@ -805,19 +805,19 @@ forget readopt <tombstone> --proposal-only
 
 ## 13. Відношення до наявних дисциплін manifesto
 
-### [Operator as Hypothesis](drafts/OPERATOR-AS-HYPOTHESIS.md)
+### Operator as Hypothesis (`drafts/OPERATOR-AS-HYPOTHESIS.md` @ `git:7ad7d454`, дистильовано у `.warrant/`)
 
 Вказівка “це старе, видали” є hypothesis про live state та impact, доки exact
 subject і references не перевірені. Воля owner'а може бути легітимним мандатом,
 але factual передумови retirement все одно розраховуються до дії.
 
-### [Reflexive Verification Bound](drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md)
+### Reflexive Verification Bound (`drafts/RVB-0.1-REFLEXIVE-VERIFICATION-BOUND.md` @ `git:7ad7d454`)
 
 Retirement може зменшувати генеративний backlog і conflict surface, але кожен
 tombstone/receipt сам додає records. Якщо протокол забуття породжує більше
 мета-зобов'язань, ніж прибирає, він програє власній меті.
 
-### [Embedded claims](drafts/embedded-claims-poc/README.md)
+### Embedded claims (`drafts/embedded-claims-poc/README.md` @ `git:7ad7d454`, `SUPERSEDED` by `.warrant/`)
 
 Retirement status, execution receipt і truth status не зливаються. Green
 retirement recipe доводить лише, що exact transition відбувся. Він не доводить,

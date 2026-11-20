@@ -1,0 +1,53 @@
+{
+ "profile": {
+  "quorum": {},
+  "roles": {
+   "challenger": [
+    "s0fractal"
+   ],
+   "claim/verifier": [
+    "codex"
+   ],
+   "pr/acceptor": [
+    "claude",
+    "codex"
+   ],
+   "pr/owner": [
+    "s0fractal"
+   ],
+   "roadmap/acceptor": [
+    "codex"
+   ],
+   "roadmap/owner": [
+    "claude",
+    "codex",
+    "s0fractal"
+   ],
+   "schema/author": [
+    "antigravity",
+    "claude",
+    "codex"
+   ]
+  },
+  "warrant": "profile/3"
+ },
+ "repository": "s0fractal/manifesto",
+ "trust": {
+  "keys": {
+   "antigravity": [
+    "12f24607dd04d6b21d375d16c2cb3b4db524427030e3fb9835d613fa30b83c06"
+   ],
+   "claude": [
+    "fc176e4bca9372cb329650c804f700079d5b283839a51671c3fd662df3f6ca57"
+   ],
+   "codex": [
+    "793e615ef5693cf6be7304aa284c6cc6f1fae9e3a2996cfafd23e1c160023b12"
+   ],
+   "s0fractal": [
+    "a44c7a84b7ab91a2d5654ebd0647cbb3224551dce294c87255d3538e0fc39ca3"
+   ]
+  },
+  "warrant": "trust/3"
+ },
+ "warrant": "repository/3"
+}
